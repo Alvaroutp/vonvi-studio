@@ -1,0 +1,10 @@
+Esta carpeta tiene imágenes de MARCADOR DE POSICIÓN (cuadrados rosados)
+solo para que el sitio se pueda probar sin descargar 11 MB.
+
+QUÉ HACER:
+  1. Borra el contenido de esta carpeta.
+  2. Copia aquí la carpeta img/ de tu proyecto original.
+  3. Renombra  diseño.png  →  diseno.png
+     (o ejecuta renombrar-imagen.bat que está en la raíz del proyecto)
+
+Lo mismo con la carpeta videos/.

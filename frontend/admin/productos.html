@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+
+    <title>Productos | Panel Vonvi Studio</title>
+    <link rel="icon" type="image/png" href="../img/icon.png">
+
+    <link rel="stylesheet" href="../CSS/admin.css">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+</head>
+
+<body>
+
+    <aside class="admin-lateral">
+
+        <div class="admin-logo">
+            <img src="../img/logo.png" alt="Vonvi Studio Perú">
+            <span>PANEL DE ADMINISTRACIÓN</span>
+        </div>
+
+        <nav class="admin-nav">
+            <a href="index.html"><i class="fa-solid fa-gauge-high"></i> Resumen</a>
+            <a href="pedidos.html"><i class="fa-solid fa-receipt"></i> Pedidos</a>
+            <a href="productos.html" class="activo"><i class="fa-solid fa-box"></i> Productos</a>
+            <a href="cotizaciones.html"><i class="fa-solid fa-envelope-open-text"></i> Cotizaciones</a>
+        </nav>
+
+        <div class="admin-lateral-pie">
+            <a href="../index.html"><i class="fa-solid fa-arrow-left"></i> Volver a la tienda</a>
+            <button type="button" id="adminSalir"><i class="fa-solid fa-right-from-bracket"></i> Cerrar sesión</button>
+        </div>
+
+    </aside>
+
+    <main class="admin-contenido">
+
+        <div class="admin-cabecera">
+            <div style="display:flex;align-items:center;gap:14px">
+                <button type="button" id="adminMenuMovil" aria-label="Abrir menú">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+                <div>
+                    <h1>Productos y categorías</h1>
+                    <p class="sub">Administra el catálogo de la tienda</p>
+                </div>
+            </div>
+            <div class="admin-perfil">
+                <span id="adminUsuario"></span>
+                <span class="avatar"><i class="fa-solid fa-user"></i></span>
+            </div>
+        </div>
+
+        <div id="contenidoAdmin"></div>
+
+    </main>
+
+    <script src="../JS/api.js"></script>
+    <script src="../JS/admin.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => Admin.iniciar('productos'));
+    </script>
+
+</body>
+
+</html>

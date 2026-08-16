@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Personaliza tu producto: elige talla, color y acabado, sube tu diseño y agrégalo al carrito.">
+
+    <title>Personalizar producto | Vonvi Studio Perú</title>
+    <link rel="icon" type="image/png" href="img/icon.png">
+
+    <link rel="stylesheet" href="CSS/estilos.css">
+    <link rel="stylesheet" href="CSS/tienda.css">
+    <link rel="stylesheet" href="CSS/responsive.css">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+</head>
+
+<body>
+
+    <header>
+
+        <div class="contenedor">
+
+            <div class="logo">
+                <a href="index.html"><img src="img/logo.png" alt="Vonvi Studio Perú"></a>
+            </div>
+
+            <nav id="menu">
+                <ul>
+                    <li><a href="index.html">Inicio</a></li>
+                    <li><a href="nosotros.html">Nosotros</a></li>
+                    <li><a href="productos.html" class="activo">Productos</a></li>
+                    <li><a href="servicios.html">Servicios</a></li>
+                    <li><a href="videos.html">Videos</a></li>
+                    <li><a href="contacto.html">Contacto</a></li>
+                </ul>
+            </nav>
+
+            <div class="acciones-header">
+
+                <div id="zonaSesion"></div>
+
+                <a href="carrito.html" class="btn-carrito" aria-label="Ver carrito">
+                    <i class="fa-solid fa-cart-shopping"></i>
+                    <span>Carrito</span>
+                    <span id="contadorCarrito" class="burbuja">0</span>
+                </a>
+
+                <div class="menu-movil" onclick="abrirMenu()" aria-label="Abrir menú">
+                    <i class="fa-solid fa-bars"></i>
+                </div>
+
+            </div>
+
+        </div>
+
+    </header>
+
+    <section class="configurador">
+        <div class="contenedor">
+
+            <nav class="migas">
+                <a href="productos.html">Productos</a>
+                <i class="fa-solid fa-chevron-right"></i>
+                <a id="migaCategoria" href="#">...</a>
+                <i class="fa-solid fa-chevron-right"></i>
+                <span id="migaProducto">...</span>
+            </nav>
+
+            <div id="cargando" class="cargando"><span class="spinner"></span> Cargando producto...</div>
+
+            <div id="configurador" class="config-grid" hidden>
+
+                <!-- Columna izquierda: imagen y vista previa -->
+                <div class="config-visual">
+                    <div class="visual-principal">
+                        <img id="imagenProducto" src="" alt="">
+                        <img id="previewEstampa" class="preview-estampa" alt="Vista previa de tu diseño" hidden>
+                    </div>
+                    <p class="nota-visual">
+                        <i class="fa-solid fa-circle-info"></i>
+                        La vista previa es referencial. Nuestro equipo ajusta el tamaño y la posición
+                        del diseño antes de producir.
+                    </p>
+                </div>
+
+                <!-- Columna derecha: opciones -->
+                <div class="config-opciones">
+
+                    <span class="etiqueta-categoria" id="etiquetaCategoria"></span>
+                    <h1 id="nombreProducto"></h1>
+                    <p class="descripcion" id="descripcionProducto"></p>
+
+                    <div class="datos-rapidos">
+                        <span id="datoEntrega"><i class="fa-regular fa-clock"></i></span>
+                        <span id="datoMinimo"><i class="fa-solid fa-layer-group"></i></span>
+                    </div>
+
+                    <form id="formConfig" novalidate>
+
+                        <div id="camposAtributos"></div>
+
+                        <!-- Subida del diseño -->
+                        <div class="campo-config" id="bloqueEstampa">
+                            <label class="etiqueta-campo">
+                                Tu diseño
+                                <span class="obligatorio" id="marcaEstampa" hidden>*</span>
+                            </label>
+
+                            <div class="zona-subida" id="zonaSubida">
+                                <input type="file" id="inputEstampa" accept="image/png,image/jpeg,image/webp,image/svg+xml,application/pdf" hidden>
+                                <i class="fa-solid fa-cloud-arrow-up"></i>
+                                <p><strong>Haz clic o arrastra tu archivo aquí</strong></p>
+                                <small>PNG, JPG, WEBP, SVG o PDF · máximo 10 MB</small>
+                            </div>
+
+                            <div class="archivo-subido" id="archivoSubido" hidden>
+                                <i class="fa-regular fa-image"></i>
+                                <div>
+                                    <strong id="nombreArchivo"></strong>
+                                    <small id="pesoArchivo"></small>
+                                </div>
+                                <button type="button" id="quitarArchivo" aria-label="Quitar archivo">&times;</button>
+                            </div>
+                        </div>
+
+                        <!-- Notas -->
+                        <div class="campo-config">
+                            <label class="etiqueta-campo" for="notas">Indicaciones adicionales</label>
+                            <textarea id="notas" rows="2" maxlength="400"
+                                placeholder="Ej.: el logo va centrado y pequeño, colores exactos del pantone..."></textarea>
+                        </div>
+
+                        <!-- Cantidad -->
+                        <div class="campo-config">
+                            <label class="etiqueta-campo" for="cantidad">Cantidad</label>
+                            <div class="control-cantidad">
+                                <button type="button" id="menos" aria-label="Quitar uno">&minus;</button>
+                                <input type="number" id="cantidad" value="1" min="1" step="1">
+                                <button type="button" id="mas" aria-label="Agregar uno">+</button>
+                            </div>
+                            <div id="avisoEscalas" class="aviso-escalas"></div>
+                        </div>
+
+                        <!-- Precio en vivo -->
+                        <div class="caja-precio">
+                            <div id="desglosePrecio" class="desglose"></div>
+                            <div class="linea-total">
+                                <span>Total</span>
+                                <strong id="precioTotal">S/ 0.00</strong>
+                            </div>
+                            <p id="errorConfig" class="error-config" hidden></p>
+                        </div>
+
+                        <button type="submit" class="btn-principal btn-agregar" id="btnAgregar">
+                            <i class="fa-solid fa-cart-plus"></i> Agregar al carrito
+                        </button>
+
+                        <a href="contacto.html" class="enlace-cotizar">
+                            ¿Necesitas algo distinto? Solicita una cotización personalizada
+                        </a>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+        </div>
+    </section>
+
+    <footer>
+        <div class="contenedor">
+            <div class="footer-grid">
+
+                <div class="footer-col">
+                    <img src="img/logo.png" alt="Vonvi Studio Perú" class="logo-footer">
+                    <p>
+                        En Vonvi Studio Perú transformamos ideas en productos personalizados
+                        de alta calidad para empresas, emprendimientos y ocasiones especiales.
+                    </p>
+                    <div class="redes">
+                        <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                        <a href="#" aria-label="TikTok"><i class="fab fa-tiktok"></i></a>
+                        <a href="https://wa.me/51907100820" aria-label="WhatsApp"><i class="fab fa-whatsapp"></i></a>
+                    </div>
+                </div>
+
+                <div class="footer-col">
+                    <h3>Enlaces</h3>
+                    <ul>
+                        <li><a href="index.html">Inicio</a></li>
+                        <li><a href="nosotros.html">Nosotros</a></li>
+                        <li><a href="productos.html">Productos</a></li>
+                        <li><a href="servicios.html">Servicios</a></li>
+                        <li><a href="videos.html">Videos</a></li>
+                        <li><a href="contacto.html">Contacto</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-col">
+                    <h3>Mi cuenta</h3>
+                    <ul>
+                        <li><a href="login.html">Iniciar sesión</a></li>
+                        <li><a href="registro.html">Crear cuenta</a></li>
+                        <li><a href="cuenta.html">Mis pedidos</a></li>
+                        <li><a href="carrito.html">Mi carrito</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-col">
+                    <h3>Contáctanos</h3>
+                    <p><i class="fas fa-location-dot"></i> Chorrillos, ref. Parque Belén - Lima, Perú</p>
+                    <p><i class="fas fa-phone"></i> +51 907 100 820</p>
+                    <p><i class="fas fa-envelope"></i> vonvistudioperu@gmail.com</p>
+                    <p><i class="fas fa-clock"></i> Lun - Sáb | 8:00 am - 6:00 pm</p>
+                </div>
+
+            </div>
+
+            <hr>
+
+            <div class="footer-bottom">
+                <p>&copy; <span id="anio"></span> Vonvi Studio Perú | Todos los derechos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <a href="https://wa.me/51907100820" class="whatsapp" target="_blank" rel="noopener" aria-label="Escríbenos por WhatsApp">
+        <i class="fab fa-whatsapp"></i>
+    </a>
+
+    <button id="btnTop" type="button" aria-label="Volver arriba">
+        <i class="fas fa-chevron-up"></i>
+    </button>
+
+    <script src="JS/api.js"></script>
+    <script src="JS/comun.js"></script>
+    <script src="JS/configurador.js"></script>
+</body>
+
+</html>

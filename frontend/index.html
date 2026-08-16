@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Personaliza polos, tazas, stickers, llaveros y más con tu marca. Configura tu producto, sube tu diseño y sigue la fabricación en línea.">
+
+    <title>Vonvi Studio Perú | Merchandising y productos personalizados</title>
+    <link rel="icon" type="image/png" href="img/icon.png">
+
+    <link rel="stylesheet" href="CSS/estilos.css">
+    <link rel="stylesheet" href="CSS/tienda.css">
+    <link rel="stylesheet" href="CSS/responsive.css">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+</head>
+
+<body>
+
+    <header>
+
+        <div class="contenedor">
+
+            <div class="logo">
+                <a href="index.html"><img src="img/logo.png" alt="Vonvi Studio Perú"></a>
+            </div>
+
+            <nav id="menu">
+                <ul>
+                    <li><a href="index.html" class="activo">Inicio</a></li>
+                    <li><a href="nosotros.html">Nosotros</a></li>
+                    <li><a href="productos.html">Productos</a></li>
+                    <li><a href="servicios.html">Servicios</a></li>
+                    <li><a href="videos.html">Videos</a></li>
+                    <li><a href="contacto.html">Contacto</a></li>
+                </ul>
+            </nav>
+
+            <div class="acciones-header">
+
+                <div id="zonaSesion"></div>
+
+                <a href="carrito.html" class="btn-carrito" aria-label="Ver carrito">
+                    <i class="fa-solid fa-cart-shopping"></i>
+                    <span>Carrito</span>
+                    <span id="contadorCarrito" class="burbuja">0</span>
+                </a>
+
+                <div class="menu-movil" onclick="abrirMenu()" aria-label="Abrir menú">
+                    <i class="fa-solid fa-bars"></i>
+                </div>
+
+            </div>
+
+        </div>
+
+    </header>
+
+    <section class="hero">
+        <div class="contenedor hero-contenido">
+
+            <div class="hero-texto">
+                <span>MERCHANDISING &bull; PAPELERÍA &bull; PUBLICIDAD</span>
+                <h1>Impulsamos tu marca con productos personalizados</h1>
+                <p>
+                    En Vonvi Studio Perú desarrollamos soluciones creativas para empresas,
+                    emprendedores y eventos. Personaliza cada producto con la identidad de tu marca
+                    y sigue su fabricación paso a paso.
+                </p>
+
+                <div class="hero-botones">
+                    <a href="productos.html" class="btn-principal">Ver Productos</a>
+                    <a href="contacto.html" class="btn-secundario">Contáctanos</a>
+                </div>
+
+                <div class="beneficios">
+                    <div><i class="fa-solid fa-circle-check"></i> Calidad Garantizada</div>
+                    <div><i class="fa-solid fa-palette"></i> Diseños Exclusivos</div>
+                    <div><i class="fa-solid fa-truck-fast"></i> Envíos a Todo el Perú</div>
+                </div>
+            </div>
+
+            <div class="hero-imagen">
+                <img src="img/banner-principal.png" alt="Productos personalizados de Vonvi Studio Perú">
+            </div>
+
+        </div>
+    </section>
+
+    <section class="categorias">
+        <div class="contenedor">
+            <div class="titulo-seccion">
+                <span>Nuestros Productos</span>
+                <h2>Personalizados para cada ocasión</h2>
+                <p>Elige una categoría y configura tu producto: talla, color, acabado y tu propio diseño.</p>
+            </div>
+            <div id="gridCategorias" class="grid-categorias"></div>
+            <div style="text-align:center;margin-top:40px">
+                <a href="productos.html" class="btn-principal">Ver todo el catálogo</a>
+            </div>
+        </div>
+    </section>
+
+    <section class="servicios">
+        <div class="contenedor">
+            <div class="titulo-seccion">
+                <span>Servicios</span>
+                <h2>Todo lo que tu marca necesita</h2>
+            </div>
+            <div class="contenedor-servicios">
+                <div class="servicio">
+                    <i class="fa-solid fa-print"></i>
+                    <h3>Impresión Digital</h3>
+                    <p>Impresión de alta resolución para todo tipo de proyectos.</p>
+                </div>
+                <div class="servicio">
+                    <i class="fa-solid fa-gift"></i>
+                    <h3>Merchandising</h3>
+                    <p>Productos promocionales para fortalecer tu identidad.</p>
+                </div>
+                <div class="servicio">
+                    <i class="fa-solid fa-pen-ruler"></i>
+                    <h3>Diseño Gráfico</h3>
+                    <p>Creamos piezas visuales modernas y totalmente personalizadas.</p>
+                </div>
+                <div class="servicio">
+                    <i class="fa-solid fa-truck-fast"></i>
+                    <h3>Envíos</h3>
+                    <p>Realizamos entregas en Lima y envíos a nivel nacional.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="estadisticas">
+        <div class="contenedor">
+            <div class="estadistica">
+                <h2>+<span class="contador" data-numero="500">0</span></h2>
+                <p>Pedidos Entregados</p>
+            </div>
+            <div class="estadistica">
+                <h2>+<span class="contador" data-numero="500">0</span></h2>
+                <p>Clientes Satisfechos</p>
+            </div>
+            <div class="estadistica">
+                <h2><span class="contador" data-numero="100">0</span>%</h2>
+                <p>Diseños Personalizados</p>
+            </div>
+            <div class="estadistica">
+                <h2><span class="contador" data-numero="24">0</span>/7</h2>
+                <p>Atención Online</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="galeria">
+        <div class="contenedor">
+            <div class="titulo-seccion">
+                <span>Galería</span>
+                <h2>Algunos de nuestros trabajos</h2>
+            </div>
+            <div class="grid-galeria">
+                <img src="img/galeria1.jpg" alt="Tazas personalizadas para empresa" loading="lazy">
+                <img src="img/galeria2.jpg" alt="Polos estampados con DTF" loading="lazy">
+                <img src="img/galeria3.jpg" alt="Llaveros acrílicos personalizados" loading="lazy">
+                <img src="img/galeria4.jpg" alt="Agendas corporativas" loading="lazy">
+                <img src="img/galeria5.jpg" alt="Bolsas ecológicas impresas" loading="lazy">
+                <img src="img/galeria6.jpg" alt="Merchandising corporativo" loading="lazy">
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="contenedor">
+            <div class="footer-grid">
+
+                <div class="footer-col">
+                    <img src="img/logo.png" alt="Vonvi Studio Perú" class="logo-footer">
+                    <p>
+                        En Vonvi Studio Perú transformamos ideas en productos personalizados
+                        de alta calidad para empresas, emprendimientos y ocasiones especiales.
+                    </p>
+                    <div class="redes">
+                        <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                        <a href="#" aria-label="TikTok"><i class="fab fa-tiktok"></i></a>
+                        <a href="https://wa.me/51907100820" aria-label="WhatsApp"><i class="fab fa-whatsapp"></i></a>
+                    </div>
+                </div>
+
+                <div class="footer-col">
+                    <h3>Enlaces</h3>
+                    <ul>
+                        <li><a href="index.html">Inicio</a></li>
+                        <li><a href="nosotros.html">Nosotros</a></li>
+                        <li><a href="productos.html">Productos</a></li>
+                        <li><a href="servicios.html">Servicios</a></li>
+                        <li><a href="videos.html">Videos</a></li>
+                        <li><a href="contacto.html">Contacto</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-col">
+                    <h3>Mi cuenta</h3>
+                    <ul>
+                        <li><a href="login.html">Iniciar sesión</a></li>
+                        <li><a href="registro.html">Crear cuenta</a></li>
+                        <li><a href="cuenta.html">Mis pedidos</a></li>
+                        <li><a href="carrito.html">Mi carrito</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-col">
+                    <h3>Contáctanos</h3>
+                    <p><i class="fas fa-location-dot"></i> Chorrillos, ref. Parque Belén - Lima, Perú</p>
+                    <p><i class="fas fa-phone"></i> +51 907 100 820</p>
+                    <p><i class="fas fa-envelope"></i> vonvistudioperu@gmail.com</p>
+                    <p><i class="fas fa-clock"></i> Lun - Sáb | 8:00 am - 6:00 pm</p>
+                </div>
+
+            </div>
+
+            <hr>
+
+            <div class="footer-bottom">
+                <p>&copy; <span id="anio"></span> Vonvi Studio Perú | Todos los derechos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <a href="https://wa.me/51907100820" class="whatsapp" target="_blank" rel="noopener" aria-label="Escríbenos por WhatsApp">
+        <i class="fab fa-whatsapp"></i>
+    </a>
+
+    <button id="btnTop" type="button" aria-label="Volver arriba">
+        <i class="fas fa-chevron-up"></i>
+    </button>
+
+    <script src="JS/api.js"></script>
+    <script src="JS/comun.js"></script>
+    <script src="JS/catalogo.js"></script>
+</body>
+
+</html>

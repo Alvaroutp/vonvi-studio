@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Conoce a Vonvi Studio Perú: nuestra historia, misión, visión y equipo.">
+
+    <title>Nosotros | Vonvi Studio Perú</title>
+    <link rel="icon" type="image/png" href="img/icon.png">
+
+    <link rel="stylesheet" href="CSS/estilos.css">
+    <link rel="stylesheet" href="CSS/tienda.css">
+    <link rel="stylesheet" href="CSS/responsive.css">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+</head>
+
+<body>
+
+    <header>
+
+        <div class="contenedor">
+
+            <div class="logo">
+                <a href="index.html"><img src="img/logo.png" alt="Vonvi Studio Perú"></a>
+            </div>
+
+            <nav id="menu">
+                <ul>
+                    <li><a href="index.html">Inicio</a></li>
+                    <li><a href="nosotros.html" class="activo">Nosotros</a></li>
+                    <li><a href="productos.html">Productos</a></li>
+                    <li><a href="servicios.html">Servicios</a></li>
+                    <li><a href="videos.html">Videos</a></li>
+                    <li><a href="contacto.html">Contacto</a></li>
+                </ul>
+            </nav>
+
+            <div class="acciones-header">
+
+                <div id="zonaSesion"></div>
+
+                <a href="carrito.html" class="btn-carrito" aria-label="Ver carrito">
+                    <i class="fa-solid fa-cart-shopping"></i>
+                    <span>Carrito</span>
+                    <span id="contadorCarrito" class="burbuja">0</span>
+                </a>
+
+                <div class="menu-movil" onclick="abrirMenu()" aria-label="Abrir menú">
+                    <i class="fa-solid fa-bars"></i>
+                </div>
+
+            </div>
+
+        </div>
+
+    </header>
+
+    <section class="hero-pagina">
+        <div class="contenedor">
+            <h1>Sobre Nosotros</h1>
+            <p>Conoce nuestra historia, misión y compromiso con cada uno de nuestros clientes.</p>
+        </div>
+    </section>
+
+    <section class="nosotros">
+        <div class="contenedor nosotros-grid">
+            <div>
+                <img src="img/tienda.png" alt="Taller de Vonvi Studio Perú" loading="lazy">
+            </div>
+            <div>
+                <h2>¿Quiénes Somos?</h2>
+                <p>
+                    Vonvi Studio Perú es una empresa dedicada a la elaboración de productos personalizados,
+                    merchandising, papelería creativa e impresión digital para empresas, emprendimientos y eventos.
+                </p>
+                <p>
+                    Trabajamos con materiales de calidad y diseños exclusivos para brindar soluciones que
+                    fortalezcan la identidad de cada marca.
+                </p>
+                <div class="valores">
+                    <div>
+                        <i class="fas fa-award"></i>
+                        <h3>Calidad</h3>
+                        <p>Productos con excelentes acabados.</p>
+                    </div>
+                    <div>
+                        <i class="fas fa-lightbulb"></i>
+                        <h3>Creatividad</h3>
+                        <p>Diseños modernos e innovadores.</p>
+                    </div>
+                    <div>
+                        <i class="fas fa-handshake"></i>
+                        <h3>Compromiso</h3>
+                        <p>Cumplimos con cada entrega.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="mision-vision">
+        <div class="contenedor tarjetas-mv">
+            <div class="tarjeta">
+                <i class="fas fa-bullseye"></i>
+                <h2>Misión</h2>
+                <p>
+                    Brindar soluciones creativas mediante productos personalizados de alta calidad
+                    que generen valor para nuestros clientes.
+                </p>
+            </div>
+            <div class="tarjeta">
+                <i class="fas fa-eye"></i>
+                <h2>Visión</h2>
+                <p>
+                    Ser una empresa líder en merchandising y personalización, reconocida por la
+                    innovación, calidad y excelente servicio.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <section class="equipo">
+        <div class="contenedor">
+            <div class="titulo-seccion">
+                <span>Nuestro Equipo</span>
+                <h2>Personas que hacen posible cada proyecto</h2>
+            </div>
+            <div class="grid-equipo">
+                <div class="miembro">
+                    <img src="img/diseno.png" alt="Equipo de diseño" loading="lazy">
+                    <h3>Diseño</h3>
+                    <p>Creatividad e innovación.</p>
+                </div>
+                <div class="miembro">
+                    <img src="img/produccion.png" alt="Equipo de producción" loading="lazy">
+                    <h3>Producción</h3>
+                    <p>Calidad en cada detalle.</p>
+                </div>
+                <div class="miembro">
+                    <img src="img/atencion.png" alt="Equipo de atención al cliente" loading="lazy">
+                    <h3>Atención</h3>
+                    <p>Asesoría personalizada.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="logros">
+        <div class="contenedor">
+            <div class="titulo-seccion">
+                <span>Nuestros Logros</span>
+                <h2>¿Por qué elegir Vonvi Studio?</h2>
+            </div>
+            <div class="estadisticas-grid">
+                <div class="estadistica-item">
+                    <i class="fas fa-users"></i>
+                    <h3>+<span class="contador" data-numero="900">0</span></h3>
+                    <p>Clientes satisfechos</p>
+                </div>
+                <div class="estadistica-item">
+                    <i class="fas fa-box-open"></i>
+                    <h3>+<span class="contador" data-numero="1500">0</span></h3>
+                    <p>Pedidos entregados</p>
+                </div>
+                <div class="estadistica-item">
+                    <i class="fas fa-star"></i>
+                    <h3>5&#9733;</h3>
+                    <p>Calificación promedio</p>
+                </div>
+                <div class="estadistica-item">
+                    <i class="fas fa-award"></i>
+                    <h3><span class="contador" data-numero="100">0</span>%</h3>
+                    <p>Diseños personalizados</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="testimonios">
+        <div class="contenedor">
+            <div class="titulo-seccion">
+                <span>Opiniones</span>
+                <h2>Lo que dicen nuestros clientes</h2>
+            </div>
+            <div class="grid-testimonios">
+                <div class="testimonio">
+                    <img src="img/cliente1.jpg" alt="María Fernández, clienta" loading="lazy">
+                    <h3>María Fernández</h3>
+                    <p>Excelente atención y productos de gran calidad. Mis pedidos siempre llegan a tiempo.</p>
+                </div>
+                <div class="testimonio">
+                    <img src="img/cliente2.jpg" alt="Carlos Rojas, cliente" loading="lazy">
+                    <h3>Carlos Rojas</h3>
+                    <p>Muy buenos diseños y excelente servicio. Totalmente recomendado para empresas.</p>
+                </div>
+                <div class="testimonio">
+                    <img src="img/cliente3.jpg" alt="Ana Torres, clienta" loading="lazy">
+                    <h3>Ana Torres</h3>
+                    <p>Superaron mis expectativas. Los acabados fueron impecables.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="cta">
+        <div class="contenedor">
+            <div class="cta-contenido">
+                <h2>¿Listo para hacer crecer tu marca?</h2>
+                <p>
+                    Nuestro equipo está preparado para ayudarte a crear productos personalizados
+                    que representen tu negocio.
+                </p>
+                <a href="productos.html" class="btn-principal">Personalizar mi producto</a>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="contenedor">
+            <div class="footer-grid">
+
+                <div class="footer-col">
+                    <img src="img/logo.png" alt="Vonvi Studio Perú" class="logo-footer">
+                    <p>
+                        En Vonvi Studio Perú transformamos ideas en productos personalizados
+                        de alta calidad para empresas, emprendimientos y ocasiones especiales.
+                    </p>
+                    <div class="redes">
+                        <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                        <a href="#" aria-label="TikTok"><i class="fab fa-tiktok"></i></a>
+                        <a href="https://wa.me/51907100820" aria-label="WhatsApp"><i class="fab fa-whatsapp"></i></a>
+                    </div>
+                </div>
+
+                <div class="footer-col">
+                    <h3>Enlaces</h3>
+                    <ul>
+                        <li><a href="index.html">Inicio</a></li>
+                        <li><a href="nosotros.html">Nosotros</a></li>
+                        <li><a href="productos.html">Productos</a></li>
+                        <li><a href="servicios.html">Servicios</a></li>
+                        <li><a href="videos.html">Videos</a></li>
+                        <li><a href="contacto.html">Contacto</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-col">
+                    <h3>Mi cuenta</h3>
+                    <ul>
+                        <li><a href="login.html">Iniciar sesión</a></li>
+                        <li><a href="registro.html">Crear cuenta</a></li>
+                        <li><a href="cuenta.html">Mis pedidos</a></li>
+                        <li><a href="carrito.html">Mi carrito</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-col">
+                    <h3>Contáctanos</h3>
+                    <p><i class="fas fa-location-dot"></i> Chorrillos, ref. Parque Belén - Lima, Perú</p>
+                    <p><i class="fas fa-phone"></i> +51 907 100 820</p>
+                    <p><i class="fas fa-envelope"></i> vonvistudioperu@gmail.com</p>
+                    <p><i class="fas fa-clock"></i> Lun - Sáb | 8:00 am - 6:00 pm</p>
+                </div>
+
+            </div>
+
+            <hr>
+
+            <div class="footer-bottom">
+                <p>&copy; <span id="anio"></span> Vonvi Studio Perú | Todos los derechos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <a href="https://wa.me/51907100820" class="whatsapp" target="_blank" rel="noopener" aria-label="Escríbenos por WhatsApp">
+        <i class="fab fa-whatsapp"></i>
+    </a>
+
+    <button id="btnTop" type="button" aria-label="Volver arriba">
+        <i class="fas fa-chevron-up"></i>
+    </button>
+
+    <script src="JS/api.js"></script>
+    <script src="JS/comun.js"></script>
+
+</body>
+
+</html>
