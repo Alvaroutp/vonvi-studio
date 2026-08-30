@@ -1,0 +1,38 @@
+services:
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+       #Se ejecutan en orden al crear el contenedor por primera vez:
+      #crean la base, las 8 tablas y cargan categorías/productos de prueba.
+      - ./backend/sql/base_datos.sql:/docker-entrypoint-initdb.d/1_base_datos.sql
+      - ./backend/sql/datos.sql:/docker-entrypoint-initdb.d/2_datos.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-p${DB_PASSWORD}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      PUERTO: 3000
+      DB_HOST: mysql
+      DB_USER: root
+      DB_PASSWORD: vonvi123
+      DB_NAME: vonvi_studio
+    depends_on:
+      mysql:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  mysql_data:
