@@ -27,7 +27,7 @@ services:
       PUERTO: 3000
       DB_HOST: mysql
       DB_USER: root
-      DB_PASSWORD: vonvi123
+      DB_PASSWORD: ${DB_PASSWORD}
       DB_NAME: vonvi_studio
     depends_on:
       mysql:
