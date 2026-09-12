@@ -440,51 +440,235 @@ const Admin = {
     },
 
     /* =================================================================
-       PRODUCTOS
+       CATÁLOGO  ·  categorías › productos › atributos › detalles
+       =================================================================
+       Cada nivel se dibuja dentro de #contenidoAdmin. No hay recarga
+       de página: solo cambia lo que hay dentro de ese contenedor.
        ================================================================= */
 
+
+    catCategoria: null,   // categoría en la que estamos metidos
+    catProducto: null,    // producto en el que estamos metidos
+
+    // Punto de entrada. Lo llama Admin.iniciar('productos')
     async productos() {
-        const zona = document.getElementById('contenidoAdmin');
-        U.cargando(zona, 'Cargando productos...');
+        this.verCategorias();
+    },
 
+    zona() {
+        return document.getElementById('contenidoAdmin');
+    },
+
+
+    /* =================================================================
+       MIGAS DE PAN
+       ================================================================= */
+    migas(nivel) {
+        const partes = [];
+
+        if (nivel === 'categorias') {
+            partes.push('<span class="actual">Categorías</span>');
+        } else {
+            partes.push('<button type="button" data-ir="categorias">Categorías</button>');
+        }
+
+        if (this.catCategoria && nivel !== 'categorias') {
+            partes.push('<i class="fa-solid fa-chevron-right" style="font-size:.7rem"></i>');
+            if (nivel === 'productos') {
+                partes.push(`<span class="actual">${U.esc(this.catCategoria.nombre)}</span>`);
+            } else {
+                partes.push(`<button type="button" data-ir="productos">${U.esc(this.catCategoria.nombre)}</button>`);
+            }
+        }
+
+        if (this.catProducto && nivel === 'producto') {
+            partes.push('<i class="fa-solid fa-chevron-right" style="font-size:.7rem"></i>');
+            partes.push(`<span class="actual">${U.esc(this.catProducto.nombre)}</span>`);
+        }
+
+        return `<div class="migas">${partes.join('')}</div>`;
+    },
+
+    conectarMigas() {
+        this.zona().querySelectorAll('[data-ir]').forEach((b) => {
+            b.addEventListener('click', () => {
+                if (b.dataset.ir === 'categorias') this.verCategorias();
+                if (b.dataset.ir === 'productos') this.verProductos(this.catCategoria);
+            });
+        });
+    },
+
+
+    /* =================================================================
+       NIVEL 1 · CATEGORÍAS
+       ================================================================= */
+    async verCategorias() {
+        this.catCategoria = null;
+        this.catProducto = null;
+
+        const zona = this.zona();
+        U.cargando(zona, 'Cargando categorías...');
+
+        let r;
         try {
-            const [rp, rc] = await Promise.all([
-                API.get('/admin/productos'),
-                API.get('/admin/categorias'),
-            ]);
+            r = await API.get('/admin/categorias');
+        } catch (e) {
+            U.vacio(zona, 'fa-solid fa-plug-circle-xmark', 'No se pudo cargar', e.message);
+            return;
+        }
 
-            zona.innerHTML = `
-                <div class="cabecera-seccion">
-                    <div>
-                        <h2>Productos</h2>
-                        <p class="sub">${rp.total} productos en ${rc.categorias.length} categorías</p>
-                    </div>
-                    <button type="button" class="btn-principal" id="btnNuevoProducto">
-                        <i class="fa-solid fa-plus"></i> Nuevo producto
-                    </button>
+        zona.innerHTML = `
+            ${this.migas('categorias')}
+
+            <div class="cabecera-seccion">
+                <div>
+                    <h2>Categorías</h2>
+                    <p class="sub">${r.total} categoría(s). Entra a una para ver sus productos.</p>
                 </div>
+                <button type="button" class="btn-principal" data-nueva>
+                    <i class="fa-solid fa-plus"></i> Nueva categoría
+                </button>
+            </div>
 
+            ${r.total === 0 ? `
+                <div class="estado-vacio">
+                    <i class="fa-solid fa-folder-open"></i>
+                    <h3>Todavía no hay categorías</h3>
+                    <p>Crea la primera para empezar a cargar productos.</p>
+                </div>` : `
                 <table class="tabla-admin">
                     <thead>
-                        <tr>
-                            <th>Producto</th><th>Categoría</th><th>Precio</th>
-                            <th>Mínimo</th><th>Opciones</th><th>Estado</th><th></th>
-                        </tr>
+                        <tr><th>Categoría</th><th>Productos</th><th>Estado</th><th></th></tr>
                     </thead>
                     <tbody>
-                        ${rp.productos.map((p) => `
-                            <tr class="${p.activo ? '' : 'inactiva'}">
+                        ${r.categorias.map((c) => `
+                            <tr class="fila-clic ${c.activo ? '' : 'inactiva'}" data-entrar="${c.id}">
                                 <td>
-                                    <strong>${U.esc(p.nombre)}</strong>
-                                    <small>${U.esc(p.slug)}</small>
+                                    <strong>${U.esc(c.nombre)}</strong>
+                                    <small>${U.esc(c.slug)}</small>
                                 </td>
-                                <td>${U.esc(p.categoria)}</td>
+                                <td>${c.total_productos}</td>
                                 <td>
-                                    ${U.soles(p.precio_base)}
-                                    ${p.unidad_medida === 'm2' ? '<small>por m²</small>' : ''}
+                                    <span class="pastilla-estado ${c.activo ? 'si' : 'no'}">
+                                        ${c.activo ? 'Activa' : 'Inactiva'}
+                                    </span>
                                 </td>
-                                <td>${p.cantidad_minima} u.</td>
+                                <td class="acciones-fila">
+                                    <button type="button" title="Editar" data-editar="${c.id}">
+                                        <i class="fa-solid fa-pen"></i>
+                                    </button>
+                                    <button type="button" title="Borrar" data-borrar-cat="${c.id}">
+                                        <i class="fa-regular fa-trash-can"></i>
+                                    </button>
+                                </td>
+                            </tr>`).join('')}
+                    </tbody>
+                </table>`}`;
+
+        this.conectarMigas();
+
+        zona.querySelector('[data-nueva]').addEventListener('click', () => this.formCategoria(null));
+
+        zona.querySelectorAll('[data-entrar]').forEach((fila) => {
+            fila.addEventListener('click', (ev) => {
+                if (ev.target.closest('button')) return;   // los botones no navegan
+                const c = r.categorias.find((x) => String(x.id) === fila.dataset.entrar);
+                this.verProductos(c);
+            });
+        });
+
+        zona.querySelectorAll('[data-editar]').forEach((b) => {
+            b.addEventListener('click', (ev) => {
+                ev.stopPropagation();
+                this.formCategoria(r.categorias.find((x) => String(x.id) === b.dataset.editar));
+            });
+        });
+
+        zona.querySelectorAll('[data-borrar-cat]').forEach((b) => {
+            b.addEventListener('click', async (ev) => {
+                ev.stopPropagation();
+                const c = r.categorias.find((x) => String(x.id) === b.dataset.borrarCat);
+                if (!confirm(`¿Borrar la categoría "${c.nombre}"?`)) return;
+                try {
+                    await API.borrar(`/admin/categorias/${c.id}`);
+                    U.aviso('Categoría eliminada');
+                    this.verCategorias();
+                } catch (e) { U.aviso(e.message, 'error'); }
+            });
+        });
+    },
+
+
+    formCategoria(categoria) {
+        const nueva = !categoria;
+
+        this.modal({
+            titulo: nueva ? 'Nueva categoría' : 'Editar categoría',
+            campos: [
+                { id: 'nombre', etiqueta: 'Nombre', valor: categoria ? categoria.nombre : '', requerido: true },
+                { id: 'descripcion', etiqueta: 'Descripción', tipo: 'textarea', valor: categoria ? (categoria.descripcion || '') : '' },
+                { id: 'imagen', etiqueta: 'Ruta de la imagen', valor: categoria ? (categoria.imagen || '') : '', placeholder: 'img/polos.jpg' },
+                { id: 'icono', etiqueta: 'Icono de Font Awesome', valor: categoria ? (categoria.icono || '') : '', placeholder: 'fa-solid fa-shirt' },
+            ],
+            guardar: async (datos) => {
+                if (nueva) await API.post('/admin/categorias', datos);
+                else await API.put(`/admin/categorias/${categoria.id}`, datos);
+                U.aviso(nueva ? 'Categoría creada' : 'Categoría actualizada');
+                this.verCategorias();
+            },
+        });
+    },
+
+
+    /* =================================================================
+       NIVEL 2 · PRODUCTOS DE UNA CATEGORÍA
+       ================================================================= */
+    async verProductos(categoria) {
+        this.catCategoria = categoria;
+        this.catProducto = null;
+
+        const zona = this.zona();
+        U.cargando(zona, 'Cargando productos...');
+
+        let r;
+        try {
+            r = await API.get(`/admin/productos?categoria=${categoria.id}`);
+        } catch (e) {
+            U.vacio(zona, 'fa-solid fa-plug-circle-xmark', 'No se pudo cargar', e.message);
+            return;
+        }
+
+        zona.innerHTML = `
+            ${this.migas('productos')}
+
+            <div class="cabecera-seccion">
+                <div>
+                    <h2>${U.esc(categoria.nombre)}</h2>
+                    <p class="sub">${r.total} producto(s). Entra a uno para armar sus opciones.</p>
+                </div>
+                <button type="button" class="btn-principal" data-nuevo>
+                    <i class="fa-solid fa-plus"></i> Nuevo producto
+                </button>
+            </div>
+
+            ${r.total === 0 ? `
+                <div class="estado-vacio">
+                    <i class="fa-solid fa-box-open"></i>
+                    <h3>Esta categoría todavía no tiene productos</h3>
+                    <p>Crea el primero con su nombre y su precio base.</p>
+                </div>` : `
+                <table class="tabla-admin">
+                    <thead>
+                        <tr><th>Producto</th><th>Precio base</th><th>Atributos</th>
+                            <th>Mínimo</th><th>Estado</th><th></th></tr>
+                    </thead>
+                    <tbody>
+                        ${r.productos.map((p) => `
+                            <tr class="fila-clic ${p.activo ? '' : 'inactiva'}" data-entrar="${p.id}">
+                                <td><strong>${U.esc(p.nombre)}</strong><small>${U.esc(p.slug)}</small></td>
+                                <td>${U.soles(p.precio_base)}</td>
                                 <td>${p.total_atributos}</td>
+                                <td>${p.cantidad_minima} u.</td>
                                 <td>
                                     <span class="pastilla-estado ${p.activo ? 'si' : 'no'}">
                                         ${p.activo ? 'Activo' : 'Inactivo'}
@@ -498,171 +682,388 @@ const Admin = {
                                             data-alternar="${p.id}" data-activo="${p.activo}">
                                         <i class="fa-solid fa-power-off"></i>
                                     </button>
+                                    <button type="button" title="Borrar" data-borrar-prod="${p.id}">
+                                        <i class="fa-regular fa-trash-can"></i>
+                                    </button>
                                 </td>
                             </tr>`).join('')}
                     </tbody>
-                </table>
+                </table>`}`;
 
-                <h2 class="titulo-seccion-admin">Categorías</h2>
-                <table class="tabla-admin">
-                    <thead><tr><th>Categoría</th><th>Productos</th><th>Orden</th><th>Estado</th></tr></thead>
-                    <tbody>
-                        ${rc.categorias.map((c) => `
-                            <tr class="${c.activo ? '' : 'inactiva'}">
-                                <td><strong>${U.esc(c.nombre)}</strong><small>${U.esc(c.slug)}</small></td>
-                                <td>${c.total_productos}</td>
-                                <td>${c.orden}</td>
-                                <td>
-                                    <span class="pastilla-estado ${c.activo ? 'si' : 'no'}">
-                                        ${c.activo ? 'Activa' : 'Inactiva'}
-                                    </span>
-                                </td>
-                            </tr>`).join('')}
-                    </tbody>
-                </table>`;
+        this.conectarMigas();
 
-            zona.querySelectorAll('[data-alternar]').forEach((b) => {
-                b.addEventListener('click', async () => {
-                    try {
-                        await API.put(`/admin/productos/${b.dataset.alternar}`,
-                            { activo: b.dataset.activo !== '1' });
-                        U.aviso('Producto actualizado');
-                        this.productos();
-                    } catch (e) { U.aviso(e.message, 'error'); }
-                });
+        zona.querySelector('[data-nuevo]').addEventListener('click', () => this.formProducto(null));
+
+        zona.querySelectorAll('[data-entrar]').forEach((fila) => {
+            fila.addEventListener('click', (ev) => {
+                if (ev.target.closest('button')) return;
+                this.verProducto(Number(fila.dataset.entrar));
             });
+        });
 
-            zona.querySelectorAll('[data-editar]').forEach((b) => {
-                b.addEventListener('click', () => {
-                    const p = rp.productos.find((x) => String(x.id) === b.dataset.editar);
-                    this.formProducto(p, rc.categorias);
-                });
+        zona.querySelectorAll('[data-editar]').forEach((b) => {
+            b.addEventListener('click', (ev) => {
+                ev.stopPropagation();
+                this.formProducto(r.productos.find((x) => String(x.id) === b.dataset.editar));
             });
+        });
 
-            document.getElementById('btnNuevoProducto')
-                .addEventListener('click', () => this.formProducto(null, rc.categorias));
+        zona.querySelectorAll('[data-alternar]').forEach((b) => {
+            b.addEventListener('click', async (ev) => {
+                ev.stopPropagation();
+                try {
+                    await API.put(`/admin/productos/${b.dataset.alternar}`,
+                        { activo: b.dataset.activo !== '1' });
+                    U.aviso('Producto actualizado');
+                    this.verProductos(this.catCategoria);
+                } catch (e) { U.aviso(e.message, 'error'); }
+            });
+        });
 
-        } catch (e) {
-            U.vacio(zona, 'fa-solid fa-triangle-exclamation', 'Error', e.message);
-        }
+        zona.querySelectorAll('[data-borrar-prod]').forEach((b) => {
+            b.addEventListener('click', async (ev) => {
+                ev.stopPropagation();
+                const p = r.productos.find((x) => String(x.id) === b.dataset.borrarProd);
+                if (!confirm(`¿Borrar "${p.nombre}" con todos sus atributos y detalles?`)) return;
+                try {
+                    await API.borrar(`/admin/productos/${p.id}`);
+                    U.aviso('Producto eliminado');
+                    this.verProductos(this.catCategoria);
+                } catch (e) { U.aviso(e.message, 'error'); }
+            });
+        });
     },
 
-    formProducto(producto, categorias) {
+
+    formProducto(producto) {
         const nuevo = !producto;
+
+        this.modal({
+            titulo: nuevo ? 'Nuevo producto' : 'Editar producto',
+            campos: [
+                { id: 'nombre', etiqueta: 'Nombre', valor: producto ? producto.nombre : '', requerido: true },
+                { id: 'precioBase', etiqueta: 'Precio base (S/)', tipo: 'number', paso: '0.01',
+                  valor: producto ? producto.precio_base : '', requerido: true },
+                { id: 'descripcion', etiqueta: 'Descripción', tipo: 'textarea',
+                  valor: producto ? (producto.descripcion || '') : '' },
+                { id: 'cantidadMinima', etiqueta: 'Cantidad mínima', tipo: 'number',
+                  valor: producto ? producto.cantidad_minima : 1 },
+                { id: 'diasProduccion', etiqueta: 'Días de producción', tipo: 'number',
+                  valor: producto ? producto.dias_produccion : 3 },
+                { id: 'imagen', etiqueta: 'Ruta de la imagen',
+                  valor: producto ? (producto.imagen || '') : '', placeholder: 'img/polos.jpg' },
+            ],
+            guardar: async (datos) => {
+                datos.categoriaId = this.catCategoria.id;
+                if (nuevo) await API.post('/admin/productos', datos);
+                else await API.put(`/admin/productos/${producto.id}`, datos);
+                U.aviso(nuevo ? 'Producto creado' : 'Producto actualizado');
+                this.verProductos(this.catCategoria);
+            },
+        });
+    },
+
+
+    /* =================================================================
+       NIVEL 3 y 4 · ATRIBUTOS Y DETALLES DE UN PRODUCTO
+       ================================================================= */
+    async verProducto(productoId) {
+        const zona = this.zona();
+        U.cargando(zona, 'Cargando el producto...');
+
+        let r;
+        try {
+            r = await API.get(`/admin/productos/${productoId}/arbol`);
+        } catch (e) {
+            U.vacio(zona, 'fa-solid fa-plug-circle-xmark', 'No se pudo cargar', e.message);
+            return;
+        }
+
+        this.catProducto = r.producto;
+
+        zona.innerHTML = `
+            ${this.migas('producto')}
+
+            <div class="cab-producto">
+                <div>
+                    <h2>${U.esc(r.producto.nombre)}</h2>
+                    <p class="sub">Precio base del producto, antes de los recargos</p>
+                </div>
+                <div class="precio">${U.soles(r.producto.precio_base)}</div>
+            </div>
+
+            <div class="cabecera-seccion">
+                <div>
+                    <h2>Atributos</h2>
+                    <p class="sub">Cada atributo es una pregunta. Dentro van sus detalles con el recargo.</p>
+                </div>
+                <button type="button" class="btn-principal" data-nuevo-atributo>
+                    <i class="fa-solid fa-plus"></i> Nuevo atributo
+                </button>
+            </div>
+
+            ${r.atributos.length === 0 ? `
+                <div class="estado-vacio">
+                    <i class="fa-solid fa-sliders"></i>
+                    <h3>Este producto todavía no tiene atributos</h3>
+                    <p>Crea uno, por ejemplo Talla o Color.</p>
+                </div>` :
+                r.atributos.map((a) => this.pintarAtributo(a)).join('')}`;
+
+        this.conectarMigas();
+
+        zona.querySelector('[data-nuevo-atributo]')
+            .addEventListener('click', () => this.formAtributo());
+
+        zona.querySelectorAll('[data-borrar-atributo]').forEach((b) => {
+            b.addEventListener('click', async () => {
+                if (!confirm('¿Borrar este atributo y todos sus detalles?')) return;
+                try {
+                    await API.borrar(`/admin/atributos/${b.dataset.borrarAtributo}`);
+                    U.aviso('Atributo eliminado');
+                    this.verProducto(productoId);
+                } catch (e) { U.aviso(e.message, 'error'); }
+            });
+        });
+
+        zona.querySelectorAll('[data-nuevo-detalle]').forEach((b) => {
+            b.addEventListener('click', () => {
+                const a = r.atributos.find((x) => String(x.id) === b.dataset.nuevoDetalle);
+                this.formDetalle(a, null);
+            });
+        });
+
+        zona.querySelectorAll('[data-editar-detalle]').forEach((b) => {
+            b.addEventListener('click', () => {
+                const a = r.atributos.find((x) => String(x.id) === b.dataset.atributo);
+                const d = a.detalles.find((x) => String(x.id) === b.dataset.editarDetalle);
+                this.formDetalle(a, d);
+            });
+        });
+
+        zona.querySelectorAll('[data-borrar-detalle]').forEach((b) => {
+            b.addEventListener('click', async () => {
+                if (!confirm('¿Borrar este detalle?')) return;
+                try {
+                    await API.borrar(`/admin/detalles/${b.dataset.borrarDetalle}`);
+                    U.aviso('Detalle eliminado');
+                    this.verProducto(productoId);
+                } catch (e) { U.aviso(e.message, 'error'); }
+            });
+        });
+    },
+
+
+    pintarAtributo(a) {
+        const NOMBRE_TIPO = { select: 'lista', color: 'color', radio: 'botones' };
+
+        return `
+            <div class="atributo">
+
+                <div class="atributo-cab">
+                    <div>
+                        <h3>${U.esc(a.nombre)}</h3>
+                        <span class="tipo">${NOMBRE_TIPO[a.tipo] || a.tipo}</span>
+                    </div>
+                    <div class="atributo-acciones">
+                        <button type="button" class="borrar" title="Borrar atributo"
+                                data-borrar-atributo="${a.id}">
+                            <i class="fa-regular fa-trash-can"></i>
+                        </button>
+                    </div>
+                </div>
+
+                ${a.detalles.length === 0
+                    ? '<p class="sin-detalles">Sin detalles todavía.</p>'
+                    : a.detalles.map((d) => `
+                        <div class="detalle">
+                            ${d.color_hex
+                                ? `<span class="muestra" style="background:${U.esc(d.color_hex)}"></span>`
+                                : ''}
+                            <span class="valor">${U.esc(d.valor)}</span>
+                            <span class="recargo ${Number(d.recargo) === 0 ? 'cero' : ''}">
+                                ${Number(d.recargo) === 0 ? 'sin recargo' : '+ ' + U.soles(d.recargo)}
+                            </span>
+                            <span class="acciones">
+                                <button type="button" title="Editar"
+                                        data-editar-detalle="${d.id}" data-atributo="${a.id}">
+                                    <i class="fa-solid fa-pen"></i>
+                                </button>
+                                <button type="button" class="borrar" title="Borrar"
+                                        data-borrar-detalle="${d.id}">
+                                    <i class="fa-regular fa-trash-can"></i>
+                                </button>
+                            </span>
+                        </div>`).join('')}
+
+                <div class="pie-atributo">
+                    <button type="button" class="btn-texto" data-nuevo-detalle="${a.id}">
+                        <i class="fa-solid fa-plus"></i> Nuevo detalle
+                    </button>
+                </div>
+
+            </div>`;
+    },
+
+
+    formAtributo() {
+        this.modal({
+            titulo: 'Nuevo atributo',
+            campos: [
+                { id: 'nombre', etiqueta: 'Nombre', placeholder: 'Talla, Color, Capacidad...',
+                  valor: '', requerido: true },
+                { id: 'tipo', etiqueta: 'Cómo se muestra al cliente', tipo: 'select', valor: 'select',
+                  opciones: [
+                      { valor: 'select', texto: 'Lista desplegable' },
+                      { valor: 'color', texto: 'Círculos de color' },
+                      { valor: 'radio', texto: 'Botones' },
+                  ] },
+            ],
+            guardar: async (datos) => {
+                datos.productoId = this.catProducto.id;
+                await API.post('/admin/atributos', datos);
+                U.aviso('Atributo creado');
+                this.verProducto(this.catProducto.id);
+            },
+        });
+    },
+
+
+    formDetalle(atributo, detalle) {
+        const nuevo = !detalle;
+
+        const campos = [
+            { id: 'valor', etiqueta: 'Valor', placeholder: 'M, Rojo, 500 ml...',
+              valor: detalle ? detalle.valor : '', requerido: true },
+            { id: 'recargo', etiqueta: 'Recargo (S/)', tipo: 'number', paso: '0.01',
+              valor: detalle ? detalle.recargo : 0 },
+        ];
+
+        // El color solo se pregunta si el atributo es de tipo color
+        if (atributo.tipo === 'color') {
+            campos.push({ id: 'colorHex', etiqueta: 'Color', tipo: 'color',
+                          valor: detalle ? (detalle.color_hex || '#000000') : '#000000' });
+        }
+
+        this.modal({
+            titulo: nuevo ? `Nuevo detalle de ${atributo.nombre}` : 'Editar detalle',
+            campos,
+            guardar: async (datos) => {
+                if (nuevo) {
+                    datos.atributoId = atributo.id;
+                    await API.post('/admin/detalles', datos);
+                } else {
+                    await API.put(`/admin/detalles/${detalle.id}`, datos);
+                }
+                U.aviso(nuevo ? 'Detalle creado' : 'Detalle actualizado');
+                this.verProducto(this.catProducto.id);
+            },
+        });
+    },
+
+
+    /* =================================================================
+       MODAL GENÉRICO
+       Recibe una lista de campos y devuelve un objeto con lo escrito.
+       Así los cuatro formularios usan el mismo código.
+       ================================================================= */
+    modal({ titulo, campos, guardar }) {
         const capa = document.createElement('div');
         capa.className = 'capa-modal';
+
         capa.innerHTML = `
             <div class="modal">
+
                 <div class="modal-cabecera">
-                    <h2>${nuevo ? 'Nuevo producto' : 'Editar producto'}</h2>
+                    <h2>${U.esc(titulo)}</h2>
                     <button type="button" class="cerrar-modal">&times;</button>
                 </div>
-                <form id="formProducto">
-                    <div class="campo">
-                        <label for="mNombre">Nombre</label>
-                        <input type="text" id="mNombre" value="${U.esc(producto ? producto.nombre : '')}" required>
-                    </div>
-                    <div class="campo">
-                        <label for="mCategoria">Categoría</label>
-                        <select id="mCategoria" required>
-                            ${categorias.map((c) => `
-                                <option value="${c.id}" ${producto && producto.categoria_id === c.id ? 'selected' : ''}>
-                                    ${U.esc(c.nombre)}
-                                </option>`).join('')}
-                        </select>
-                    </div>
-                    <div class="campo">
-                        <label for="mDescripcion">Descripción</label>
-                        <textarea id="mDescripcion" rows="2">${U.esc(producto ? (producto.descripcion || '') : '')}</textarea>
-                    </div>
-                    <div class="fila-campos">
+
+                <form id="formCatalogo">
+                    ${campos.map((c) => `
                         <div class="campo">
-                            <label for="mPrecio">Precio base (S/)</label>
-                            <input type="number" id="mPrecio" step="0.01" min="0"
-                                   value="${producto ? producto.precio_base : ''}" required>
-                        </div>
-                        <div class="campo">
-                            <label for="mUnidad">Se cobra por</label>
-                            <select id="mUnidad">
-                                <option value="unidad" ${producto && producto.unidad_medida === 'unidad' ? 'selected' : ''}>Unidad</option>
-                                <option value="m2" ${producto && producto.unidad_medida === 'm2' ? 'selected' : ''}>Metro cuadrado</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="fila-campos">
-                        <div class="campo">
-                            <label for="mMinimo">Cantidad mínima</label>
-                            <input type="number" id="mMinimo" min="1" value="${producto ? producto.cantidad_minima : 1}">
-                        </div>
-                        <div class="campo">
-                            <label for="mDias">Días de producción</label>
-                            <input type="number" id="mDias" min="1" value="${producto ? producto.dias_produccion : 3}">
-                        </div>
-                    </div>
-                    <div class="campo">
-                        <label for="mImagen">Ruta de la imagen</label>
-                        <input type="text" id="mImagen" placeholder="img/polos.jpg"
-                               value="${U.esc(producto ? (producto.imagen || '') : '')}">
-                    </div>
-                    <label class="check">
-                        <input type="checkbox" id="mEstampa" ${!producto || producto.estampa_obligatoria ? 'checked' : ''}>
-                        <span>El cliente debe subir su diseño obligatoriamente</span>
-                    </label>
-                    <label class="check">
-                        <input type="checkbox" id="mDestacado" ${producto && producto.destacado ? 'checked' : ''}>
-                        <span>Mostrar como destacado en la portada</span>
-                    </label>
-                    <p id="errorModal" class="error-general" hidden></p>
+                            <label for="c_${c.id}">${U.esc(c.etiqueta)}</label>
+                            ${this.campo(c)}
+                        </div>`).join('')}
+
+                    <p id="errorCatalogo" class="error-general" hidden></p>
+
                     <div class="modal-acciones">
                         <button type="button" class="btn-secundario cerrar-modal">Cancelar</button>
-                        <button type="submit" class="btn-principal">${nuevo ? 'Crear' : 'Guardar'}</button>
+                        <button type="submit" class="btn-principal">Guardar</button>
                     </div>
-                    ${nuevo ? `
-                        <p class="nota-modal">
-                            <i class="fa-solid fa-circle-info"></i>
-                            Las opciones (talla, color...) se asignan después desde la base de datos
-                            o duplicando un producto parecido.
-                        </p>` : ''}
                 </form>
+
             </div>`;
 
         document.body.appendChild(capa);
         requestAnimationFrame(() => capa.classList.add('visible'));
 
-        const cerrar = () => { capa.classList.remove('visible'); setTimeout(() => capa.remove(), 220); };
-        capa.querySelectorAll('.cerrar-modal').forEach((b) => b.addEventListener('click', cerrar));
-        capa.addEventListener('click', (e) => { if (e.target === capa) cerrar(); });
+        const cerrar = () => {
+            capa.classList.remove('visible');
+            setTimeout(() => capa.remove(), 220);
+        };
 
-        capa.querySelector('#formProducto').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const error = capa.querySelector('#errorModal');
+        capa.querySelectorAll('.cerrar-modal').forEach((b) => b.addEventListener('click', cerrar));
+        capa.addEventListener('click', (ev) => { if (ev.target === capa) cerrar(); });
+
+        const primero = capa.querySelector('input, select, textarea');
+        if (primero) primero.focus();
+
+        capa.querySelector('#formCatalogo').addEventListener('submit', async (ev) => {
+            ev.preventDefault();
+
+            const error = capa.querySelector('#errorCatalogo');
             error.hidden = true;
 
-            const datos = {
-                nombre: capa.querySelector('#mNombre').value.trim(),
-                categoriaId: Number(capa.querySelector('#mCategoria').value),
-                descripcion: capa.querySelector('#mDescripcion').value.trim(),
-                precioBase: Number(capa.querySelector('#mPrecio').value),
-                unidadMedida: capa.querySelector('#mUnidad').value,
-                cantidadMinima: Number(capa.querySelector('#mMinimo').value),
-                diasProduccion: Number(capa.querySelector('#mDias').value),
-                imagen: capa.querySelector('#mImagen').value.trim() || null,
-                estampaObligatoria: capa.querySelector('#mEstampa').checked,
-                destacado: capa.querySelector('#mDestacado').checked,
-            };
+            const datos = {};
+            campos.forEach((c) => {
+                const el = capa.querySelector('#c_' + c.id);
+                datos[c.id] = c.tipo === 'number' ? Number(el.value) : el.value.trim();
+            });
 
             try {
-                if (nuevo) await API.post('/admin/productos', datos);
-                else await API.put(`/admin/productos/${producto.id}`, datos);
-                U.aviso(nuevo ? 'Producto creado' : 'Producto actualizado');
+                await guardar(datos);
                 cerrar();
-                this.productos();
             } catch (err) {
                 error.textContent = err.message;
                 error.hidden = false;
             }
         });
     },
+
+
+    campo(c) {
+        const id = 'c_' + c.id;
+        const req = c.requerido ? 'required' : '';
+
+        if (c.tipo === 'textarea') {
+            return `<textarea id="${id}" rows="3" ${req}>${U.esc(c.valor)}</textarea>`;
+        }
+
+        if (c.tipo === 'select') {
+            return `<select id="${id}">
+                ${c.opciones.map((o) => `
+                    <option value="${o.valor}" ${o.valor === c.valor ? 'selected' : ''}>
+                        ${U.esc(o.texto)}
+                    </option>`).join('')}
+            </select>`;
+        }
+
+        if (c.tipo === 'number') {
+            return `<input type="number" id="${id}" min="0" step="${c.paso || '1'}"
+                           value="${U.esc(c.valor)}" ${req}>`;
+        }
+
+        if (c.tipo === 'color') {
+            return `<input type="color" id="${id}" value="${U.esc(c.valor)}"
+                           style="height:44px;padding:4px">`;
+        }
+
+        return `<input type="text" id="${id}" value="${U.esc(c.valor)}"
+                       placeholder="${U.esc(c.placeholder || '')}" ${req}>`;
+    },
+
 
     /* =================================================================
        COTIZACIONES

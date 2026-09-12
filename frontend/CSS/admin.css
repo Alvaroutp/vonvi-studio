@@ -834,3 +834,52 @@ ul { list-style: none; }
     .datos-admin dt { margin-top: 10px; }
     .fila-barra { grid-template-columns: 100px 1fr 30px; font-size: 12px; }
 }
+/* =====================================================================
+   CATÁLOGO DEL PANEL
+   Vistas de categorías, productos y el árbol de atributos y detalles.
+   ===================================================================== */
+
+.migas { display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+         margin-bottom:18px; font-size:.9rem; color:var(--gris); }
+.migas button { background:none; border:0; cursor:pointer; color:var(--rosa);
+                font-weight:600; font-size:.9rem; padding:0; }
+.migas button:hover { text-decoration:underline; }
+.migas span.actual { color:var(--tinta); font-weight:600; }
+
+.fila-clic { cursor:pointer; }
+.fila-clic:hover { background:var(--rosa-claro); }
+
+.cab-producto { background:var(--panel); border-radius:16px; padding:22px 24px;
+                box-shadow:var(--sombra); margin-bottom:22px;
+                display:flex; justify-content:space-between; align-items:center; gap:16px; }
+.cab-producto h2 { font-size:1.3rem; margin-bottom:4px; }
+.cab-producto .precio { font-size:1.6rem; font-weight:700; color:var(--rosa); }
+
+.atributo { background:var(--panel); border-radius:16px; box-shadow:var(--sombra);
+            margin-bottom:16px; overflow:hidden; }
+.atributo-cab { display:flex; justify-content:space-between; align-items:center;
+                gap:12px; padding:16px 22px; border-bottom:1px solid var(--linea); }
+.atributo-cab h3 { font-size:1.05rem; }
+.atributo-cab .tipo { font-size:.72rem; text-transform:uppercase; letter-spacing:.5px;
+                      color:var(--gris-claro); font-weight:600; }
+.atributo-acciones { display:flex; gap:8px; }
+
+.detalle { display:flex; align-items:center; gap:14px; padding:12px 22px;
+           border-bottom:1px solid var(--linea); }
+.detalle:last-child { border-bottom:0; }
+.detalle .muestra { width:20px; height:20px; border-radius:50%;
+                    border:1px solid var(--linea); flex-shrink:0; }
+.detalle .valor { flex:1; font-weight:500; }
+.detalle .recargo { font-weight:600; color:var(--tinta); }
+.detalle .recargo.cero { color:var(--gris-claro); font-weight:400; }
+.detalle .acciones { display:flex; gap:6px; }
+.detalle button, .atributo-acciones button {
+    background:none; border:1px solid var(--linea); border-radius:8px;
+    width:30px; height:30px; cursor:pointer; color:var(--gris); }
+.detalle button:hover, .atributo-acciones button:hover {
+    border-color:var(--rosa); color:var(--rosa); }
+.detalle button.borrar:hover, .atributo-acciones button.borrar:hover {
+    border-color:var(--error); color:var(--error); }
+
+.sin-detalles { padding:16px 22px; color:var(--gris-claro); font-size:.9rem; }
+.pie-atributo { padding:12px 22px; }

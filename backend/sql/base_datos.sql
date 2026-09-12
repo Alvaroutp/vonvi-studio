@@ -1,20 +1,7 @@
--- =====================================================================
---  VONVI STUDIO PERÚ  ·  Base de datos
---  Paso 0.1 · Crea la base de datos y las 8 tablas
---
---  Cómo ejecutarlo:
---    phpMyAdmin → pestaña Importar → elegir este archivo → Continuar
--- =====================================================================
-
 DROP DATABASE IF EXISTS vonvi_studio;
 CREATE DATABASE vonvi_studio CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE vonvi_studio;
 
-
--- =====================================================================
---  TABLA 1 · usuarios
---  Las cuentas de los clientes y del administrador.
--- =====================================================================
 CREATE TABLE usuarios (
     id         INT AUTO_INCREMENT PRIMARY KEY,
     nombres    VARCHAR(80)  NOT NULL,
@@ -27,11 +14,6 @@ CREATE TABLE usuarios (
     creado_en  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-
--- =====================================================================
---  TABLA 2 · categorias
---  Polos, Tazas, Stickers... Lo primero que ve el cliente.
--- =====================================================================
 CREATE TABLE categorias (
     id          INT AUTO_INCREMENT PRIMARY KEY,
     nombre      VARCHAR(80)  NOT NULL,
@@ -42,11 +24,6 @@ CREATE TABLE categorias (
     activo      TINYINT(1)   NOT NULL DEFAULT 1
 );
 
-
--- =====================================================================
---  TABLA 3 · productos
---  El tipo dentro de la categoría: Polo Básico, Polo Oversize...
--- =====================================================================
 CREATE TABLE productos (
     id              INT AUTO_INCREMENT PRIMARY KEY,
     categoria_id    INT           NOT NULL,
@@ -63,12 +40,6 @@ CREATE TABLE productos (
     FOREIGN KEY (categoria_id) REFERENCES categorias(id)
 );
 
-
--- =====================================================================
---  TABLA 4 · atributos
---  Las preguntas que el configurador le hace a CADA producto.
---  Ejemplo, para el Polo Oversize:  Talla, Color, Técnica de estampado
--- =====================================================================
 CREATE TABLE atributos (
     id          INT AUTO_INCREMENT PRIMARY KEY,
     producto_id INT         NOT NULL,
@@ -85,12 +56,6 @@ CREATE TABLE atributos (
     FOREIGN KEY (producto_id) REFERENCES productos(id) ON DELETE CASCADE
 );
 
-
--- =====================================================================
---  TABLA 5 · atributo_valores
---  Las respuestas posibles de cada atributo, con su recargo.
---  Ejemplo, para el atributo "Talla":  XS, S, M, L, XL, XXL (+S/ 5)
--- =====================================================================
 CREATE TABLE atributo_valores (
     id          INT AUTO_INCREMENT PRIMARY KEY,
     atributo_id INT           NOT NULL,
@@ -102,11 +67,6 @@ CREATE TABLE atributo_valores (
     FOREIGN KEY (atributo_id) REFERENCES atributos(id) ON DELETE CASCADE
 );
 
-
--- =====================================================================
---  TABLA 6 · pedidos
---  Una fila por compra.
--- =====================================================================
 CREATE TABLE pedidos (
     id         INT AUTO_INCREMENT PRIMARY KEY,
     codigo     VARCHAR(20) NOT NULL UNIQUE,    -- VONVI-2026-000001
@@ -159,16 +119,6 @@ CREATE TABLE pedidos (
     FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
 );
 
-
--- =====================================================================
---  TABLA 7 · pedido_items
---  Los productos de cada pedido.
---
---  IMPORTANTE: guarda una COPIA del nombre y del precio.
---  Si mañana el polo sube de S/ 45 a S/ 50 y aquí solo estuviera el id,
---  al abrir una compra vieja diría S/ 50 y el historial estaría mintiendo
---  sobre lo que el cliente realmente pagó.
--- =====================================================================
 CREATE TABLE pedido_items (
     id          INT AUTO_INCREMENT PRIMARY KEY,
     pedido_id   INT NOT NULL,
@@ -191,11 +141,6 @@ CREATE TABLE pedido_items (
     FOREIGN KEY (producto_id) REFERENCES productos(id) ON DELETE SET NULL
 );
 
-
--- =====================================================================
---  TABLA 8 · cotizaciones
---  El formulario de contacto.html
--- =====================================================================
 CREATE TABLE cotizaciones (
     id         INT AUTO_INCREMENT PRIMARY KEY,
     usuario_id INT NULL,                       -- NULL si no tenía sesión
@@ -212,9 +157,3 @@ CREATE TABLE cotizaciones (
 
     FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE SET NULL
 );
-
-
--- =====================================================================
---  Comprobación: debe mostrar las 8 tablas
--- =====================================================================
-SHOW TABLES;

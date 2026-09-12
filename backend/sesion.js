@@ -28,4 +28,10 @@ async function requiereSesion(req, res, next) {
     }
 }
 
-module.exports = { requiereSesion };
+function requiereAdmin(req, res, next) {
+    if (req.usuario.rol !== 'admin') {
+        return res.status(403).json({ ok: false, mensaje: 'No tienes permiso para esto' });
+    }
+    next();
+}
+module.exports = { requiereSesion, requiereAdmin };
