@@ -1,11 +1,3 @@
-/* =====================================================================
-   admin.js  ·  Panel de administración
-   =====================================================================
-   El control real de acceso está en el BACKEND. Este guard solo evita
-   que un usuario común vea una pantalla rota: aunque alguien lo saltee,
-   la API le responderá 403 a cada petición.
-   ===================================================================== */
-
 const Admin = {
 
     estados: [],
@@ -712,9 +704,9 @@ const Admin = {
             b.addEventListener('click', async (ev) => {
                 ev.stopPropagation();
                 try {
-                    await API.put(`/admin/productos/${b.dataset.alternar}`,
-                        { activo: b.dataset.activo !== '1' });
-                    U.aviso('Producto actualizado');
+                    const accion = b.dataset.activo === '1' ? 'desactivar' : 'activar';
+                    await API.put(`/admin/productos/${b.dataset.alternar}/${accion}`);
+                    U.aviso(accion === 'activar' ? 'Producto activado' : 'Producto desactivado');
                     this.verProductos(this.catCategoria);
                 } catch (e) { U.aviso(e.message, 'error'); }
             });
@@ -815,6 +807,12 @@ const Admin = {
         zona.querySelector('[data-nuevo-atributo]')
             .addEventListener('click', () => this.formAtributo());
 
+        zona.querySelectorAll('[data-editar-atributo]').forEach((b) => {
+            b.addEventListener('click', () => {
+                this.formAtributo(r.atributos.find((x) => String(x.id) === b.dataset.editarAtributo));
+            });
+        });
+
         zona.querySelectorAll('[data-borrar-atributo]').forEach((b) => {
             b.addEventListener('click', async () => {
                 if (!confirm('¿Borrar este atributo y todos sus detalles?')) return;
@@ -866,6 +864,10 @@ const Admin = {
                         <span class="tipo">${NOMBRE_TIPO[a.tipo] || a.tipo}</span>
                     </div>
                     <div class="atributo-acciones">
+                        <button type="button" title="Editar atributo"
+                                data-editar-atributo="${a.id}">
+                            <i class="fa-solid fa-pen"></i>
+                        </button>
                         <button type="button" class="borrar" title="Borrar atributo"
                                 data-borrar-atributo="${a.id}">
                             <i class="fa-regular fa-trash-can"></i>
@@ -906,13 +908,16 @@ const Admin = {
     },
 
 
-    formAtributo() {
+    formAtributo(atributo) {
+        const nuevo = !atributo;
+
         this.modal({
-            titulo: 'Nuevo atributo',
+            titulo: nuevo ? 'Nuevo atributo' : 'Editar atributo',
             campos: [
                 { id: 'nombre', etiqueta: 'Nombre', placeholder: 'Talla, Color, Capacidad...',
-                  valor: '', requerido: true },
-                { id: 'tipo', etiqueta: 'Cómo se muestra al cliente', tipo: 'select', valor: 'select',
+                  valor: atributo ? atributo.nombre : '', requerido: true },
+                { id: 'tipo', etiqueta: 'Cómo se muestra al cliente', tipo: 'select',
+                  valor: atributo ? atributo.tipo : 'select',
                   opciones: [
                       { valor: 'select', texto: 'Lista desplegable' },
                       { valor: 'color', texto: 'Círculos de color' },
@@ -920,9 +925,13 @@ const Admin = {
                   ] },
             ],
             guardar: async (datos) => {
-                datos.productoId = this.catProducto.id;
-                await API.post('/admin/atributos', datos);
-                U.aviso('Atributo creado');
+                if (nuevo) {
+                    datos.productoId = this.catProducto.id;
+                    await API.post('/admin/atributos', datos);
+                } else {
+                    await API.put(`/admin/atributos/${atributo.id}`, datos);
+                }
+                U.aviso(nuevo ? 'Atributo creado' : 'Atributo actualizado');
                 this.verProducto(this.catProducto.id);
             },
         });

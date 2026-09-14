@@ -25,9 +25,7 @@ router.get('/categorias', async (req, res) => {
     }
 });
 
-// ---------------------------------------------------------------------
-//  Convierte "Polos Oversize" en "polos-oversize".
-// ---------------------------------------------------------------------
+
 function aSlug(texto) {
     return String(texto)
         .toLowerCase()
@@ -38,9 +36,7 @@ function aSlug(texto) {
 }
 
 
-// =====================================================================
-//  Los productos de una categoría   ·   categoria.html
-// =====================================================================
+
 router.get('/categorias/:slug', async (req, res) => {
     try {
         const [categorias] = await db.query(
@@ -69,9 +65,7 @@ router.get('/categorias/:slug', async (req, res) => {
 });
 
 
-// =====================================================================
-//  Buscador   ·   productos.html
-// =====================================================================
+
 router.get('/productos', async (req, res) => {
     try {
         const texto = (req.query.buscar || '').trim();
@@ -102,9 +96,6 @@ router.get('/productos', async (req, res) => {
 });
 
 
-// =====================================================================
-//  Un producto con sus opciones   ·   producto.html
-// =====================================================================
 router.get('/productos/:slug', async (req, res) => {
     try {
         const [productos] = await db.query(`
@@ -136,8 +127,6 @@ router.get('/productos/:slug', async (req, res) => {
              ORDER BY v.orden, v.id
         `, [producto.id]);
 
-        // Se le cuelgan sus valores a cada atributo.
-        // tipo_input y slug son los nombres que espera el configurador.
         producto.atributos = atributos.map((a) => ({
             id: a.id,
             nombre: a.nombre,
@@ -147,7 +136,6 @@ router.get('/productos/:slug', async (req, res) => {
             valores: valores.filter((v) => v.atributo_id === a.id),
         }));
 
-        // Todavía no hay descuentos por volumen ni subida de archivos
         producto.escalas = [];
         producto.permite_estampa = false;
 
@@ -160,18 +148,6 @@ router.get('/productos/:slug', async (req, res) => {
 });
 
 
-// =====================================================================
-//  CÁLCULO DEL PRECIO
-//  =====================================================================
-//  Esta es la regla de negocio principal del proyecto y por eso vive en
-//  el servidor. Si el navegador calculara el precio, cualquiera podría
-//  abrir la consola y agregarse un polo a S/ 1.
-//
-//      precio = precio base + suma de los recargos elegidos
-//
-//  Recibe { seleccion: { "atributo-1": 5, "atributo-2": 9 }, cantidad }
-//  donde los números son ids de atributo_valores.
-// =====================================================================
 router.post('/productos/:id/precio', async (req, res) => {
     try {
         const id = Number(req.params.id);
@@ -196,9 +172,6 @@ router.post('/productos/:id/precio', async (req, res) => {
             });
         }
 
-        // Todo lo que este producto puede ofrecer. Se lee de la base y no
-        // de lo que mandó el navegador: así nadie puede inventarse un
-        // recargo negativo ni elegir la talla de otro producto.
         const [atributos] = await db.query(
             'SELECT id, nombre FROM atributos WHERE producto_id = ?', [id]
         );

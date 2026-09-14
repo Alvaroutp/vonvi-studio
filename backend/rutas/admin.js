@@ -7,18 +7,16 @@ const router = express.Router();
 function aSlug(texto) {
     return String(texto)
         .toLowerCase()
-        .normalize('NFD')                   // separa la letra de su tilde
-        .replace(/[\u0300-\u036f]/g, '')    // y borra la tilde
-        .replace(/[^a-z0-9]+/g, '-')        // todo lo raro pasa a guion
-        .replace(/^-+|-+$/g, '');           // sin guiones al inicio ni al final
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
 }
 
 
+// NIVEL 1 CATEGORÍAS
 
-//NIVEL 1 CATEGORÍAS
-
-
-//Listar
+// Listar
 router.get('/admin/categorias', requiereSesion, requiereAdmin, async (req, res) => {
     try {
         const [categorias] = await db.query(`
@@ -39,7 +37,7 @@ router.get('/admin/categorias', requiereSesion, requiereAdmin, async (req, res) 
 });
 
 
-//Crear
+// Crear
 router.post('/admin/categorias', requiereSesion, requiereAdmin, async (req, res) => {
     try {
         const nombre = (req.body.nombre || '').trim();
@@ -69,7 +67,7 @@ router.post('/admin/categorias', requiereSesion, requiereAdmin, async (req, res)
         });
 
     } catch (error) {
-        // ER_DUP_ENTRY: el slug ya existe porque es UNIQUE
+        // El slug ya existe porque la columna es UNIQUE
         if (error.code === 'ER_DUP_ENTRY') {
             return res.status(400).json({ ok: false, mensaje: 'Ya existe una categoría con ese nombre' });
         }
@@ -79,7 +77,7 @@ router.post('/admin/categorias', requiereSesion, requiereAdmin, async (req, res)
 });
 
 
-//Editar
+// Editar
 router.put('/admin/categorias/:id', requiereSesion, requiereAdmin, async (req, res) => {
     try {
         const id = Number(req.params.id);
@@ -123,10 +121,40 @@ router.put('/admin/categorias/:id', requiereSesion, requiereAdmin, async (req, r
 });
 
 
-//NIVEL 2 PRODUCTOS
+// Borrar
+router.delete('/admin/categorias/:id', requiereSesion, requiereAdmin, async (req, res) => {
+    try {
+        const id = Number(req.params.id);
+
+        const [cuenta] = await db.query(
+            'SELECT COUNT(*) AS total FROM productos WHERE categoria_id = ?', [id]
+        );
+
+        if (cuenta[0].total > 0) {
+            return res.status(400).json({
+                ok: false,
+                mensaje: `Esta categoría tiene ${cuenta[0].total} producto(s). Bórralos primero.`,
+            });
+        }
+
+        const [r] = await db.query('DELETE FROM categorias WHERE id = ?', [id]);
+
+        if (r.affectedRows === 0) {
+            return res.status(404).json({ ok: false, mensaje: 'Esa categoría no existe' });
+        }
+
+        res.json({ ok: true, mensaje: 'Categoría eliminada' });
+
+    } catch (error) {
+        console.error('Error borrando categoría:', error.message);
+        res.status(500).json({ ok: false, mensaje: 'No se pudo eliminar la categoría' });
+    }
+});
 
 
-//Listar
+// NIVEL 2 PRODUCTOS
+
+// Listar
 router.get('/admin/productos', requiereSesion, requiereAdmin, async (req, res) => {
     try {
         const filtro = Number(req.query.categoria) || null;
@@ -155,9 +183,6 @@ router.get('/admin/productos', requiereSesion, requiereAdmin, async (req, res) =
     }
 });
 
-
-//  Lee y valida los datos del formulario.
-//  Se usa igual al crear y al editar, así las reglas no se repiten.
 async function leerProducto(body) {
     const nombre = (body.nombre || '').trim();
     const categoriaId = Number(body.categoriaId || body.categoria_id);
@@ -184,7 +209,7 @@ async function leerProducto(body) {
 }
 
 
-//Crear
+// Crear
 router.post('/admin/productos', requiereSesion, requiereAdmin, async (req, res) => {
     try {
         const d = await leerProducto(req.body);
@@ -218,7 +243,7 @@ router.post('/admin/productos', requiereSesion, requiereAdmin, async (req, res) 
 });
 
 
-//Editar
+// Editar
 router.put('/admin/productos/:id', requiereSesion, requiereAdmin, async (req, res) => {
     try {
         const id = Number(req.params.id);
@@ -227,12 +252,6 @@ router.put('/admin/productos/:id', requiereSesion, requiereAdmin, async (req, re
 
         if (fila.length === 0) {
             return res.status(404).json({ ok: false, mensaje: 'Ese producto no existe' });
-        }
-
-        if (Object.keys(req.body).length === 1 && 'activo' in req.body) {
-            await db.query('UPDATE productos SET activo = ? WHERE id = ?',
-                [req.body.activo ? 1 : 0, id]);
-            return res.json({ ok: true, mensaje: 'Producto actualizado' });
         }
 
         const d = await leerProducto(req.body);
@@ -262,7 +281,254 @@ router.put('/admin/productos/:id', requiereSesion, requiereAdmin, async (req, re
 });
 
 
-//NIVEL 3 y 4 ATRIBUTOS Y DETALLES
+// Activar
+router.put('/admin/productos/:id/activar', requiereSesion, requiereAdmin, async (req, res) => {
+    try {
+        const [r] = await db.query(
+            'UPDATE productos SET activo = 1 WHERE id = ?', [Number(req.params.id)]
+        );
+
+        if (r.affectedRows === 0) {
+            return res.status(404).json({ ok: false, mensaje: 'Ese producto no existe' });
+        }
+
+        res.json({ ok: true, mensaje: 'Producto activado' });
+
+    } catch (error) {
+        console.error('Error activando producto:', error.message);
+        res.status(500).json({ ok: false, mensaje: 'No se pudo activar el producto' });
+    }
+});
+
+
+// Desactivar
+router.put('/admin/productos/:id/desactivar', requiereSesion, requiereAdmin, async (req, res) => {
+    try {
+        const [r] = await db.query(
+            'UPDATE productos SET activo = 0 WHERE id = ?', [Number(req.params.id)]
+        );
+
+        if (r.affectedRows === 0) {
+            return res.status(404).json({ ok: false, mensaje: 'Ese producto no existe' });
+        }
+
+        res.json({ ok: true, mensaje: 'Producto desactivado' });
+
+    } catch (error) {
+        console.error('Error desactivando producto:', error.message);
+        res.status(500).json({ ok: false, mensaje: 'No se pudo desactivar el producto' });
+    }
+});
+
+
+// Borrar
+router.delete('/admin/productos/:id', requiereSesion, requiereAdmin, async (req, res) => {
+    try {
+        const [r] = await db.query('DELETE FROM productos WHERE id = ?', [Number(req.params.id)]);
+
+        if (r.affectedRows === 0) {
+            return res.status(404).json({ ok: false, mensaje: 'Ese producto no existe' });
+        }
+
+        res.json({ ok: true, mensaje: 'Producto eliminado' });
+
+    } catch (error) {
+        console.error('Error borrando producto:', error.message);
+        res.status(500).json({ ok: false, mensaje: 'No se pudo eliminar el producto' });
+    }
+});
+
+
+// NIVEL 3 ATRIBUTOS
+
+// Crear
+router.post('/admin/atributos', requiereSesion, requiereAdmin, async (req, res) => {
+    try {
+        const productoId = Number(req.body.productoId);
+        const nombre = (req.body.nombre || '').trim();
+        const tipo = req.body.tipo || 'select';
+
+        if (!productoId) return res.status(400).json({ ok: false, mensaje: 'Falta el producto' });
+        if (!nombre) return res.status(400).json({ ok: false, mensaje: 'Escribe el nombre del atributo' });
+
+        if (!['select', 'color', 'radio'].includes(tipo)) {
+            return res.status(400).json({ ok: false, mensaje: 'Ese tipo de atributo no existe' });
+        }
+
+        const [producto] = await db.query('SELECT id FROM productos WHERE id = ?', [productoId]);
+        if (producto.length === 0) {
+            return res.status(404).json({ ok: false, mensaje: 'Ese producto no existe' });
+        }
+
+        // El orden se calcula solo: va al final de los que ya tiene
+        const [ultimo] = await db.query(
+            'SELECT COALESCE(MAX(orden), 0) + 1 AS siguiente FROM atributos WHERE producto_id = ?',
+            [productoId]
+        );
+
+        const [resultado] = await db.query(
+            'INSERT INTO atributos (producto_id, nombre, tipo, orden) VALUES (?, ?, ?, ?)',
+            [productoId, nombre, tipo, ultimo[0].siguiente]
+        );
+
+        res.status(201).json({
+            ok: true,
+            mensaje: 'Atributo creado',
+            atributo: { id: resultado.insertId, nombre, tipo, orden: ultimo[0].siguiente, detalles: [] },
+        });
+
+    } catch (error) {
+        console.error('Error creando atributo:', error.message);
+        res.status(500).json({ ok: false, mensaje: 'No se pudo crear el atributo' });
+    }
+});
+
+
+// Editar
+router.put('/admin/atributos/:id', requiereSesion, requiereAdmin, async (req, res) => {
+    try {
+        const nombre = (req.body.nombre || '').trim();
+        const tipo = req.body.tipo || 'select';
+
+        if (!nombre) {
+            return res.status(400).json({ ok: false, mensaje: 'Escribe el nombre del atributo' });
+        }
+
+        if (!['select', 'color', 'radio'].includes(tipo)) {
+            return res.status(400).json({ ok: false, mensaje: 'Ese tipo de atributo no existe' });
+        }
+
+        const [r] = await db.query(
+            'UPDATE atributos SET nombre = ?, tipo = ? WHERE id = ?',
+            [nombre, tipo, Number(req.params.id)]
+        );
+
+        if (r.affectedRows === 0) {
+            return res.status(404).json({ ok: false, mensaje: 'Ese atributo no existe' });
+        }
+
+        res.json({ ok: true, mensaje: 'Atributo actualizado' });
+
+    } catch (error) {
+        console.error('Error editando atributo:', error.message);
+        res.status(500).json({ ok: false, mensaje: 'No se pudo actualizar el atributo' });
+    }
+});
+
+
+// Borrar
+router.delete('/admin/atributos/:id', requiereSesion, requiereAdmin, async (req, res) => {
+    try {
+        const [r] = await db.query('DELETE FROM atributos WHERE id = ?', [Number(req.params.id)]);
+
+        if (r.affectedRows === 0) {
+            return res.status(404).json({ ok: false, mensaje: 'Ese atributo no existe' });
+        }
+
+        res.json({ ok: true, mensaje: 'Atributo eliminado' });
+
+    } catch (error) {
+        console.error('Error borrando atributo:', error.message);
+        res.status(500).json({ ok: false, mensaje: 'No se pudo eliminar el atributo' });
+    }
+});
+
+
+// NIVEL 4 DETALLES
+
+// Crear
+router.post('/admin/detalles', requiereSesion, requiereAdmin, async (req, res) => {
+    try {
+        const atributoId = Number(req.body.atributoId);
+        const valor = (req.body.valor || '').trim();
+        const recargo = Number(req.body.recargo || 0);
+        const colorHex = (req.body.colorHex || '').trim() || null;
+
+        if (!atributoId) return res.status(400).json({ ok: false, mensaje: 'Falta el atributo' });
+        if (!valor) return res.status(400).json({ ok: false, mensaje: 'Escribe el valor del detalle' });
+
+        if (isNaN(recargo) || recargo < 0) {
+            return res.status(400).json({ ok: false, mensaje: 'El recargo no es válido' });
+        }
+
+        const [atributo] = await db.query('SELECT id FROM atributos WHERE id = ?', [atributoId]);
+        if (atributo.length === 0) {
+            return res.status(404).json({ ok: false, mensaje: 'Ese atributo no existe' });
+        }
+
+        const [ultimo] = await db.query(
+            'SELECT COALESCE(MAX(orden), 0) + 1 AS siguiente FROM atributo_valores WHERE atributo_id = ?',
+            [atributoId]
+        );
+
+        const [resultado] = await db.query(
+            'INSERT INTO atributo_valores (atributo_id, valor, color_hex, recargo, orden) VALUES (?, ?, ?, ?, ?)',
+            [atributoId, valor, colorHex, recargo, ultimo[0].siguiente]
+        );
+
+        res.status(201).json({
+            ok: true,
+            mensaje: 'Detalle creado',
+            detalle: { id: resultado.insertId, atributo_id: atributoId, valor, color_hex: colorHex, recargo },
+        });
+
+    } catch (error) {
+        console.error('Error creando detalle:', error.message);
+        res.status(500).json({ ok: false, mensaje: 'No se pudo crear el detalle' });
+    }
+});
+
+
+// Editar
+router.put('/admin/detalles/:id', requiereSesion, requiereAdmin, async (req, res) => {
+    try {
+        const id = Number(req.params.id);
+        const valor = (req.body.valor || '').trim();
+        const recargo = Number(req.body.recargo || 0);
+
+        if (!valor) return res.status(400).json({ ok: false, mensaje: 'Escribe el valor del detalle' });
+
+        if (isNaN(recargo) || recargo < 0) {
+            return res.status(400).json({ ok: false, mensaje: 'El recargo no es válido' });
+        }
+
+        const [r] = await db.query(
+            'UPDATE atributo_valores SET valor = ?, color_hex = ?, recargo = ? WHERE id = ?',
+            [valor, (req.body.colorHex || '').trim() || null, recargo, id]
+        );
+
+        if (r.affectedRows === 0) {
+            return res.status(404).json({ ok: false, mensaje: 'Ese detalle no existe' });
+        }
+
+        res.json({ ok: true, mensaje: 'Detalle actualizado' });
+
+    } catch (error) {
+        console.error('Error editando detalle:', error.message);
+        res.status(500).json({ ok: false, mensaje: 'No se pudo actualizar el detalle' });
+    }
+});
+
+
+// Borrar
+router.delete('/admin/detalles/:id', requiereSesion, requiereAdmin, async (req, res) => {
+    try {
+        const [r] = await db.query('DELETE FROM atributo_valores WHERE id = ?', [Number(req.params.id)]);
+
+        if (r.affectedRows === 0) {
+            return res.status(404).json({ ok: false, mensaje: 'Ese detalle no existe' });
+        }
+
+        res.json({ ok: true, mensaje: 'Detalle eliminado' });
+
+    } catch (error) {
+        console.error('Error borrando detalle:', error.message);
+        res.status(500).json({ ok: false, mensaje: 'No se pudo eliminar el detalle' });
+    }
+});
+
+
+// Arbol
 router.get('/admin/productos/:id/arbol', requiereSesion, requiereAdmin, async (req, res) => {
     try {
         const id = Number(req.params.id);
@@ -307,208 +573,4 @@ router.get('/admin/productos/:id/arbol', requiereSesion, requiereAdmin, async (r
 });
 
 
-//Crear atributo 
-router.post('/admin/atributos', requiereSesion, requiereAdmin, async (req, res) => {
-    try {
-        const productoId = Number(req.body.productoId);
-        const nombre = (req.body.nombre || '').trim();
-        const tipo = req.body.tipo || 'select';
-
-        if (!productoId) return res.status(400).json({ ok: false, mensaje: 'Falta el producto' });
-        if (!nombre) return res.status(400).json({ ok: false, mensaje: 'Escribe el nombre del atributo' });
-
-        if (!['select', 'color', 'radio'].includes(tipo)) {
-            return res.status(400).json({ ok: false, mensaje: 'Ese tipo de atributo no existe' });
-        }
-
-        const [producto] = await db.query('SELECT id FROM productos WHERE id = ?', [productoId]);
-        if (producto.length === 0) {
-            return res.status(404).json({ ok: false, mensaje: 'Ese producto no existe' });
-        }
-
-        // El orden se calcula solo: va al final de los que ya tiene
-        const [ultimo] = await db.query(
-            'SELECT COALESCE(MAX(orden), 0) + 1 AS siguiente FROM atributos WHERE producto_id = ?',
-            [productoId]
-        );
-
-        const [resultado] = await db.query(
-            'INSERT INTO atributos (producto_id, nombre, tipo, orden) VALUES (?, ?, ?, ?)',
-            [productoId, nombre, tipo, ultimo[0].siguiente]
-        );
-
-        res.status(201).json({
-            ok: true,
-            mensaje: 'Atributo creado',
-            atributo: { id: resultado.insertId, nombre, tipo, orden: ultimo[0].siguiente, detalles: [] },
-        });
-
-    } catch (error) {
-        console.error('Error creando atributo:', error.message);
-        res.status(500).json({ ok: false, mensaje: 'No se pudo crear el atributo' });
-    }
-});
-
-
-//Borrar atributo 
-router.delete('/admin/atributos/:id', requiereSesion, requiereAdmin, async (req, res) => {
-    try {
-        const [r] = await db.query('DELETE FROM atributos WHERE id = ?', [Number(req.params.id)]);
-
-        if (r.affectedRows === 0) {
-            return res.status(404).json({ ok: false, mensaje: 'Ese atributo no existe' });
-        }
-
-        res.json({ ok: true, mensaje: 'Atributo eliminado' });
-
-    } catch (error) {
-        console.error('Error borrando atributo:', error.message);
-        res.status(500).json({ ok: false, mensaje: 'No se pudo eliminar el atributo' });
-    }
-});
-
-
-//Crear detalle 
-router.post('/admin/detalles', requiereSesion, requiereAdmin, async (req, res) => {
-    try {
-        const atributoId = Number(req.body.atributoId);
-        const valor = (req.body.valor || '').trim();
-        const recargo = Number(req.body.recargo || 0);
-        const colorHex = (req.body.colorHex || '').trim() || null;
-
-        if (!atributoId) return res.status(400).json({ ok: false, mensaje: 'Falta el atributo' });
-        if (!valor) return res.status(400).json({ ok: false, mensaje: 'Escribe el valor del detalle' });
-
-        if (isNaN(recargo) || recargo < 0) {
-            return res.status(400).json({ ok: false, mensaje: 'El recargo no es válido' });
-        }
-
-        const [atributo] = await db.query('SELECT id FROM atributos WHERE id = ?', [atributoId]);
-        if (atributo.length === 0) {
-            return res.status(404).json({ ok: false, mensaje: 'Ese atributo no existe' });
-        }
-
-        const [ultimo] = await db.query(
-            'SELECT COALESCE(MAX(orden), 0) + 1 AS siguiente FROM atributo_valores WHERE atributo_id = ?',
-            [atributoId]
-        );
-
-        const [resultado] = await db.query(
-            'INSERT INTO atributo_valores (atributo_id, valor, color_hex, recargo, orden) VALUES (?, ?, ?, ?, ?)',
-            [atributoId, valor, colorHex, recargo, ultimo[0].siguiente]
-        );
-
-        res.status(201).json({
-            ok: true,
-            mensaje: 'Detalle creado',
-            detalle: { id: resultado.insertId, atributo_id: atributoId, valor, color_hex: colorHex, recargo },
-        });
-
-    } catch (error) {
-        console.error('Error creando detalle:', error.message);
-        res.status(500).json({ ok: false, mensaje: 'No se pudo crear el detalle' });
-    }
-});
-
-
-//Editar detalle 
-router.put('/admin/detalles/:id', requiereSesion, requiereAdmin, async (req, res) => {
-    try {
-        const id = Number(req.params.id);
-        const valor = (req.body.valor || '').trim();
-        const recargo = Number(req.body.recargo || 0);
-
-        if (!valor) return res.status(400).json({ ok: false, mensaje: 'Escribe el valor del detalle' });
-
-        if (isNaN(recargo) || recargo < 0) {
-            return res.status(400).json({ ok: false, mensaje: 'El recargo no es válido' });
-        }
-
-        const [r] = await db.query(
-            'UPDATE atributo_valores SET valor = ?, color_hex = ?, recargo = ? WHERE id = ?',
-            [valor, (req.body.colorHex || '').trim() || null, recargo, id]
-        );
-
-        if (r.affectedRows === 0) {
-            return res.status(404).json({ ok: false, mensaje: 'Ese detalle no existe' });
-        }
-
-        res.json({ ok: true, mensaje: 'Detalle actualizado' });
-
-    } catch (error) {
-        console.error('Error editando detalle:', error.message);
-        res.status(500).json({ ok: false, mensaje: 'No se pudo actualizar el detalle' });
-    }
-});
-
-
-//Borrar detalle 
-router.delete('/admin/detalles/:id', requiereSesion, requiereAdmin, async (req, res) => {
-    try {
-        const [r] = await db.query('DELETE FROM atributo_valores WHERE id = ?', [Number(req.params.id)]);
-
-        if (r.affectedRows === 0) {
-            return res.status(404).json({ ok: false, mensaje: 'Ese detalle no existe' });
-        }
-
-        res.json({ ok: true, mensaje: 'Detalle eliminado' });
-
-    } catch (error) {
-        console.error('Error borrando detalle:', error.message);
-        res.status(500).json({ ok: false, mensaje: 'No se pudo eliminar el detalle' });
-    }
-});
-//Borrar categoría
-//  Solo si está vacía. Con productos dentro, MySQL lo bloquearía por la
-//  clave foránea, así que se avisa antes con un mensaje entendible.
-router.delete('/admin/categorias/:id', requiereSesion, requiereAdmin, async (req, res) => {
-    try {
-        const id = Number(req.params.id);
-
-        const [cuenta] = await db.query(
-            'SELECT COUNT(*) AS total FROM productos WHERE categoria_id = ?', [id]
-        );
-
-        if (cuenta[0].total > 0) {
-            return res.status(400).json({
-                ok: false,
-                mensaje: `Esta categoría tiene ${cuenta[0].total} producto(s). Bórralos primero.`,
-            });
-        }
-
-        const [r] = await db.query('DELETE FROM categorias WHERE id = ?', [id]);
-
-        if (r.affectedRows === 0) {
-            return res.status(404).json({ ok: false, mensaje: 'Esa categoría no existe' });
-        }
-
-        res.json({ ok: true, mensaje: 'Categoría eliminada' });
-
-    } catch (error) {
-        console.error('Error borrando categoría:', error.message);
-        res.status(500).json({ ok: false, mensaje: 'No se pudo eliminar la categoría' });
-    }
-});
-
-
-//Borrar producto
-//  Sus atributos y detalles se van solos por el ON DELETE CASCADE.
-//  Si el producto estaba en algún pedido, ese pedido lo conserva: la
-//  clave foránea de pedido_items es ON DELETE SET NULL y la fila guarda
-//  una copia del nombre y del precio.
-router.delete('/admin/productos/:id', requiereSesion, requiereAdmin, async (req, res) => {
-    try {
-        const [r] = await db.query('DELETE FROM productos WHERE id = ?', [Number(req.params.id)]);
-
-        if (r.affectedRows === 0) {
-            return res.status(404).json({ ok: false, mensaje: 'Ese producto no existe' });
-        }
-
-        res.json({ ok: true, mensaje: 'Producto eliminado' });
-
-    } catch (error) {
-        console.error('Error borrando producto:', error.message);
-        res.status(500).json({ ok: false, mensaje: 'No se pudo eliminar el producto' });
-    }
-});
 module.exports = router;
