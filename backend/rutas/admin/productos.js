@@ -1,6 +1,6 @@
 const express = require('express');
-const db = require('../db');
-const { requiereSesion, requiereAdmin } = require('../sesion');
+const db = require('../../db');
+const { requiereSesion, requiereAdmin } = require('../../sesion');
 
 const router = express.Router();
 
