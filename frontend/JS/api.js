@@ -9,7 +9,7 @@
 const API = {
 
     /** Cambia esto si subes el backend a un servidor. */
-    base: 'http://localhost:3000/api',
+    base: '/api',
 
     /* ---------------- Sesión ---------------- */
 
