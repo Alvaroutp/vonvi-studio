@@ -6,6 +6,7 @@
    ===================================================================== */
 
 :root {
+    --rosab:#ff83bd;
     --rosa: #ec4f95;
     --rosa-claro: #ffe6f2;
     --rosa-oscuro: #d43d80;
@@ -1231,25 +1232,39 @@
 .pagina-auth {
     min-height: 100vh;
     display: flex;
-    align-items: center;
     justify-content: center;
-    padding: 130px 20px 60px;
-    background: linear-gradient(135deg, var(--rosa-claro) 0%, var(--fondo) 55%);
+    align-items: center;
+    padding: 50px 20px 60px;
+    background: linear-gradient(-45deg, #ffbdec, #ffeae1, #ffccdb, #d4fff1);
+    background-size: 400% 400%;
+    animation: movimientoDegradado 15s ease infinite;
+}
+
+@keyframes movimientoDegradado {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
 }
 
 .caja-auth {
     background: var(--panel);
     border-radius: 22px;
-    padding: 44px 38px;
+    padding: 34px 38px;
     box-shadow: var(--sombra-fuerte);
     width: 100%;
-    max-width: 420px;
+    max-width: 490px;
 }
 
-.caja-auth.ancha { max-width: 540px; }
+.caja-auth.ancha { max-width: 610px; }
 
 .auth-cabecera { text-align: center; margin-bottom: 30px; }
-.auth-cabecera img { width: 168px; margin: 0 auto 20px; }
+.auth-cabecera img { width: 98px; margin: 0 auto 20px; }
 .auth-cabecera h1 { font-size: 25px; margin-bottom: 7px; }
 .auth-cabecera p { font-size: 14px; color: var(--gris); }
 
