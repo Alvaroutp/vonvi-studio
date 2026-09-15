@@ -9,7 +9,7 @@ CREATE TABLE usuarios (
     email      VARCHAR(120) NOT NULL UNIQUE,   
     password   VARCHAR(255) NOT NULL,          
     telefono   VARCHAR(20)      NULL,
-    rol        ENUM('cliente','admin') NOT NULL DEFAULT 'cliente',
+    rol        ENUM('cliente','admin','empleado') NOT NULL DEFAULT 'cliente',
     token      VARCHAR(60)      NULL,          
     creado_en  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
