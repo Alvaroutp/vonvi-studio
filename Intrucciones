@@ -1,0 +1,17 @@
+crear la base de datos
+
+archivo "config.js" dentro de backend
+module.exports = {
+    puerto: 3000,
+    bd: {
+        host: 'localhost',
+        user: 'root',
+        password: 'AQUI_TU_CONTRASENA',
+        database: 'vonvi_studio'
+    }
+};
+
+librerias dentro de backend (cd backend)
+npm install
+
+node servidor.js
