@@ -1,6 +1,6 @@
 const express = require('express');
 const db = require('../../db');
-const { requiereSesion, requiereAdmin } = require('../../sesion');
+const { requiereSesion, requiereRol } = require('../../sesion');
 
 const router = express.Router();
 
@@ -17,7 +17,7 @@ function aSlug(texto) {
 // NIVEL 1 CATEGORÍAS
 
 // Listar
-router.get('/admin/categorias', requiereSesion, requiereAdmin, async (req, res) => {
+router.get('/admin/categorias', requiereSesion, requiereRol('admin'), async (req, res) => {
     try {
         const [categorias] = await db.query(`
             SELECT c.id, c.nombre, c.slug, c.descripcion, c.imagen, c.icono, c.activo,
@@ -38,7 +38,7 @@ router.get('/admin/categorias', requiereSesion, requiereAdmin, async (req, res) 
 
 
 // Crear
-router.post('/admin/categorias', requiereSesion, requiereAdmin, async (req, res) => {
+router.post('/admin/categorias', requiereSesion, requiereRol('admin'), async (req, res) => {
     try {
         const nombre = (req.body.nombre || '').trim();
         const descripcion = (req.body.descripcion || '').trim() || null;
@@ -78,7 +78,7 @@ router.post('/admin/categorias', requiereSesion, requiereAdmin, async (req, res)
 
 
 // Editar
-router.put('/admin/categorias/:id', requiereSesion, requiereAdmin, async (req, res) => {
+router.put('/admin/categorias/:id', requiereSesion, requiereRol('admin'), async (req, res) => {
     try {
         const id = Number(req.params.id);
 
@@ -122,7 +122,7 @@ router.put('/admin/categorias/:id', requiereSesion, requiereAdmin, async (req, r
 
 
 // Borrar
-router.delete('/admin/categorias/:id', requiereSesion, requiereAdmin, async (req, res) => {
+router.delete('/admin/categorias/:id', requiereSesion, requiereRol('admin'), async (req, res) => {
     try {
         const id = Number(req.params.id);
 
@@ -155,7 +155,7 @@ router.delete('/admin/categorias/:id', requiereSesion, requiereAdmin, async (req
 // NIVEL 2 PRODUCTOS
 
 // Listar
-router.get('/admin/productos', requiereSesion, requiereAdmin, async (req, res) => {
+router.get('/admin/productos', requiereSesion, requiereRol('admin'), async (req, res) => {
     try {
         const filtro = Number(req.query.categoria) || null;
 
@@ -210,7 +210,7 @@ async function leerProducto(body) {
 
 
 // Crear
-router.post('/admin/productos', requiereSesion, requiereAdmin, async (req, res) => {
+router.post('/admin/productos', requiereSesion, requiereRol('admin'), async (req, res) => {
     try {
         const d = await leerProducto(req.body);
 
@@ -244,7 +244,7 @@ router.post('/admin/productos', requiereSesion, requiereAdmin, async (req, res) 
 
 
 // Editar
-router.put('/admin/productos/:id', requiereSesion, requiereAdmin, async (req, res) => {
+router.put('/admin/productos/:id', requiereSesion, requiereRol('admin'), async (req, res) => {
     try {
         const id = Number(req.params.id);
 
@@ -282,7 +282,7 @@ router.put('/admin/productos/:id', requiereSesion, requiereAdmin, async (req, re
 
 
 // Activar
-router.put('/admin/productos/:id/activar', requiereSesion, requiereAdmin, async (req, res) => {
+router.put('/admin/productos/:id/activar', requiereSesion, requiereRol('admin'), async (req, res) => {
     try {
         const [r] = await db.query(
             'UPDATE productos SET activo = 1 WHERE id = ?', [Number(req.params.id)]
@@ -302,7 +302,7 @@ router.put('/admin/productos/:id/activar', requiereSesion, requiereAdmin, async 
 
 
 // Desactivar
-router.put('/admin/productos/:id/desactivar', requiereSesion, requiereAdmin, async (req, res) => {
+router.put('/admin/productos/:id/desactivar', requiereSesion, requiereRol('admin'), async (req, res) => {
     try {
         const [r] = await db.query(
             'UPDATE productos SET activo = 0 WHERE id = ?', [Number(req.params.id)]
@@ -322,7 +322,7 @@ router.put('/admin/productos/:id/desactivar', requiereSesion, requiereAdmin, asy
 
 
 // Borrar
-router.delete('/admin/productos/:id', requiereSesion, requiereAdmin, async (req, res) => {
+router.delete('/admin/productos/:id', requiereSesion, requiereRol('admin'), async (req, res) => {
     try {
         const [r] = await db.query('DELETE FROM productos WHERE id = ?', [Number(req.params.id)]);
 
@@ -342,7 +342,7 @@ router.delete('/admin/productos/:id', requiereSesion, requiereAdmin, async (req,
 // NIVEL 3 ATRIBUTOS
 
 // Crear
-router.post('/admin/atributos', requiereSesion, requiereAdmin, async (req, res) => {
+router.post('/admin/atributos', requiereSesion, requiereRol('admin'), async (req, res) => {
     try {
         const productoId = Number(req.body.productoId);
         const nombre = (req.body.nombre || '').trim();
@@ -385,7 +385,7 @@ router.post('/admin/atributos', requiereSesion, requiereAdmin, async (req, res) 
 
 
 // Editar
-router.put('/admin/atributos/:id', requiereSesion, requiereAdmin, async (req, res) => {
+router.put('/admin/atributos/:id', requiereSesion, requiereRol('admin'), async (req, res) => {
     try {
         const nombre = (req.body.nombre || '').trim();
         const tipo = req.body.tipo || 'select';
@@ -417,7 +417,7 @@ router.put('/admin/atributos/:id', requiereSesion, requiereAdmin, async (req, re
 
 
 // Borrar
-router.delete('/admin/atributos/:id', requiereSesion, requiereAdmin, async (req, res) => {
+router.delete('/admin/atributos/:id', requiereSesion, requiereRol('admin'), async (req, res) => {
     try {
         const [r] = await db.query('DELETE FROM atributos WHERE id = ?', [Number(req.params.id)]);
 
@@ -437,7 +437,7 @@ router.delete('/admin/atributos/:id', requiereSesion, requiereAdmin, async (req,
 // NIVEL 4 DETALLES
 
 // Crear
-router.post('/admin/detalles', requiereSesion, requiereAdmin, async (req, res) => {
+router.post('/admin/detalles', requiereSesion, requiereRol('admin'), async (req, res) => {
     try {
         const atributoId = Number(req.body.atributoId);
         const valor = (req.body.valor || '').trim();
@@ -480,7 +480,7 @@ router.post('/admin/detalles', requiereSesion, requiereAdmin, async (req, res) =
 
 
 // Editar
-router.put('/admin/detalles/:id', requiereSesion, requiereAdmin, async (req, res) => {
+router.put('/admin/detalles/:id', requiereSesion, requiereRol('admin'), async (req, res) => {
     try {
         const id = Number(req.params.id);
         const valor = (req.body.valor || '').trim();
@@ -511,7 +511,7 @@ router.put('/admin/detalles/:id', requiereSesion, requiereAdmin, async (req, res
 
 
 // Borrar
-router.delete('/admin/detalles/:id', requiereSesion, requiereAdmin, async (req, res) => {
+router.delete('/admin/detalles/:id', requiereSesion, requiereRol('admin'), async (req, res) => {
     try {
         const [r] = await db.query('DELETE FROM atributo_valores WHERE id = ?', [Number(req.params.id)]);
 
@@ -529,7 +529,7 @@ router.delete('/admin/detalles/:id', requiereSesion, requiereAdmin, async (req, 
 
 
 // Arbol
-router.get('/admin/productos/:id/arbol', requiereSesion, requiereAdmin, async (req, res) => {
+router.get('/admin/productos/:id/arbol', requiereSesion, requiereRol('admin'), async (req, res) => {
     try {
         const id = Number(req.params.id);
 

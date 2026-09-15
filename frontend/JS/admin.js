@@ -46,6 +46,7 @@ const Admin = {
         if (pagina === 'pedidos') this.pedidos();
         if (pagina === 'productos') this.productos();
         if (pagina === 'cotizaciones') this.cotizaciones();
+        if (pagina === 'empleados') this.empleados();
     },
 
     /* =================================================================
@@ -449,6 +450,104 @@ const Admin = {
 
     zona() {
         return document.getElementById('contenidoAdmin');
+    },
+    
+    // EMPLEADOS
+    // Solo el admin llega aqui. Las cuentas de empleado nacen desde esta pantalla,
+    // nadie se puede registrar solo como empleado
+    async empleados() {
+        const zona = this.zona();
+        U.cargando(zona, 'Cargando empleados...');
+
+        let r;
+        try {
+            r = await API.get('/admin/empleados');
+        } catch (e) {
+            U.vacio(zona, 'fa-solid fa-plug-circle-xmark', 'No se pudo cargar', e.message);
+            return;
+        }
+
+        // La clave recien generada se muestra una sola vez y se borra de la memoria
+        const reciente = this.claveNueva;
+        this.claveNueva = null;
+
+        zona.innerHTML = `
+            <div class="cabecera-seccion">
+                <div>
+                    <h2>Empleados</h2>
+                    <p class="sub">${r.empleados.length} cuenta(s) con acceso a los pedidos.</p>
+                </div>
+                <button type="button" class="btn-principal" data-nuevo>
+                    <i class="fa-solid fa-user-plus"></i> Nuevo empleado
+                </button>
+            </div>
+
+            ${reciente ? `
+                <div class="clave-nueva">
+                    <p>Cuenta creada para <strong>${U.esc(reciente.email)}</strong></p>
+                    <p class="clave">${U.esc(reciente.clave)}</p>
+                    <small>Anota esta contraseña ahora. No se vuelve a mostrar.</small>
+                </div>` : ''}
+
+            ${r.empleados.length === 0 ? `
+                <div class="estado-vacio">
+                    <i class="fa-solid fa-users"></i>
+                    <h3>Todavía no hay empleados</h3>
+                    <p>Crea la primera cuenta para que alguien pueda atender los pedidos.</p>
+                </div>` : `
+                <table class="tabla-admin">
+                    <thead>
+                        <tr><th>Empleado</th><th>Correo</th><th>Teléfono</th><th>Desde</th><th></th></tr>
+                    </thead>
+                    <tbody>
+                        ${r.empleados.map((e) => `
+                            <tr>
+                                <td><strong>${U.esc(e.nombres)} ${U.esc(e.apellidos)}</strong></td>
+                                <td>${U.esc(e.email)}</td>
+                                <td>${U.esc(e.telefono || '—')}</td>
+                                <td>${U.fecha(e.creado_en)}</td>
+                                <td class="acciones-fila">
+                                    <button type="button" title="Borrar cuenta" data-borrar-emp="${e.id}">
+                                        <i class="fa-regular fa-trash-can"></i>
+                                    </button>
+                                </td>
+                            </tr>`).join('')}
+                    </tbody>
+                </table>`}`;
+
+        zona.querySelector('[data-nuevo]').addEventListener('click', () => this.formEmpleado());
+
+        zona.querySelectorAll('[data-borrar-emp]').forEach((b) => {
+            b.addEventListener('click', async () => {
+                const e = r.empleados.find((x) => String(x.id) === b.dataset.borrarEmp);
+                if (!confirm(`¿Borrar la cuenta de ${e.nombres} ${e.apellidos}?`)) return;
+                try {
+                    await API.borrar(`/admin/empleados/${e.id}`);
+                    U.aviso('Cuenta eliminada');
+                    this.empleados();
+                } catch (err) { U.aviso(err.message, 'error'); }
+            });
+        });
+    },
+
+
+    // El admin no escribe la contrasena, la genera el servidor y se la dicta al empleado
+    formEmpleado() {
+        this.modal({
+            titulo: 'Nuevo empleado',
+            campos: [
+                { id: 'nombres', etiqueta: 'Nombres', valor: '', requerido: true },
+                { id: 'apellidos', etiqueta: 'Apellidos', valor: '', requerido: true },
+                { id: 'email', etiqueta: 'Correo', valor: '', requerido: true, placeholder: 'kelvin@vonvi.pe' },
+                { id: 'telefono', etiqueta: 'Teléfono', valor: '', placeholder: '999 888 777' },
+            ],
+            guardar: async (datos) => {
+                const r = await API.post('/admin/empleados', datos);
+                this.claveNueva = { email: datos.email, clave: r.clave_temporal };
+                U.aviso('Empleado creado');
+                this.empleados();
+            },
+        });
     },
 
 

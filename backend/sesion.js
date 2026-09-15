@@ -34,4 +34,12 @@ function requiereAdmin(req, res, next) {
     }
     next();
 }
-module.exports = { requiereSesion, requiereAdmin };
+function requiereRol(...roles) {
+    return function (req, res, next) {
+        if (!roles.includes(req.usuario.rol)) {
+            return res.status(403).json({ ok: false, mensaje: 'No tienes permiso para esto' });
+        }
+        next();
+    };
+}
+module.exports = { requiereSesion, requiereAdmin, requiereRol };

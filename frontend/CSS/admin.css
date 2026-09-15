@@ -883,3 +883,27 @@ ul { list-style: none; }
 
 .sin-detalles { padding:16px 22px; color:var(--gris-claro); font-size:.9rem; }
 .pie-atributo { padding:12px 22px; }
+/* Caja donde se muestra la clave temporal recien generada */
+.clave-nueva {
+    border: 1px solid #C9A227;
+    background: #FFFBEB;
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin-bottom: 18px;
+}
+
+.clave-nueva p {
+    margin: 0 0 6px;
+}
+
+.clave-nueva .clave {
+    font-family: 'Courier New', monospace;
+    font-size: 1.6rem;
+    font-weight: bold;
+    letter-spacing: 3px;
+    margin: 4px 0;
+}
+
+.clave-nueva small {
+    color: #8A6D1F;
+}
