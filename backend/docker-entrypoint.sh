@@ -1,6 +1,3 @@
-#!/bin/sh
-# Genera config.js dentro del contenedor a partir de variables de entorno.
-# Así nunca hace falta escribir la contraseña dentro del código ni subirla a Git.
 set -e
 
 cat > config.js << CONFIGEOF

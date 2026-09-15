@@ -28,12 +28,6 @@ async function requiereSesion(req, res, next) {
     }
 }
 
-function requiereAdmin(req, res, next) {
-    if (req.usuario.rol !== 'admin') {
-        return res.status(403).json({ ok: false, mensaje: 'No tienes permiso para esto' });
-    }
-    next();
-}
 function requiereRol(...roles) {
     return function (req, res, next) {
         if (!roles.includes(req.usuario.rol)) {
@@ -42,4 +36,4 @@ function requiereRol(...roles) {
         next();
     };
 }
-module.exports = { requiereSesion, requiereAdmin, requiereRol };
+module.exports = { requiereSesion, requiereRol };
