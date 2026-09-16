@@ -4,14 +4,33 @@
 
 const Carrito = {
 
+    /** id del contenedor que se está pintando ahora mismo (página completa o panel). */
+    contenedorActual: 'contenidoCarrito',
+
     async iniciar() {
         const zona = document.getElementById('contenidoCarrito');
         if (!zona) return;
-        await this.pintar();
+        await this.pintarEn('contenidoCarrito');
     },
 
+    /** Compatibilidad: vuelve a pintar el último contenedor usado. */
     async pintar() {
-        const zona = document.getElementById('contenidoCarrito');
+        return this.pintarEn(this.contenedorActual);
+    },
+
+    /**
+     * Pinta el carrito dentro de cualquier contenedor: la página
+     * carrito.html (#contenidoCarrito) o el panel lateral tipo
+     * Temu/AliExpress (#panelCarritoContenido). Es la misma lógica,
+     * solo cambia dónde se dibuja.
+     */
+    async pintarEn(idContenedor) {
+        const zona = document.getElementById(idContenedor);
+        if (!zona) return;
+
+        this.contenedorActual = idContenedor;
+        const esPanel = idContenedor !== 'contenidoCarrito';
+
         U.cargando(zona, 'Cargando tu carrito...');
 
         let r;
@@ -36,12 +55,15 @@ const Carrito = {
 
         const envio = resumen.subtotal >= 250 ? 0 : 12;
 
+        // En el panel lateral se usa un layout de una sola columna
+        // (más angosto que la página completa), por eso el resumen
+        // va debajo de los ítems en vez de al costado.
         zona.innerHTML = `
-            <div class="carrito-grid">
+            <div class="carrito-grid ${esPanel ? 'carrito-grid-panel' : ''}">
 
                 <div class="carrito-items">
-                    ${items.map((i) => this.fila(i)).join('')}
-                    <button type="button" id="vaciarCarrito" class="btn-texto peligro">
+                    ${items.map((i) => this.fila(i, esPanel)).join('')}
+                    <button type="button" class="vaciar-carrito btn-texto peligro">
                         <i class="fa-regular fa-trash-can"></i> Vaciar carrito
                     </button>
                 </div>
@@ -89,17 +111,17 @@ const Carrito = {
 
             </div>`;
 
-        this.conectarEventos();
+        this.conectarEventos(idContenedor);
         Header.actualizarCarrito();
     },
 
-    fila(i) {
+    fila(i, esPanel = false) {
         const opciones = (i.opciones || [])
             .map((o) => `<span class="pastilla">${U.esc(o.atributo)}: <b>${U.esc(o.valor)}</b></span>`)
             .join('');
 
         return `
-            <article class="item-carrito" data-id="${i.id}">
+            <article class="item-carrito ${esPanel ? 'item-carrito-panel' : ''}" data-id="${i.id}">
 
                 <a href="producto.html?p=${U.esc(i.producto_slug)}" class="item-imagen">
                     <img src="${U.esc(i.producto_imagen || 'img/logo.png')}" alt="${U.esc(i.producto_nombre)}">
@@ -111,7 +133,7 @@ const Carrito = {
 
                     <div class="item-opciones">${opciones}</div>
 
-                    ${i.estampa_nombre ? `
+                    ${(i.estampa_nombre && !esPanel) ? `
                         <p class="item-estampa">
                             <i class="fa-regular fa-image"></i>
                             <a href="${API.base.replace('/api', '')}${U.esc(i.estampa_url)}" target="_blank" rel="noopener">
@@ -119,7 +141,7 @@ const Carrito = {
                             </a>
                         </p>` : ''}
 
-                    ${i.notas ? `<p class="item-notas"><i class="fa-regular fa-note-sticky"></i> ${U.esc(i.notas)}</p>` : ''}
+                    ${(i.notas && !esPanel) ? `<p class="item-notas"><i class="fa-regular fa-note-sticky"></i> ${U.esc(i.notas)}</p>` : ''}
                 </div>
 
                 <div class="item-acciones">
@@ -142,8 +164,11 @@ const Carrito = {
             </article>`;
     },
 
-    conectarEventos() {
-        document.querySelectorAll('.item-carrito').forEach((fila) => {
+    conectarEventos(idContenedor) {
+        const raiz = document.getElementById(idContenedor);
+        if (!raiz) return;
+
+        raiz.querySelectorAll('.item-carrito').forEach((fila) => {
             const id = fila.dataset.id;
             const input = fila.querySelector('[data-accion="cantidad"]');
 
@@ -159,7 +184,7 @@ const Carrito = {
                 () => this.quitar(id, fila));
         });
 
-        const vaciar = document.getElementById('vaciarCarrito');
+        const vaciar = raiz.querySelector('.vaciar-carrito');
         if (vaciar) {
             vaciar.addEventListener('click', async () => {
                 if (!confirm('¿Seguro que quieres vaciar el carrito?')) return;

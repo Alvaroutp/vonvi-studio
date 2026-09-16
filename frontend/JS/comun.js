@@ -16,6 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
     acordeon();
     avisoPendiente();
     Header.iniciar();
+    PanelCarrito.enganchar();
 });
 
 /** Muestra un aviso dejado por otra página antes de redirigir. */
@@ -233,5 +234,179 @@ const Header = {
         } catch (e) {
             burbuja.classList.remove('visible');
         }
+    },
+};
+
+/* =====================================================================
+   PANEL DEL CARRITO (sidebar tipo Temu / AliExpress)
+   =====================================================================
+   En vez de llevar a carrito.html, el ícono del carrito abre este
+   panel deslizable. Usa exactamente la misma lógica de Carrito
+   (carrito.js) que ya pinta la página completa: solo cambia el
+   contenedor donde se dibuja.
+
+   carrito.html sigue existiendo tal cual, por si alguien entra por
+   un enlace directo o guardado.
+   ===================================================================== */
+const PanelCarrito = {
+
+    creado: false,
+
+    /** Conecta el clic del ícono "Carrito" del header con el panel. */
+    enganchar() {
+        const enPaginaCarrito = /(^|\/)carrito\.html$/.test(location.pathname);
+
+        document.querySelectorAll('.btn-carrito').forEach((enlace) => {
+            enlace.addEventListener('click', (e) => {
+                // En la propia página del carrito, el enlace se deja normal.
+                if (enPaginaCarrito) return;
+                e.preventDefault();
+                this.abrir();
+            });
+        });
+    },
+
+    /** Crea el HTML y el CSS del panel la primera vez que se necesita. */
+    crear() {
+        if (this.creado) return;
+        this.creado = true;
+
+        const estilo = document.createElement('style');
+        estilo.textContent = `
+            .overlay-panel-carrito {
+                position: fixed; inset: 0;
+                background: rgba(31, 36, 48, .55);
+                opacity: 0; visibility: hidden;
+                transition: opacity .25s ease;
+                z-index: 1500;
+            }
+            .overlay-panel-carrito.visible { opacity: 1; visibility: visible; }
+
+            .panel-carrito {
+                position: fixed; top: 0; right: 0;
+                height: 100%; width: min(430px, 100%);
+                background: var(--panel, #fff);
+                box-shadow: var(--sombra-fuerte, -8px 0 24px rgba(0,0,0,.15));
+                display: flex; flex-direction: column;
+                transform: translateX(100%);
+                transition: transform .3s ease;
+                z-index: 1501;
+            }
+            .panel-carrito.abierto { transform: translateX(0); }
+
+            .panel-carrito-cabecera {
+                display: flex; align-items: center; justify-content: space-between;
+                padding: 20px 24px;
+                border-bottom: 1px solid var(--linea, #e5e7eb);
+                flex-shrink: 0;
+            }
+            .panel-carrito-cabecera h2 {
+                font-size: 1.05rem; margin: 0;
+                color: var(--tinta, #1f2430);
+                display: flex; align-items: center; gap: 9px;
+            }
+            .panel-carrito-cabecera h2 i { color: var(--rosa, #ec4f95); }
+            .panel-carrito-cabecera button {
+                background: none; border: none; cursor: pointer;
+                font-size: 1.2rem; color: var(--gris, #6b7280); line-height: 1;
+                padding: 6px; transition: .2s;
+            }
+            .panel-carrito-cabecera button:hover { color: var(--rosa, #ec4f95); }
+
+            .panel-carrito-cuerpo {
+                flex: 1; overflow-y: auto;
+                padding: 20px 24px 28px;
+            }
+
+            body.bloqueo-scroll { overflow: hidden; }
+
+            /* Layout de una sola columna dentro del panel angosto */
+            .carrito-grid-panel {
+                display: flex; flex-direction: column; gap: 22px;
+            }
+            .carrito-grid-panel .item-carrito-panel {
+                display: grid;
+                grid-template-columns: 68px 1fr;
+                gap: 12px;
+                align-items: start;
+                background: none;
+                box-shadow: none;
+                border-bottom: 1px solid var(--linea, #e5e7eb);
+                border-radius: 0;
+                padding: 0 0 18px;
+                margin-bottom: 0;
+            }
+            .carrito-grid-panel .item-carrito-panel .item-imagen img {
+                width: 68px; height: 68px; object-fit: cover; border-radius: 10px;
+            }
+            .carrito-grid-panel .item-carrito-panel h3 { font-size: .95rem; margin-bottom: 6px; }
+            .carrito-grid-panel .item-carrito-panel .item-acciones {
+                grid-column: 1 / -1;
+                flex-direction: row;
+                align-items: center;
+                justify-content: space-between;
+                margin-top: 8px;
+            }
+            .carrito-grid-panel .item-carrito-panel .item-precio { text-align: right; }
+            .carrito-grid-panel .item-carrito-panel .item-precio strong { font-size: 16px; }
+
+            .carrito-grid-panel .carrito-resumen {
+                position: static;
+                box-shadow: none;
+                border-top: 1px solid var(--linea, #e5e7eb);
+                border-radius: 0;
+                padding: 18px 0 0;
+            }
+
+            @media (max-width: 480px) {
+                .panel-carrito { width: 100%; }
+            }
+        `;
+        document.head.appendChild(estilo);
+
+        const overlay = document.createElement('div');
+        overlay.id = 'overlayCarrito';
+        overlay.className = 'overlay-panel-carrito';
+
+        const panel = document.createElement('aside');
+        panel.id = 'panelCarrito';
+        panel.className = 'panel-carrito';
+        panel.setAttribute('aria-label', 'Carrito de compras');
+        panel.innerHTML = `
+            <div class="panel-carrito-cabecera">
+                <h2><i class="fa-solid fa-cart-shopping"></i> Mi carrito</h2>
+                <button type="button" id="cerrarPanelCarrito" aria-label="Cerrar carrito">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div id="panelCarritoContenido" class="panel-carrito-cuerpo"></div>
+        `;
+
+        document.body.appendChild(overlay);
+        document.body.appendChild(panel);
+
+        overlay.addEventListener('click', () => this.cerrar());
+        panel.querySelector('#cerrarPanelCarrito').addEventListener('click', () => this.cerrar());
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') this.cerrar();
+        });
+    },
+
+    abrir() {
+        this.crear();
+        document.getElementById('overlayCarrito').classList.add('visible');
+        document.getElementById('panelCarrito').classList.add('abierto');
+        document.body.classList.add('bloqueo-scroll');
+
+        if (typeof Carrito !== 'undefined') Carrito.pintarEn('panelCarritoContenido');
+    },
+
+    cerrar() {
+        const overlay = document.getElementById('overlayCarrito');
+        const panel = document.getElementById('panelCarrito');
+        if (overlay) overlay.classList.remove('visible');
+        if (panel) panel.classList.remove('abierto');
+        document.body.classList.remove('bloqueo-scroll');
     },
 };
