@@ -9,7 +9,7 @@ CREATE TABLE usuarios (
     email      VARCHAR(120) NOT NULL UNIQUE,   
     password   VARCHAR(255) NOT NULL,          
     telefono   VARCHAR(20)      NULL,
-    rol        ENUM('cliente','admin','empleado') NOT NULL DEFAULT 'cliente',
+    rol        ENUM('cliente','admin','empleado','proveedor') NOT NULL DEFAULT 'cliente',
     token      VARCHAR(60)      NULL,          
     creado_en  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
@@ -132,4 +132,16 @@ CREATE TABLE cotizaciones (
     creado_en            DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE SET NULL
+);
+CREATE TABLE solicitudes (
+    id             INT AUTO_INCREMENT PRIMARY KEY,
+    proveedor_id   INT NOT NULL,
+    descripcion    TEXT NOT NULL,
+    cantidad       INT NOT NULL,
+    estado         ENUM('enviada','aceptada','rechazada') NOT NULL DEFAULT 'enviada',
+    respuesta      VARCHAR(255) NULL,
+    creado_en      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    respondido_en  DATETIME NULL,
+ 
+    FOREIGN KEY (proveedor_id) REFERENCES usuarios(id) ON DELETE CASCADE
 );
