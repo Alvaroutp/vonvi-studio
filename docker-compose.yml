@@ -3,11 +3,9 @@ services:
     image: mysql:8.0
     environment:
       MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
-    ports:
-      - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
-      #Se ejecutan en orden al crear el contenedor por primera vez:
+       #Se ejecutan en orden al crear el contenedor por primera vez:
       #crean la base, las 8 tablas y cargan categorías/productos de prueba.
       - ./backend/sql/base_datos.sql:/docker-entrypoint-initdb.d/1_base_datos.sql
       - ./backend/sql/datos.sql:/docker-entrypoint-initdb.d/2_datos.sql
