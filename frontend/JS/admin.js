@@ -3,16 +3,11 @@ const Admin = {
     estados: [],
 
     async iniciar(pagina) {
-        // Sin sesión: al login, y que vuelva aquí después de entrar.
         if (!API.haySesion()) {
             location.href = '../login.html?volver=' + encodeURIComponent('admin/index.html');
             return;
         }
 
-        // Con sesión pero sin permisos: se va a la tienda.
-        //
-        // Mandarlo al login sería un bucle: el login vería que YA tiene sesión
-        // y lo devolvería al panel, y así indefinidamente.
         if (!API.esAdmin()) {
             sessionStorage.setItem('vonvi_aviso', 'Esta sección es solo para administradores');
             location.href = '../index.html';
@@ -48,10 +43,6 @@ const Admin = {
         if (pagina === 'cotizaciones') this.cotizaciones();
         if (pagina === 'empleados') this.empleados();
     },
-
-    /* =================================================================
-       DASHBOARD
-       ================================================================= */
 
     async dashboard() {
         const zona = document.getElementById('contenidoAdmin');
@@ -132,10 +123,6 @@ const Admin = {
                 </div>
             </div>`;
     },
-
-    /* =================================================================
-       PEDIDOS
-       ================================================================= */
 
     async pedidos() {
         const zona = document.getElementById('contenidoAdmin');
@@ -432,18 +419,10 @@ const Admin = {
         });
     },
 
-    /* =================================================================
-       CATÁLOGO  ·  categorías › productos › atributos › detalles
-       =================================================================
-       Cada nivel se dibuja dentro de #contenidoAdmin. No hay recarga
-       de página: solo cambia lo que hay dentro de ese contenedor.
-       ================================================================= */
 
+    catCategoria: null,  
+    catProducto: null,    
 
-    catCategoria: null,   // categoría en la que estamos metidos
-    catProducto: null,    // producto en el que estamos metidos
-
-    // Punto de entrada. Lo llama Admin.iniciar('productos')
     async productos() {
         this.verCategorias();
     },
@@ -452,9 +431,6 @@ const Admin = {
         return document.getElementById('contenidoAdmin');
     },
     
-    // EMPLEADOS
-    // Solo el admin llega aqui. Las cuentas de empleado nacen desde esta pantalla,
-    // nadie se puede registrar solo como empleado
     async empleados() {
         const zona = this.zona();
         U.cargando(zona, 'Cargando empleados...');
@@ -467,7 +443,6 @@ const Admin = {
             return;
         }
 
-        // La clave recien generada se muestra una sola vez y se borra de la memoria
         const reciente = this.claveNueva;
         this.claveNueva = null;
 
@@ -530,8 +505,6 @@ const Admin = {
         });
     },
 
-
-    // El admin no escribe la contrasena, la genera el servidor y se la dicta al empleado
     formEmpleado() {
         this.modal({
             titulo: 'Nuevo empleado',
@@ -551,9 +524,7 @@ const Admin = {
     },
 
 
-    /* =================================================================
-       MIGAS DE PAN
-       ================================================================= */
+
     migas(nivel) {
         const partes = [];
 
@@ -590,9 +561,6 @@ const Admin = {
     },
 
 
-    /* =================================================================
-       NIVEL 1 · CATEGORÍAS
-       ================================================================= */
     async verCategorias() {
         this.catCategoria = null;
         this.catProducto = null;
@@ -698,8 +666,7 @@ const Admin = {
             campos: [
                 { id: 'nombre', etiqueta: 'Nombre', valor: categoria ? categoria.nombre : '', requerido: true },
                 { id: 'descripcion', etiqueta: 'Descripción', tipo: 'textarea', valor: categoria ? (categoria.descripcion || '') : '' },
-                { id: 'imagen', etiqueta: 'Ruta de la imagen', valor: categoria ? (categoria.imagen || '') : '', placeholder: 'img/polos.jpg' },
-                { id: 'icono', etiqueta: 'Icono de Font Awesome', valor: categoria ? (categoria.icono || '') : '', placeholder: 'fa-solid fa-shirt' },
+                { id: 'imagen', etiqueta: 'Imagen', tipo: 'imagen',valor: categoria ? (categoria.imagen || '') : '' },
             ],
             guardar: async (datos) => {
                 if (nueva) await API.post('/admin/categorias', datos);
@@ -710,10 +677,6 @@ const Admin = {
         });
     },
 
-
-    /* =================================================================
-       NIVEL 2 · PRODUCTOS DE UNA CATEGORÍA
-       ================================================================= */
     async verProductos(categoria) {
         this.catCategoria = categoria;
         this.catProducto = null;
@@ -841,8 +804,8 @@ const Admin = {
                   valor: producto ? producto.cantidad_minima : 1 },
                 { id: 'diasProduccion', etiqueta: 'Días de producción', tipo: 'number',
                   valor: producto ? producto.dias_produccion : 3 },
-                { id: 'imagen', etiqueta: 'Ruta de la imagen',
-                  valor: producto ? (producto.imagen || '') : '', placeholder: 'img/polos.jpg' },
+                { id: 'imagen', etiqueta: 'Imagen', tipo: 'imagen',
+                  valor: producto ? (producto.imagen || '') : '' },
             ],
             guardar: async (datos) => {
                 datos.categoriaId = this.catCategoria.id;
@@ -855,9 +818,6 @@ const Admin = {
     },
 
 
-    /* =================================================================
-       NIVEL 3 y 4 · ATRIBUTOS Y DETALLES DE UN PRODUCTO
-       ================================================================= */
     async verProducto(productoId) {
         const zona = this.zona();
         U.cargando(zona, 'Cargando el producto...');
@@ -1070,11 +1030,6 @@ const Admin = {
     },
 
 
-    /* =================================================================
-       MODAL GENÉRICO
-       Recibe una lista de campos y devuelve un objeto con lo escrito.
-       Así los cuatro formularios usan el mismo código.
-       ================================================================= */
     modal({ titulo, campos, guardar }) {
         const capa = document.createElement('div');
         capa.className = 'capa-modal';
@@ -1124,8 +1079,29 @@ const Admin = {
             const error = capa.querySelector('#errorCatalogo');
             error.hidden = true;
 
+            // Primero se suben las imagenes, y se guarda la ruta que devuelve el servidor
+            for (const c of campos.filter((x) => x.tipo === 'imagen')) {
+                const entrada = capa.querySelector('#c_' + c.id);
+                if (entrada.files.length === 0) continue;
+
+                const cuerpo = new FormData();
+                cuerpo.append('imagen', entrada.files[0]);
+                try {
+                    const r = await API.pedir('/admin/imagenes', { method: 'POST', body: cuerpo });
+                    capa.querySelector('#c_' + c.id + '_ruta').value = r.ruta;
+                } catch (err) {
+                    error.textContent = err.message;
+                    error.hidden = false;
+                    return;
+                }
+            }
+
             const datos = {};
             campos.forEach((c) => {
+                if (c.tipo === 'imagen') {
+                    datos[c.id] = capa.querySelector('#c_' + c.id + '_ruta').value;
+                    return;
+                }
                 const el = capa.querySelector('#c_' + c.id);
                 datos[c.id] = c.tipo === 'number' ? Number(el.value) : el.value.trim();
             });
@@ -1163,6 +1139,13 @@ const Admin = {
                            value="${U.esc(c.valor)}" ${req}>`;
         }
 
+                if (c.tipo === 'imagen') {
+            return `<input type="file" id="${id}" accept="image/jpeg,image/png,image/webp">
+                    <input type="hidden" id="${id}_ruta" value="${U.esc(c.valor || '')}">
+                    <small>${c.valor ? 'Actual: ' + U.esc(c.valor)
+                                     : 'Si no eliges nada, se queda como esta.'}</small>`;
+        }
+
         if (c.tipo === 'color') {
             return `<input type="color" id="${id}" value="${U.esc(c.valor)}"
                            style="height:44px;padding:4px">`;
@@ -1173,9 +1156,6 @@ const Admin = {
     },
 
 
-    /* =================================================================
-       COTIZACIONES
-       ================================================================= */
 
     async cotizaciones() {
         const zona = document.getElementById('contenidoAdmin');

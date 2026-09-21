@@ -6,5 +6,6 @@ router.use(require('./pedidos'));
 router.use(require('./resumen'));
 router.use(require('./cotizaciones'));
 router.use(require('./empleados'));
+router.use(require('./proveedores'));
 
 module.exports = router;

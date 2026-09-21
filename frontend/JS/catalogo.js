@@ -1,10 +1,3 @@
-/* =====================================================================
-   catalogo.js  ·  productos.html y categoria.html
-   ===================================================================== */
-
-/* ---------------------------------------------------------------
-   productos.html  →  las 11 categorías + buscador
-   --------------------------------------------------------------- */
 const Catalogo = {
 
     async iniciar() {
@@ -25,7 +18,6 @@ const Catalogo = {
                 <a href="categoria.html?cat=${encodeURIComponent(c.slug)}" class="card-categoria mostrar">
                     <div class="imagen-categoria">
                         <img src="${U.esc(c.imagen || 'img/logo.png')}" alt="${U.esc(c.nombre)}" loading="lazy">
-                        <span class="icono-categoria"><i class="${U.esc(c.icono || 'fa-solid fa-tag')}"></i></span>
                     </div>
                     <div class="contenido-categoria">
                         <h3>${U.esc(c.nombre)}</h3>
@@ -62,8 +54,6 @@ const Catalogo = {
                 return;
             }
 
-            // Se espera a que deje de escribir: sin esto se dispara
-            // una petición por cada tecla presionada.
             temporizador = setTimeout(async () => {
                 try {
                     const r = await API.get(`/productos?buscar=${encodeURIComponent(texto)}`);
@@ -80,7 +70,7 @@ const Catalogo = {
                     resultados.innerHTML = r.productos
                         .map((p) => Catalogo.tarjetaProducto(p)).join('');
 
-                } catch (e) { /* búsqueda fallida: se ignora en silencio */ }
+                } catch (e) { }
             }, 350);
         });
     },
@@ -112,9 +102,6 @@ const Catalogo = {
     },
 };
 
-/* ---------------------------------------------------------------
-   categoria.html  →  los productos de una categoría
-   --------------------------------------------------------------- */
 const Categoria = {
 
     async iniciar() {
