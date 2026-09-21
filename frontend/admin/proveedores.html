@@ -7,7 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
 
-    <title>Pedidos | Panel Vonvi Studio</title>
+    <title>Productos | Panel Vonvi Studio</title>
     <link rel="icon" type="image/png" href="../img/icon.png">
 
     <link rel="stylesheet" href="../CSS/admin.css">
@@ -32,12 +32,12 @@
 
         <nav class="admin-nav">
             <a href="index.html"><i class="fa-solid fa-gauge-high"></i> Resumen</a>
-            <a href="pedidos.html" class="activo"><i class="fa-solid fa-receipt"></i> Pedidos</a>
-            <a href="productos.html"><i class="fa-solid fa-box"></i> Productos</a>
+            <a href="pedidos.html"><i class="fa-solid fa-receipt"></i> Pedidos</a>
+            <a href="productos.html" ><i class="fa-solid fa-box"></i> Productos</a>
             <a href="cotizaciones.html"><i class="fa-solid fa-envelope-open-text"></i> Cotizaciones</a>
             <a href="empleados.html"><i class="fa-solid fa-users"></i> Empleados</a>
-            <a href="proveedores.html" ><i class="fa-solid fa-truck"></i> Proveedores</a>
-            
+            <a href="proveedores.html" class="activo"><i class="fa-solid fa-truck"></i> Proveedores</a>
+
         </nav>
 
         <div class="admin-lateral-pie">
@@ -55,8 +55,8 @@
                     <i class="fa-solid fa-bars"></i>
                 </button>
                 <div>
-                    <h1>Pedidos</h1>
-                    <p class="sub">Consulta pedidos y avanza el estado de fabricación</p>
+                    <h1>Portal de Proveedores</h1>
+                    <p class="sub">Gestiona tus requerimientos y proveedores en tiempo real</p>
                 </div>
             </div>
             <div class="admin-perfil">
@@ -72,7 +72,7 @@
     <script src="../JS/api.js"></script>
     <script src="../JS/admin.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', () => Admin.iniciar('pedidos'));
+        document.addEventListener('DOMContentLoaded', () => Admin.iniciar('productos'));
     </script>
 
 </body>
