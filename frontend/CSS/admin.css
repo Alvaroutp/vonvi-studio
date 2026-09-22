@@ -488,6 +488,16 @@ ul { list-style: none; }
 }
 
 .campo input:focus, .campo select:focus, .campo textarea:focus { border-color: var(--rosa); }
+.campo input[type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+}
+
+.campo input[type="number"]::-webkit-outer-spin-button,
+.campo input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
 
 .fila-campos { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 

@@ -1173,7 +1173,7 @@ const Admin = {
             { id: 'valor', etiqueta: 'Valor', placeholder: 'M, Rojo, 500 ml...',
               valor: detalle ? detalle.valor : '', requerido: true },
             { id: 'recargo', etiqueta: 'Recargo (S/)', tipo: 'number', paso: '0.01',
-              valor: detalle ? detalle.recargo : 0 },
+              valor: detalle ? detalle.recargo : '' },
         ];
 
         // El color solo se pregunta si el atributo es de tipo color
@@ -1311,8 +1311,7 @@ const Admin = {
                 if (c.tipo === 'imagen') {
             return `<input type="file" id="${id}" accept="image/jpeg,image/png,image/webp">
                     <input type="hidden" id="${id}_ruta" value="${U.esc(c.valor || '')}">
-                    <small>${c.valor ? 'Actual: ' + U.esc(c.valor)
-                                     : 'Si no eliges nada, se queda como esta.'}</small>`;
+                    <input type="hidden" id="${id}_ruta" value="${U.esc(c.valor || '')}">`;
         }
 
         if (c.tipo === 'color') {
