@@ -16,27 +16,6 @@ function aSlug(texto) {
 
 // NIVEL 1 CATEGORÍAS
 
-// Listar
-router.get('/admin/categorias', requiereSesion, requiereRol('admin'), async (req, res) => {
-    try {
-        const [categorias] = await db.query(`
-            SELECT c.id, c.nombre, c.slug, c.descripcion, c.imagen, c.icono, c.activo,
-                   COUNT(p.id) AS total_productos
-              FROM categorias c
-              LEFT JOIN productos p ON p.categoria_id = c.id
-             GROUP BY c.id, c.nombre, c.slug, c.descripcion, c.imagen, c.icono, c.activo
-             ORDER BY c.id
-        `);
-
-        res.json({ ok: true, total: categorias.length, categorias });
-
-    } catch (error) {
-        console.error('Error listando categorías:', error.message);
-        res.status(500).json({ ok: false, mensaje: 'No se pudo consultar la base de datos' });
-    }
-});
-
-
 // Crear
 router.post('/admin/categorias', requiereSesion, requiereRol('admin'), async (req, res) => {
     try {
@@ -73,6 +52,26 @@ router.post('/admin/categorias', requiereSesion, requiereRol('admin'), async (re
         }
         console.error('Error creando categoría:', error.message);
         res.status(500).json({ ok: false, mensaje: 'No se pudo crear la categoría' });
+    }
+});
+
+// Listar
+router.get('/admin/categorias', requiereSesion, requiereRol('admin'), async (req, res) => {
+    try {
+        const [categorias] = await db.query(`
+            SELECT c.id, c.nombre, c.slug, c.descripcion, c.imagen, c.icono, c.activo,
+                   COUNT(p.id) AS total_productos
+              FROM categorias c
+              LEFT JOIN productos p ON p.categoria_id = c.id
+             GROUP BY c.id, c.nombre, c.slug, c.descripcion, c.imagen, c.icono, c.activo
+             ORDER BY c.id
+        `);
+
+        res.json({ ok: true, total: categorias.length, categorias });
+
+    } catch (error) {
+        console.error('Error listando categorías:', error.message);
+        res.status(500).json({ ok: false, mensaje: 'No se pudo consultar la base de datos' });
     }
 });
 
@@ -154,6 +153,39 @@ router.delete('/admin/categorias/:id', requiereSesion, requiereRol('admin'), asy
 
 // NIVEL 2 PRODUCTOS
 
+// Crear
+router.post('/admin/productos', requiereSesion, requiereRol('admin'), async (req, res) => {
+    try {
+        const d = await leerProducto(req.body);
+
+        if (d.error) {
+            return res.status(400).json({ ok: false, mensaje: d.error });
+        }
+
+        const [resultado] = await db.query(
+            `INSERT INTO productos
+                (categoria_id, nombre, slug, descripcion, precio, imagen,
+                 cantidad_minima, dias_produccion, activo)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [d.categoriaId, d.nombre, d.slug, d.descripcion, d.precio, d.imagen,
+             d.cantidadMinima, d.diasProduccion, d.activo]
+        );
+
+        res.status(201).json({
+            ok: true,
+            mensaje: 'Producto creado',
+            producto: { id: resultado.insertId, ...d },
+        });
+
+    } catch (error) {
+        if (error.code === 'ER_DUP_ENTRY') {
+            return res.status(400).json({ ok: false, mensaje: 'Ya existe un producto con ese nombre' });
+        }
+        console.error('Error creando producto:', error.message);
+        res.status(500).json({ ok: false, mensaje: 'No se pudo crear el producto' });
+    }
+});
+
 // Listar
 router.get('/admin/productos', requiereSesion, requiereRol('admin'), async (req, res) => {
     try {
@@ -207,41 +239,6 @@ async function leerProducto(body) {
         activo: body.activo === false ? 0 : 1,
     };
 }
-
-
-// Crear
-router.post('/admin/productos', requiereSesion, requiereRol('admin'), async (req, res) => {
-    try {
-        const d = await leerProducto(req.body);
-
-        if (d.error) {
-            return res.status(400).json({ ok: false, mensaje: d.error });
-        }
-
-        const [resultado] = await db.query(
-            `INSERT INTO productos
-                (categoria_id, nombre, slug, descripcion, precio, imagen,
-                 cantidad_minima, dias_produccion, activo)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            [d.categoriaId, d.nombre, d.slug, d.descripcion, d.precio, d.imagen,
-             d.cantidadMinima, d.diasProduccion, d.activo]
-        );
-
-        res.status(201).json({
-            ok: true,
-            mensaje: 'Producto creado',
-            producto: { id: resultado.insertId, ...d },
-        });
-
-    } catch (error) {
-        if (error.code === 'ER_DUP_ENTRY') {
-            return res.status(400).json({ ok: false, mensaje: 'Ya existe un producto con ese nombre' });
-        }
-        console.error('Error creando producto:', error.message);
-        res.status(500).json({ ok: false, mensaje: 'No se pudo crear el producto' });
-    }
-});
-
 
 // Editar
 router.put('/admin/productos/:id', requiereSesion, requiereRol('admin'), async (req, res) => {
