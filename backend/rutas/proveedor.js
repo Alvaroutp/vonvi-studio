@@ -3,7 +3,6 @@ const db = require('../db');
 const { requiereSesion, requiereRol } = require('../sesion');
 const router = express.Router();
 
-// GET /proveedor/solicitudes — que el proveedor vea las solicitudes que le llegaron
 router.get('/proveedor/solicitudes', requiereSesion, requiereRol('proveedor'), async (req, res) => {
     const [filas] = await db.query(
         `SELECT id, descripcion, cantidad, estado, respuesta, creado_en, respondido_en
@@ -15,7 +14,6 @@ router.get('/proveedor/solicitudes', requiereSesion, requiereRol('proveedor'), a
     res.json({ ok: true, solicitudes: filas });
 });
 
-// PUT /proveedor/solicitudes/:id/responder — que la acepte o la rechace
 router.put('/proveedor/solicitudes/:id/responder', requiereSesion, requiereRol('proveedor'), async (req, res) => {
     const id = Number(req.params.id);
     const estado = (req.body.estado || '').trim();
