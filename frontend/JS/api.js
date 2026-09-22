@@ -1,17 +1,9 @@
-/* =====================================================================
-   api.js  ·  Punto único de comunicación con el backend
-   =====================================================================
-   Todas las páginas hablan con la API a través de este archivo.
-   Centralizarlo evita repetir el manejo del token y de los errores
-   en cada pantalla.
-   ===================================================================== */
-
 const API = {
 
-    /** Cambia esto si subes el backend a un servidor. */
+
     base: '/api',
 
-    /* ---------------- Sesión ---------------- */
+
 
     get token() { return localStorage.getItem('vonvi_token'); },
     set token(v) {

@@ -79,6 +79,8 @@ const Login = {
      * haría que el panel lo devuelva al login, y el login otra vez al panel.
      */
     destino() {
+        if (API.usuario && API.usuario.rol === 'proveedor') return 'proveedor.html';
+
         const volver = U.parametro('volver');
         const interna = volver
             && /^[a-zA-Z0-9_\-./?=&]+$/.test(volver)
@@ -89,8 +91,8 @@ const Login = {
             return volver;
         }
         return API.esAdmin() ? 'admin/index.html' : 'cuenta.html';
-    },
-};
+        },
+    };
 
 /* ---------------------------------------------------------------
    REGISTRO

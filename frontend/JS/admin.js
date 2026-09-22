@@ -42,6 +42,7 @@ const Admin = {
         if (pagina === 'productos') this.productos();
         if (pagina === 'cotizaciones') this.cotizaciones();
         if (pagina === 'empleados') this.empleados();
+        if (pagina === 'proveedores') this.proveedores();
     },
 
     async dashboard() {
@@ -519,6 +520,174 @@ const Admin = {
                 this.claveNueva = { email: datos.email, clave: r.clave_temporal };
                 U.aviso('Empleado creado');
                 this.empleados();
+            },
+        });
+    },
+
+        // PROVEEDORES
+    // Solo el admin llega aqui. Las cuentas de proveedor nacen desde esta pantalla
+    async proveedores() {
+        const zona = this.zona();
+        U.cargando(zona, 'Cargando proveedores...');
+
+        let r;
+        try {
+            r = await API.get('/admin/proveedores');
+        } catch (e) {
+            U.vacio(zona, 'fa-solid fa-plug-circle-xmark', 'No se pudo cargar', e.message);
+            return;
+        }
+
+        // Las solicitudes vienen de a un proveedor por vez, asi que se piden todas
+        // juntas y se juntan en una sola lista con el nombre de la empresa adentro
+        const listas = await Promise.all(
+            r.proveedores.map((p) => API.get('/admin/proveedores/' + p.id + '/solicitudes'))
+        );
+        const solicitudes = [];
+        listas.forEach((lista, i) => {
+            lista.solicitudes.forEach((s) => {
+                s.empresa = r.proveedores[i].apellidos;
+                solicitudes.push(s);
+            });
+        });
+
+        const reciente = this.claveNueva;
+        this.claveNueva = null;
+
+        // El CSS solo tiene dos colores de pastilla: verde (si) y rojo (no)
+        const color = { enviada: '', aceptada: 'si', rechazada: 'no' };
+
+        zona.innerHTML = `
+            <div class="cabecera-seccion">
+                <div>
+                    <h2>Proveedores</h2>
+                    <p class="sub">${r.proveedores.length} proveedor(es) registrado(s).</p>
+                </div>
+                <button type="button" class="btn-principal" data-nuevo>
+                    <i class="fa-solid fa-truck"></i> Nuevo proveedor
+                </button>
+            </div>
+
+            ${reciente ? `
+                <div class="clave-nueva">
+                    <p>Cuenta creada para <strong>${U.esc(reciente.email)}</strong></p>
+                    <p class="clave">${U.esc(reciente.clave)}</p>
+                    <small>Anota esta contraseña ahora. No se vuelve a mostrar.</small>
+                </div>` : ''}
+
+            ${r.proveedores.length === 0 ? `
+                <div class="estado-vacio">
+                    <i class="fa-solid fa-truck"></i>
+                    <h3>Todavía no hay proveedores</h3>
+                    <p>Registra el primero para poder mandarle solicitudes.</p>
+                </div>` : `
+                <table class="tabla-admin">
+                    <thead>
+                        <tr><th>Empresa</th><th>Contacto</th><th>Correo</th>
+                            <th>Teléfono</th><th></th></tr>
+                    </thead>
+                    <tbody>
+                        ${r.proveedores.map((p) => `
+                            <tr>
+                                <td><strong>${U.esc(p.apellidos)}</strong></td>
+                                <td>${U.esc(p.nombres)}</td>
+                                <td>${U.esc(p.email)}</td>
+                                <td>${U.esc(p.telefono || '—')}</td>
+                                <td class="acciones-fila">
+                                    <button type="button" title="Mandar solicitud"
+                                            data-solicitar="${p.id}">
+                                        <i class="fa-solid fa-paper-plane"></i>
+                                    </button>
+                                    <button type="button" title="Borrar cuenta"
+                                            data-borrar-prov="${p.id}">
+                                        <i class="fa-regular fa-trash-can"></i>
+                                    </button>
+                                </td>
+                            </tr>`).join('')}
+                    </tbody>
+                </table>`}
+
+            <h2 class="titulo-seccion-admin">Solicitudes enviadas</h2>
+
+            ${solicitudes.length === 0 ? `
+                <p class="sub">Todavia no se ha mandado ninguna solicitud.</p>` : `
+                <table class="tabla-admin">
+                    <thead>
+                        <tr><th>Proveedor</th><th>Qué se pidió</th><th>Cantidad</th>
+                            <th>Enviada</th><th>Estado</th></tr>
+                    </thead>
+                    <tbody>
+                        ${solicitudes.map((s) => `
+                            <tr>
+                                <td>${U.esc(s.empresa)}</td>
+                                <td>${U.esc(s.descripcion)}</td>
+                                <td>${s.cantidad}</td>
+                                <td>${U.fecha(s.creado_en)}</td>
+                                <td>
+                                    <span class="pastilla-estado ${color[s.estado]}">
+                                        ${s.estado}
+                                    </span>
+                                </td>
+                            </tr>`).join('')}
+                    </tbody>
+                </table>`}`;
+
+        zona.querySelector('[data-nuevo]').addEventListener('click', () => this.formProveedor());
+
+        zona.querySelectorAll('[data-solicitar]').forEach((b) => {
+            b.addEventListener('click', () => {
+                const p = r.proveedores.find((x) => String(x.id) === b.dataset.solicitar);
+                this.formSolicitud(p);
+            });
+        });
+
+        zona.querySelectorAll('[data-borrar-prov]').forEach((b) => {
+            b.addEventListener('click', async () => {
+                const p = r.proveedores.find((x) => String(x.id) === b.dataset.borrarProv);
+                if (!confirm(`¿Borrar la cuenta de ${p.apellidos}?`)) return;
+                try {
+                    await API.borrar(`/admin/proveedores/${p.id}`);
+                    U.aviso('Cuenta eliminada');
+                    this.proveedores();
+                } catch (err) { U.aviso(err.message, 'error'); }
+            });
+        });
+    },
+
+
+    // El admin no escribe la contrasena, la genera el servidor y se la dicta al proveedor
+    formProveedor() {
+        this.modal({
+            titulo: 'Nuevo proveedor',
+            campos: [
+                { id: 'apellidos', etiqueta: 'Nombre de la empresa', valor: '', requerido: true },
+                { id: 'nombres', etiqueta: 'Nombre del contacto', valor: '', requerido: true },
+                { id: 'email', etiqueta: 'Correo', valor: '', requerido: true,
+                  placeholder: 'mario@textiles.pe' },
+                { id: 'telefono', etiqueta: 'Telefono', valor: '', placeholder: '999 888 777' },
+            ],
+            guardar: async (datos) => {
+                const r = await API.post('/admin/proveedores', datos);
+                this.claveNueva = { email: datos.email, clave: r.clave_temporal };
+                U.aviso('Proveedor registrado');
+                this.proveedores();
+            },
+        });
+    },
+
+
+    formSolicitud(p) {
+        this.modal({
+            titulo: 'Nueva solicitud para ' + p.apellidos,
+            campos: [
+                { id: 'descripcion', etiqueta: 'Que necesitas', tipo: 'textarea', valor: '',
+                  requerido: true },
+                { id: 'cantidad', etiqueta: 'Cantidad', tipo: 'number', valor: 1, requerido: true },
+            ],
+            guardar: async (datos) => {
+                await API.post('/admin/solicitudes', { proveedorId: p.id, ...datos });
+                U.aviso('Solicitud enviada');
+                this.proveedores();
             },
         });
     },
