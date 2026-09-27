@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+
+    <title>Mis solicitudes | Vonvi Studio Perú</title>
+    <link rel="icon" type="image/png" href="img/icon.png">
+
+    <link rel="stylesheet" href="CSS/estilos.css">
+    <link rel="stylesheet" href="CSS/tienda.css">
+    <link rel="stylesheet" href="CSS/responsive.css">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+    <style>
+        /* Portal del proveedor. Estilos propios de esta pagina */
+        .pagina-proveedor { padding: 125px 0 70px; }    
+
+        .tarjeta-solicitud {
+            background: #fff;
+            border: 1px solid #eceaee;
+            border-radius: 14px;
+            padding: 20px 22px;
+            margin-bottom: 14px;
+        }
+
+        .tarjeta-solicitud h3 { margin: 0 0 4px; font-size: 17px; }
+        .tarjeta-solicitud .sub { margin: 0; color: #8a8a8a; font-size: 14px; }
+        .tarjeta-solicitud .acciones { display: flex; gap: 10px; margin-top: 14px; }
+
+        .marca-estado {
+            display: inline-block;
+            margin-top: 12px;
+            padding: 5px 14px;
+            border-radius: 999px;
+            font-size: 13px;
+            font-weight: 600;
+            background: #f4f4f5;
+            color: #6b6b6b;
+        }
+
+        .marca-estado.aceptada { background: #f0fdf4; color: #16a34a; }
+        .marca-estado.rechazada { background: #fef2f2; color: #dc2626; }
+        .motivo { margin: 8px 0 0; font-style: italic; color: #8a8a8a; }
+        .pagina-proveedor h1 { font-size: 30px; margin: 0 0 22px; }
+    </style>
+
+</head>
+
+<body>
+
+    <header>
+        <div class="contenedor">
+
+            <div class="logo">
+                <a href="index.html"><img src="img/logo.png" alt="Vonvi Studio Perú"></a>
+            </div>
+
+            <div class="acciones-header">
+                <div id="zonaSesion"></div>
+            </div>
+
+        </div>
+    </header>
+
+    <main class="contenedor pagina-proveedor">
+
+    <h1>Sus pedidos</h1>
+
+        <div id="listaSolicitudes"></div>
+
+    </main>
+
+    <script src="JS/api.js"></script>
+    <script src="JS/comun.js"></script>
+    <script src="JS/proveedor.js"></script>
+
+</body>
+
+</html>
