@@ -53,24 +53,3 @@ router.put('/proveedor/ordenes/:id/responder', requiereSesion, requiereRol('prov
 });
 
 module.exports = router;
-
-// Compatibilidad: endpoints antiguos de solicitudes para el frontend del proveedor
-router.get('/proveedor/solicitudes', requiereSesion, requiereRol('proveedor'), async (req, res) => {
-    try {
-        // devolver vacío para mantener compatibilidad
-        res.json({ ok: true, solicitudes: [] });
-    } catch (error) {
-        console.error(error.message);
-        res.status(500).json({ ok: false, mensaje: 'No se pudo listar las solicitudes' });
-    }
-});
-
-router.put('/proveedor/solicitudes/:id/responder', requiereSesion, requiereRol('proveedor'), async (req, res) => {
-    try {
-        // Como no existe la tabla, respondemos con 404 indicando que no hay entidad
-        res.status(404).json({ ok: false, mensaje: 'La acción de solicitudes no está disponible' });
-    } catch (error) {
-        console.error(error.message);
-        res.status(500).json({ ok: false, mensaje: 'No se pudo procesar la respuesta' });
-    }
-});

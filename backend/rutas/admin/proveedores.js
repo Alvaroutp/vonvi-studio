@@ -111,6 +111,8 @@ router.delete('/admin/proveedores/:id', requiereSesion, requiereRol('admin'), as
         const [ordenes] = await db.query('SELECT COUNT(*) AS c FROM ordenes_compra WHERE proveedor_id = ?', [id]);
         if (ordenes[0].c > 0) return res.status(400).json({ ok: false, mensaje: 'No se puede borrar un proveedor con órdenes' });
 
+        // Primero las cuentas de sus encargados: solo existen para esta empresa
+        await db.query('DELETE FROM usuarios WHERE proveedor_id = ?', [id]);
         await db.query('DELETE FROM proveedores WHERE id = ?', [id]);
         res.json({ ok: true });
     } catch (error) {
@@ -190,39 +192,3 @@ router.put('/admin/encargados/:id/clave', requiereSesion, requiereRol('admin'), 
 });
 
 module.exports = router;
-
-// Compatibilidad: endpoints antiguos de "solicitudes" para frontend
-// Estas rutas no requieren la tabla `solicitudes` y devuelven respuestas seguras.
-router.get('/admin/proveedores/:id/solicitudes', requiereSesion, requiereRol('admin'), async (req, res) => {
-    try {
-        const id = Number(req.params.id);
-        const [prov] = await db.query('SELECT id FROM proveedores WHERE id = ?', [id]);
-        if (prov.length === 0) return res.status(404).json({ ok: false, mensaje: 'Proveedor no existe' });
-        // Devolver lista vacía para no romper el frontend antiguo
-        res.json({ ok: true, solicitudes: [] });
-    } catch (error) {
-        console.error(error.message);
-        res.status(500).json({ ok: false, mensaje: 'No se pudo obtener las solicitudes' });
-    }
-});
-
-router.post('/admin/solicitudes', requiereSesion, requiereRol('admin'), async (req, res) => {
-    try {
-        const proveedorId = Number(req.body.proveedorId);
-        const descripcion = (req.body.descripcion || '').trim();
-        const cantidad = Number(req.body.cantidad);
-
-        if (!descripcion) return res.status(400).json({ ok: false, mensaje: 'Escribe que necesitas' });
-        if (isNaN(cantidad) || cantidad < 1) return res.status(400).json({ ok: false, mensaje: 'La cantidad no es valida' });
-
-        const [prov] = await db.query('SELECT id FROM proveedores WHERE id = ?', [proveedorId]);
-        if (prov.length === 0) return res.status(404).json({ ok: false, mensaje: 'Ese proveedor no existe' });
-
-        // No existe la tabla `solicitudes` (compatibilidad): simulamos creación y devolvemos id temporal
-        const fakeId = Date.now();
-        res.status(201).json({ ok: true, id: fakeId });
-    } catch (error) {
-        console.error(error.message);
-        res.status(500).json({ ok: false, mensaje: 'No se pudo crear la solicitud' });
-    }
-});

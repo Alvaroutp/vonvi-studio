@@ -24,7 +24,7 @@ CREATE TABLE usuarios (
     rol        ENUM('cliente','admin','empleado','proveedor') NOT NULL DEFAULT 'cliente',
     token      VARCHAR(60)      NULL,          
     creado_en  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (proveedor_id) REFERENCES proveedores(id) ON DELETE SET NULL
+    FOREIGN KEY (proveedor_id) REFERENCES proveedores(id)
 );
 
 CREATE TABLE categorias (
@@ -145,32 +145,32 @@ CREATE TABLE cotizaciones (
     creado_en            DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE SET NULL
-    );
+);
 
-    -- =====================================================================
-    --  Tabla ordenes_compra y orden_items
-    -- =====================================================================
-    CREATE TABLE ordenes_compra (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        codigo VARCHAR(30) NOT NULL UNIQUE,
-        proveedor_id INT NOT NULL,
-        estado ENUM('enviada','aceptada','rechazada') NOT NULL DEFAULT 'enviada',
-        fecha_entrega DATE NULL,
-        respuesta VARCHAR(500) NULL,
-        subtotal DECIMAL(10,2) NOT NULL DEFAULT 0.00,
-        igv DECIMAL(10,2) NOT NULL DEFAULT 0.00,
-        total DECIMAL(10,2) NOT NULL DEFAULT 0.00,
-        creado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        respondido_en DATETIME NULL,
-        FOREIGN KEY (proveedor_id) REFERENCES proveedores(id) ON DELETE CASCADE
-    );
+-- =====================================================================
+--  Tabla ordenes_compra y orden_items
+-- =====================================================================
+CREATE TABLE ordenes_compra (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    codigo VARCHAR(30) NOT NULL UNIQUE,
+    proveedor_id INT NOT NULL,
+    estado ENUM('enviada','aceptada','rechazada') NOT NULL DEFAULT 'enviada',
+    fecha_entrega DATE NULL,
+    respuesta VARCHAR(500) NULL,
+    subtotal DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    igv DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    total DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    creado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    respondido_en DATETIME NULL,
+    FOREIGN KEY (proveedor_id) REFERENCES proveedores(id)
+);
 
-    CREATE TABLE orden_items (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        orden_id INT NOT NULL,
-        descripcion VARCHAR(500) NOT NULL,
-        cantidad INT NOT NULL,
-        precio_unitario DECIMAL(10,2) NOT NULL,
-        subtotal DECIMAL(10,2) NOT NULL,
-        FOREIGN KEY (orden_id) REFERENCES ordenes_compra(id) ON DELETE CASCADE
-    );
+CREATE TABLE orden_items (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    orden_id INT NOT NULL,
+    descripcion VARCHAR(500) NOT NULL,
+    cantidad INT NOT NULL,
+    precio_unitario DECIMAL(10,2) NOT NULL,
+    subtotal DECIMAL(10,2) NOT NULL,
+    FOREIGN KEY (orden_id) REFERENCES ordenes_compra(id) ON DELETE CASCADE
+);

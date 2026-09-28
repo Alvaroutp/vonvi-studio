@@ -5,14 +5,19 @@ const { requiereSesion, requiereRol } = require('../../sesion');
 const router = express.Router();
 
 async function siguienteCodigo() {
-    const fecha = new Date();
-    const anio = fecha.getFullYear();
-    const [filas] = await db.query("SELECT codigo FROM ordenes_compra WHERE codigo LIKE ? ORDER BY id DESC LIMIT 1", [`OC-${anio}-%`]);
-    if (filas.length === 0) return `OC-${anio}-001`;
-    const ultimo = filas[0].codigo; // OC-2026-001
-    const partes = ultimo.split('-');
-    const num = parseInt(partes[2], 10) + 1;
-    return `OC-${anio}-${String(num).padStart(3, '0')}`;
+    const anio = new Date().getFullYear();
+
+    // Se toma el numero mas alto del anio, no el ultimo creado: si se borra
+    // la orden mas reciente, el codigo no se vuelve a usar
+    const [filas] = await db.query(
+        `SELECT MAX(CAST(SUBSTRING(codigo, 9) AS UNSIGNED)) AS ultimo
+           FROM ordenes_compra
+          WHERE codigo LIKE ?`,
+        [`OC-${anio}-%`]
+    );
+
+    const numero = String((filas[0].ultimo || 0) + 1).padStart(3, '0');
+    return `OC-${anio}-${numero}`;
 }
 
 // Listar ordenes de un proveedor
@@ -41,6 +46,23 @@ router.post('/admin/ordenes', requiereSesion, requiereRol('admin'), async (req, 
         if (!proveedor_id) return res.status(400).json({ ok: false, mensaje: 'Proveedor requerido' });
         if (items.length === 0) return res.status(400).json({ ok: false, mensaje: 'La orden debe tener al menos un item' });
 
+        // El proveedor tiene que existir
+        const [prov] = await db.query('SELECT id FROM proveedores WHERE id = ?', [proveedor_id]);
+        if (prov.length === 0) {
+            return res.status(404).json({ ok: false, mensaje: 'Ese proveedor no existe' });
+        }
+
+        // Y tiene que tener cuenta de acceso, o nadie podria responder la orden
+        const [cuentas] = await db.query(
+            'SELECT COUNT(*) AS c FROM usuarios WHERE proveedor_id = ?', [proveedor_id]
+        );
+        if (cuentas[0].c === 0) {
+            return res.status(400).json({
+                ok: false,
+                mensaje: 'Ese proveedor no tiene cuenta de acceso. Creale una primero.'
+            });
+        }
+
         // Calcular subtotal en el servidor
         let subtotal = 0;
         const itemsToInsert = [];
@@ -66,9 +88,16 @@ router.post('/admin/ordenes', requiereSesion, requiereRol('admin'), async (req, 
             [codigo, proveedor_id, fecha_entrega || null, subtotal, igv, total]);
 
         const ordenId = r.insertId;
-        for (const it of itemsToInsert) {
-            await db.query('INSERT INTO orden_items (orden_id, descripcion, cantidad, precio_unitario, subtotal) VALUES (?, ?, ?, ?, ?)',
-                [ordenId, it.descripcion, it.cantidad, it.precio_unitario, it.subtotal]);
+
+        try {
+            for (const it of itemsToInsert) {
+                await db.query('INSERT INTO orden_items (orden_id, descripcion, cantidad, precio_unitario, subtotal) VALUES (?, ?, ?, ?, ?)',
+                    [ordenId, it.descripcion, it.cantidad, it.precio_unitario, it.subtotal]);
+            }
+        } catch (errorLineas) {
+            // Si una linea falla, se borra la cabecera para no dejar una orden vacia
+            await db.query('DELETE FROM ordenes_compra WHERE id = ?', [ordenId]);
+            throw errorLineas;
         }
 
         res.status(201).json({ ok: true, id: ordenId, codigo });
