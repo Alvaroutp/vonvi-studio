@@ -524,8 +524,16 @@ const Admin = {
         });
     },
 
-        // PROVEEDORES
-    // Solo el admin llega aqui. Las cuentas de proveedor nacen desde esta pantalla
+        // =================================================================
+    // PROVEEDORES Y ORDENES DE COMPRA
+    // El admin registra empresas, les crea cuentas de acceso y les manda
+    // ordenes de compra. La pantalla son dos columnas: la lista a la
+    // izquierda, y todo lo de la empresa elegida a la derecha.
+    // =================================================================
+
+    provSel: null,      // id de la empresa elegida
+    provLista: [],      // las empresas, para filtrar sin volver a pedirlas
+
     async proveedores() {
         const zona = this.zona();
         U.cargando(zona, 'Cargando proveedores...');
@@ -538,34 +546,23 @@ const Admin = {
             return;
         }
 
-        // Las solicitudes vienen de a un proveedor por vez, asi que se piden todas
-        // juntas y se juntan en una sola lista con el nombre de la empresa adentro
-        const listas = await Promise.all(
-            r.proveedores.map((p) => API.get('/admin/proveedores/' + p.id + '/solicitudes'))
-        );
-        const solicitudes = [];
-        listas.forEach((lista, i) => {
-            lista.solicitudes.forEach((s) => {
-                s.empresa = r.proveedores[i].apellidos;
-                solicitudes.push(s);
-            });
-        });
+        this.provLista = r.proveedores;
 
+        // Si la elegida ya no existe (se borro), se pasa a la primera
+        if (!this.provLista.some((p) => p.id === this.provSel)) {
+            this.provSel = this.provLista.length ? this.provLista[0].id : null;
+        }
+
+        // La clave recien generada se muestra una sola vez y se borra
         const reciente = this.claveNueva;
         this.claveNueva = null;
-
-        // El CSS solo tiene dos colores de pastilla: verde (si) y rojo (no)
-        const color = { enviada: '', aceptada: 'si', rechazada: 'no' };
 
         zona.innerHTML = `
             <div class="cabecera-seccion">
                 <div>
                     <h2>Proveedores</h2>
-                    <p class="sub">${r.proveedores.length} proveedor(es) registrado(s).</p>
+                    <p class="sub">Empresas a las que Vonvi Studio compra insumos</p>
                 </div>
-                <button type="button" class="btn-principal" data-nuevo>
-                    <i class="fa-solid fa-truck"></i> Nuevo proveedor
-                </button>
             </div>
 
             ${reciente ? `
@@ -575,120 +572,532 @@ const Admin = {
                     <small>Anota esta contraseña ahora. No se vuelve a mostrar.</small>
                 </div>` : ''}
 
-            ${r.proveedores.length === 0 ? `
-                <div class="estado-vacio">
-                    <i class="fa-solid fa-truck"></i>
-                    <h3>Todavía no hay proveedores</h3>
-                    <p>Registra el primero para poder mandarle solicitudes.</p>
-                </div>` : `
-                <table class="tabla-admin">
-                    <thead>
-                        <tr><th>Empresa</th><th>Contacto</th><th>Correo</th>
-                            <th>Teléfono</th><th></th></tr>
-                    </thead>
-                    <tbody>
-                        ${r.proveedores.map((p) => `
-                            <tr>
-                                <td><strong>${U.esc(p.apellidos)}</strong></td>
-                                <td>${U.esc(p.nombres)}</td>
-                                <td>${U.esc(p.email)}</td>
-                                <td>${U.esc(p.telefono || '—')}</td>
-                                <td class="acciones-fila">
-                                    <button type="button" title="Mandar solicitud"
-                                            data-solicitar="${p.id}">
-                                        <i class="fa-solid fa-paper-plane"></i>
-                                    </button>
-                                    <button type="button" title="Borrar cuenta"
-                                            data-borrar-prov="${p.id}">
-                                        <i class="fa-regular fa-trash-can"></i>
-                                    </button>
-                                </td>
-                            </tr>`).join('')}
-                    </tbody>
-                </table>`}
+            <div class="prov-grid">
 
-            <h2 class="titulo-seccion-admin">Solicitudes enviadas</h2>
+                <div class="prov-lista">
+                    <input type="text" class="prov-buscador" id="buscarProv"
+                           placeholder="Buscar proveedor...">
+                    <button type="button" class="btn-principal"
+                            style="width:100%;margin-bottom:12px" data-nueva-empresa>
+                        <i class="fa-solid fa-plus"></i> Agregar proveedor
+                    </button>
+                    <div id="listaProv"></div>
+                </div>
 
-            ${solicitudes.length === 0 ? `
-                <p class="sub">Todavia no se ha mandado ninguna solicitud.</p>` : `
-                <table class="tabla-admin">
-                    <thead>
-                        <tr><th>Proveedor</th><th>Qué se pidió</th><th>Cantidad</th>
-                            <th>Enviada</th><th>Estado</th></tr>
-                    </thead>
-                    <tbody>
-                        ${solicitudes.map((s) => `
-                            <tr>
-                                <td>${U.esc(s.empresa)}</td>
-                                <td>${U.esc(s.descripcion)}</td>
-                                <td>${s.cantidad}</td>
-                                <td>${U.fecha(s.creado_en)}</td>
-                                <td>
-                                    <span class="pastilla-estado ${color[s.estado]}">
-                                        ${s.estado}
-                                    </span>
-                                </td>
-                            </tr>`).join('')}
-                    </tbody>
-                </table>`}`;
+                <div id="detalleProv"></div>
 
-        zona.querySelector('[data-nuevo]').addEventListener('click', () => this.formProveedor());
+            </div>`;
 
-        zona.querySelectorAll('[data-solicitar]').forEach((b) => {
+        this.pintarLista('');
+
+        document.getElementById('buscarProv')
+            .addEventListener('input', (ev) => this.pintarLista(ev.target.value));
+
+        zona.querySelector('[data-nueva-empresa]')
+            .addEventListener('click', () => this.formEmpresa(null));
+
+        this.verProveedor();
+    },
+
+
+    // Solo la columna izquierda. El texto filtra por nombre o por RUC
+    pintarLista(texto) {
+        const caja = document.getElementById('listaProv');
+        const busca = texto.trim().toLowerCase();
+
+        const visibles = this.provLista.filter((p) =>
+            p.razon_social.toLowerCase().includes(busca) || p.ruc.includes(busca));
+
+        if (this.provLista.length === 0) {
+            caja.innerHTML = '<p class="sub" style="padding:10px 4px">Todavía no hay proveedores.</p>';
+            return;
+        }
+
+        if (visibles.length === 0) {
+            caja.innerHTML = '<p class="sub" style="padding:10px 4px">Ninguno coincide.</p>';
+            return;
+        }
+
+        caja.innerHTML = visibles.map((p) => `
+            <div class="prov-item ${p.id === this.provSel ? 'activo' : ''}" data-prov="${p.id}">
+                <div class="nom">${U.esc(p.razon_social)}</div>
+                <div class="ruc">RUC ${U.esc(p.ruc)}</div>
+                ${Number(p.encargados) === 0
+                    ? '<div class="marca sin">sin acceso al portal</div>'
+                    : `<div class="marca">${p.encargados} encargado(s) · ${p.ordenes} orden(es)</div>`}
+            </div>`).join('');
+
+        caja.querySelectorAll('[data-prov]').forEach((el) => {
+            el.addEventListener('click', () => {
+                this.provSel = Number(el.dataset.prov);
+                this.pintarLista(texto);
+                this.verProveedor();
+            });
+        });
+    },
+
+
+    // Toda la columna derecha: datos, encargados y ordenes de la elegida
+    async verProveedor() {
+        const caja = document.getElementById('detalleProv');
+
+        if (!this.provSel) {
+            U.vacio(caja, 'fa-solid fa-truck', 'Todavía no hay proveedores',
+                    'Registra el primero para poder mandarle órdenes de compra.');
+            return;
+        }
+
+        U.cargando(caja, 'Cargando...');
+
+        const p = this.provLista.find((x) => x.id === this.provSel);
+
+        let encargados = [];
+        let ordenes = [];
+
+        try {
+            const [re, ro] = await Promise.all([
+                API.get('/admin/proveedores/' + this.provSel + '/encargados'),
+                API.get('/admin/proveedores/' + this.provSel + '/ordenes'),
+            ]);
+            encargados = re.encargados;
+            ordenes = ro.ordenes;
+        } catch (e) {
+            U.vacio(caja, 'fa-solid fa-plug-circle-xmark', 'No se pudo cargar', e.message);
+            return;
+        }
+
+        // El CSS tiene tres colores de pastilla: ambar, verde y rojo
+        const color = { enviada: 'espera', aceptada: 'si', rechazada: 'no' };
+
+        const sinAcceso = encargados.length === 0;
+
+        caja.innerHTML = `
+            <div class="prov-panel">
+
+                <div class="prov-cab">
+                    <div>
+                        <h2>${U.esc(p.razon_social)}</h2>
+                        <p class="ruc">RUC ${U.esc(p.ruc)}</p>
+                    </div>
+                    <div class="acciones-fila">
+                        <button type="button" title="Editar" data-editar-emp>
+                            <i class="fa-solid fa-pen"></i>
+                        </button>
+                        <button type="button" title="Borrar" data-borrar-emp>
+                            <i class="fa-regular fa-trash-can"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="prov-datos">
+                    <div>
+                        <div class="et">Teléfono</div>
+                        <div class="va">${U.esc(p.telefono || '—')}</div>
+                    </div>
+                    <div>
+                        <div class="et">Correo</div>
+                        <div class="va">${U.esc(p.email || '—')}</div>
+                    </div>
+                    <div>
+                        <div class="et">Dirección</div>
+                        <div class="va">${U.esc(p.direccion || '—')}</div>
+                    </div>
+                </div>
+
+                <div class="prov-encargados">
+                    <div class="et" style="margin-bottom:8px">ENCARGADOS</div>
+
+                    ${sinAcceso ? `
+                        <p class="sin-acceso">Todavía no tiene acceso al portal.</p>` : `
+                        ${encargados.map((e) => `
+                            <div class="enc-fila">
+                                <div>
+                                    <div class="nom">${U.esc(e.nombres)} ${U.esc(e.apellidos)}</div>
+                                    <div class="mail">${U.esc(e.email)} · ${U.esc(e.telefono || '—')}</div>
+                                </div>
+                                <div>
+                                    <button type="button" class="btn-mini"
+                                            data-editar-enc="${e.id}">Editar</button>
+                                    <button type="button" class="btn-mini"
+                                            data-clave-enc="${e.id}">Restablecer clave</button>
+                                </div>
+                            </div>`).join('')}`}
+
+                    <button type="button" class="btn-secundario chico"
+                            style="margin-top:12px" data-nuevo-enc>
+                        <i class="fa-solid fa-user-plus"></i> Agregar encargado
+                    </button>
+                </div>
+
+            </div>
+
+            <div class="prov-panel">
+
+                <div class="cabecera-seccion">
+                    <div>
+                        <h2>Órdenes de compra</h2>
+                        <p class="sub">${ordenes.length} orden(es) a ${U.esc(p.razon_social)}</p>
+                    </div>
+                    ${sinAcceso ? '' : `
+                        <button type="button" class="btn-principal" data-nueva-orden>
+                            <i class="fa-solid fa-plus"></i> Nueva orden
+                        </button>`}
+                </div>
+
+                ${sinAcceso ? `
+                    <p class="sub">Créale una cuenta de acceso para poder mandarle órdenes:
+                    si nadie puede entrar al portal, nadie podría responderlas.</p>` : ''}
+
+                ${!sinAcceso && ordenes.length === 0 ? `
+                    <p class="sub">Todavía no le has mandado ninguna orden.</p>` : ''}
+
+                ${ordenes.map((o) => `
+                    <div class="oc-tarjeta">
+
+                        <div class="oc-lin">
+                            <span class="oc-cod">${U.esc(o.codigo)}</span>
+                            <div>
+                                <span class="pastilla-estado ${color[o.estado]}">${o.estado}</span>
+                                <button type="button" class="btn-mini"
+                                        data-borrar-oc="${o.id}">Borrar</button>
+                            </div>
+                        </div>
+
+                        <p class="oc-fecha">
+                            Emitida el ${U.fecha(o.creado_en)}
+                            ${o.fecha_entrega ? ' · Entrega esperada: ' + U.fecha(o.fecha_entrega) : ''}
+                            ${o.respondido_en ? ' · Respondida el ' + U.fecha(o.respondido_en) : ''}
+                        </p>
+
+                        <table class="tabla-admin">
+                            <thead>
+                                <tr><th>Descripción</th><th>Cant.</th>
+                                    <th>P. unit.</th><th>Subtotal</th></tr>
+                            </thead>
+                            <tbody>
+                                ${(o.items || []).map((i) => `
+                                    <tr>
+                                        <td>${U.esc(i.descripcion)}</td>
+                                        <td>${i.cantidad}</td>
+                                        <td>${U.soles(i.precio_unitario)}</td>
+                                        <td>${U.soles(i.subtotal)}</td>
+                                    </tr>`).join('')}
+                            </tbody>
+                        </table>
+
+                        <div class="oc-totales">
+                            <div class="fila"><span>Subtotal</span><span>${U.soles(o.subtotal)}</span></div>
+                            <div class="fila"><span>IGV (18%)</span><span>${U.soles(o.igv)}</span></div>
+                            <div class="fila total"><span>Total</span><span>${U.soles(o.total)}</span></div>
+                        </div>
+
+                        ${o.respuesta ? `
+                            <p class="oc-motivo">Motivo del rechazo: "${U.esc(o.respuesta)}"</p>` : ''}
+
+                    </div>`).join('')}
+
+            </div>`;
+
+        // ---- los botones, que recien existen ahora ----
+
+        caja.querySelector('[data-editar-emp]')
+            .addEventListener('click', () => this.formEmpresa(p));
+
+        caja.querySelector('[data-borrar-emp]')
+            .addEventListener('click', () => this.borrarEmpresa(p));
+
+        caja.querySelector('[data-nuevo-enc]')
+            .addEventListener('click', () => this.formEncargado(p, null));
+
+        caja.querySelectorAll('[data-editar-enc]').forEach((b) => {
             b.addEventListener('click', () => {
-                const p = r.proveedores.find((x) => String(x.id) === b.dataset.solicitar);
-                this.formSolicitud(p);
+                const e = encargados.find((x) => String(x.id) === b.dataset.editarEnc);
+                this.formEncargado(p, e);
             });
         });
 
-        zona.querySelectorAll('[data-borrar-prov]').forEach((b) => {
-            b.addEventListener('click', async () => {
-                const p = r.proveedores.find((x) => String(x.id) === b.dataset.borrarProv);
-                if (!confirm(`¿Borrar la cuenta de ${p.apellidos}?`)) return;
-                try {
-                    await API.borrar(`/admin/proveedores/${p.id}`);
-                    U.aviso('Cuenta eliminada');
-                    this.proveedores();
-                } catch (err) { U.aviso(err.message, 'error'); }
+        caja.querySelectorAll('[data-clave-enc]').forEach((b) => {
+            b.addEventListener('click', () => {
+                const e = encargados.find((x) => String(x.id) === b.dataset.claveEnc);
+                this.restablecerClave(e);
+            });
+        });
+
+        const btnOrden = caja.querySelector('[data-nueva-orden]');
+        if (btnOrden) btnOrden.addEventListener('click', () => this.formOrden(p));
+
+        caja.querySelectorAll('[data-borrar-oc]').forEach((b) => {
+            b.addEventListener('click', () => {
+                const o = ordenes.find((x) => String(x.id) === b.dataset.borrarOc);
+                this.borrarOrden(o);
             });
         });
     },
 
 
-    // El admin no escribe la contrasena, la genera el servidor y se la dicta al proveedor
-    formProveedor() {
+    // ---------------- la empresa ----------------
+
+    formEmpresa(empresa) {
+        const nueva = !empresa;
+
         this.modal({
-            titulo: 'Nuevo proveedor',
+            titulo: nueva ? 'Nuevo proveedor' : 'Editar proveedor',
             campos: [
-                { id: 'apellidos', etiqueta: 'Nombre de la empresa', valor: '', requerido: true },
-                { id: 'nombres', etiqueta: 'Nombre del contacto', valor: '', requerido: true },
-                { id: 'email', etiqueta: 'Correo', valor: '', requerido: true,
-                  placeholder: 'mario@textiles.pe' },
-                { id: 'telefono', etiqueta: 'Telefono', valor: '', placeholder: '999 888 777' },
+                { id: 'razon_social', etiqueta: 'Razón social', requerido: true,
+                  valor: empresa ? empresa.razon_social : '',
+                  placeholder: 'Textiles Lima S.A.C' },
+                { id: 'ruc', etiqueta: 'RUC', requerido: true,
+                  valor: empresa ? empresa.ruc : '', placeholder: '20512345678' },
+                { id: 'direccion', etiqueta: 'Dirección',
+                  valor: empresa ? (empresa.direccion || '') : '',
+                  placeholder: 'Av. Argentina 1234, Lima' },
+                { id: 'telefono', etiqueta: 'Teléfono',
+                  valor: empresa ? (empresa.telefono || '') : '',
+                  placeholder: '987 654 321' },
+                { id: 'email', etiqueta: 'Correo de la empresa',
+                  valor: empresa ? (empresa.email || '') : '',
+                  placeholder: 'ventas@textileslima.pe' },
             ],
             guardar: async (datos) => {
-                const r = await API.post('/admin/proveedores', datos);
-                this.claveNueva = { email: datos.email, clave: r.clave_temporal };
-                U.aviso('Proveedor registrado');
+                if (nueva) {
+                    const r = await API.post('/admin/proveedores', datos);
+                    this.provSel = r.id;
+                    U.aviso('Proveedor registrado');
+                } else {
+                    await API.put('/admin/proveedores/' + empresa.id, datos);
+                    U.aviso('Proveedor actualizado');
+                }
                 this.proveedores();
             },
         });
     },
 
 
-    formSolicitud(p) {
+    async borrarEmpresa(empresa) {
+        if (!confirm(`¿Borrar a ${empresa.razon_social}?\n\nSe borran también sus cuentas de acceso.`)) {
+            return;
+        }
+
+        try {
+            await API.borrar('/admin/proveedores/' + empresa.id);
+            U.aviso('Proveedor eliminado');
+            this.provSel = null;
+            this.proveedores();
+        } catch (e) {
+            U.aviso(e.message, 'error');
+        }
+    },
+
+
+    // ---------------- los encargados ----------------
+
+    formEncargado(empresa, encargado) {
+        const nuevo = !encargado;
+
+        // Al editar no va el correo: es el usuario con el que inicia sesion
+        // y el servidor no lo cambia
+        const campos = [
+            { id: 'nombres', etiqueta: 'Nombres', requerido: true,
+              valor: encargado ? encargado.nombres : '', placeholder: 'Mario' },
+            { id: 'apellidos', etiqueta: 'Apellidos', requerido: true,
+              valor: encargado ? encargado.apellidos : '', placeholder: 'Quispe' },
+        ];
+
+        if (nuevo) {
+            campos.push({ id: 'email', etiqueta: 'Correo', requerido: true, valor: '',
+                          placeholder: 'mario@textileslima.pe' });
+        }
+
+        campos.push({ id: 'telefono', etiqueta: 'Teléfono',
+                      valor: encargado ? (encargado.telefono || '') : '',
+                      placeholder: '912 345 678' });
+
         this.modal({
-            titulo: 'Nueva solicitud para ' + p.apellidos,
-            campos: [
-                { id: 'descripcion', etiqueta: 'Que necesitas', tipo: 'textarea', valor: '',
-                  requerido: true },
-                { id: 'cantidad', etiqueta: 'Cantidad', tipo: 'number', valor: 1, requerido: true },
-            ],
+            titulo: nuevo ? 'Nueva cuenta de acceso' : 'Editar encargado',
+            campos,
             guardar: async (datos) => {
-                await API.post('/admin/solicitudes', { proveedorId: p.id, ...datos });
-                U.aviso('Solicitud enviada');
+                if (nuevo) {
+                    const r = await API.post(
+                        '/admin/proveedores/' + empresa.id + '/encargados', datos);
+                    this.claveNueva = { email: datos.email, clave: r.clave_temporal };
+                    U.aviso('Cuenta creada');
+                } else {
+                    await API.put('/admin/encargados/' + encargado.id, datos);
+                    U.aviso('Encargado actualizado');
+                }
                 this.proveedores();
             },
+        });
+    },
+
+
+    async restablecerClave(encargado) {
+        if (!confirm(`¿Generarle una contraseña nueva a ${encargado.nombres}?\n\n` +
+                     'La anterior deja de funcionar.')) return;
+
+        try {
+            const r = await API.put('/admin/encargados/' + encargado.id + '/clave');
+            this.claveNueva = { email: encargado.email, clave: r.clave_temporal };
+            U.aviso('Contraseña restablecida');
+            this.proveedores();
+        } catch (e) {
+            U.aviso(e.message, 'error');
+        }
+    },
+
+
+    // ---------------- las ordenes ----------------
+
+    async borrarOrden(orden) {
+        if (!confirm(`¿Borrar la orden ${orden.codigo}?`)) return;
+
+        try {
+            await API.borrar('/admin/ordenes/' + orden.id);
+            U.aviso('Orden eliminada');
+            this.proveedores();
+        } catch (e) {
+            U.aviso(e.message, 'error');
+        }
+    },
+
+
+    // Este formulario no usa modal() porque tiene una tabla de lineas
+    // que se agregan y se quitan, y totales que se recalculan solos
+    formOrden(empresa) {
+        const capa = document.createElement('div');
+        capa.className = 'capa-modal';
+
+        capa.innerHTML = `
+            <div class="modal">
+
+                <div class="modal-cabecera">
+                    <h2>Nueva orden a ${U.esc(empresa.razon_social)}</h2>
+                    <button type="button" class="cerrar-modal">&times;</button>
+                </div>
+
+                <form id="formOrden">
+
+                    <div class="campo">
+                        <label for="fechaEntrega">Fecha de entrega esperada</label>
+                        <input type="date" id="fechaEntrega">
+                    </div>
+
+                    <table class="lineas-orden">
+                        <thead>
+                            <tr>
+                                <th>Descripción</th>
+                                <th style="width:92px">Cantidad</th>
+                                <th style="width:112px">P. unitario</th>
+                                <th style="width:28px"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="cuerpoLineas"></tbody>
+                    </table>
+
+                    <button type="button" class="btn-secundario chico" id="agregarLinea">
+                        <i class="fa-solid fa-plus"></i> Agregar producto
+                    </button>
+
+                    <div class="oc-totales">
+                        <div class="fila"><span>Subtotal</span><span id="tSubtotal">S/ 0.00</span></div>
+                        <div class="fila"><span>IGV (18%)</span><span id="tIgv">S/ 0.00</span></div>
+                        <div class="fila total"><span>Total</span><span id="tTotal">S/ 0.00</span></div>
+                    </div>
+
+                    <p id="errorOrden" class="error-general" hidden></p>
+
+                    <div class="modal-acciones">
+                        <button type="button" class="btn-secundario cerrar-modal">Cancelar</button>
+                        <button type="submit" class="btn-principal">Mandar orden</button>
+                    </div>
+
+                </form>
+
+            </div>`;
+
+        document.body.appendChild(capa);
+        requestAnimationFrame(() => capa.classList.add('visible'));
+
+        const cerrar = () => {
+            capa.classList.remove('visible');
+            setTimeout(() => capa.remove(), 220);
+        };
+
+        capa.querySelectorAll('.cerrar-modal').forEach((b) => b.addEventListener('click', cerrar));
+        capa.addEventListener('click', (ev) => { if (ev.target === capa) cerrar(); });
+
+        const cuerpo = capa.querySelector('#cuerpoLineas');
+
+        // Suma las lineas cada vez que se escribe algo
+        const recalcular = () => {
+            let subtotal = 0;
+
+            cuerpo.querySelectorAll('tr').forEach((fila) => {
+                const cantidad = Number(fila.querySelector('[data-cant]').value);
+                const precio = Number(fila.querySelector('[data-precio]').value);
+                if (!isNaN(cantidad) && !isNaN(precio)) subtotal += cantidad * precio;
+            });
+
+            const igv = subtotal * 0.18;
+
+            capa.querySelector('#tSubtotal').textContent = U.soles(subtotal);
+            capa.querySelector('#tIgv').textContent = U.soles(igv);
+            capa.querySelector('#tTotal').textContent = U.soles(subtotal + igv);
+        };
+
+        const agregarLinea = () => {
+            const fila = document.createElement('tr');
+
+            fila.innerHTML = `
+                <td><input type="text" data-desc placeholder="Polos blancos algodon 20/1"></td>
+                <td><input type="number" data-cant min="1" value="1"></td>
+                <td><input type="number" data-precio min="0" step="0.01" placeholder="0.00"></td>
+                <td><button type="button" class="quitar" title="Quitar">&times;</button></td>`;
+
+            cuerpo.appendChild(fila);
+
+            fila.querySelector('.quitar').addEventListener('click', () => {
+                fila.remove();
+                recalcular();
+            });
+
+            fila.querySelectorAll('input').forEach((i) => i.addEventListener('input', recalcular));
+            recalcular();
+        };
+
+        capa.querySelector('#agregarLinea').addEventListener('click', agregarLinea);
+        agregarLinea();
+
+        capa.querySelector('#formOrden').addEventListener('submit', async (ev) => {
+            ev.preventDefault();
+
+            const error = capa.querySelector('#errorOrden');
+            error.hidden = true;
+
+            const items = [];
+            cuerpo.querySelectorAll('tr').forEach((fila) => {
+                items.push({
+                    descripcion: fila.querySelector('[data-desc]').value.trim(),
+                    cantidad: Number(fila.querySelector('[data-cant]').value),
+                    precio_unitario: Number(fila.querySelector('[data-precio]').value),
+                });
+            });
+
+            try {
+                await API.post('/admin/ordenes', {
+                    proveedor_id: empresa.id,
+                    fecha_entrega: capa.querySelector('#fechaEntrega').value || null,
+                    items: items,
+                });
+
+                U.aviso('Orden de compra creada');
+                cerrar();
+                this.proveedores();
+
+            } catch (e) {
+                error.textContent = e.message;
+                error.hidden = false;
+            }
         });
     },
 

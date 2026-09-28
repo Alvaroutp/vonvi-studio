@@ -917,3 +917,197 @@ ul { list-style: none; }
 .clave-nueva small {
     color: #8A6D1F;
 }
+/* =====================================================================
+   PROVEEDORES Y ÓRDENES DE COMPRA
+   ===================================================================== */
+
+.prov-grid {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 22px;
+    align-items: start;
+}
+
+/* ---------------- columna izquierda: la lista ---------------- */
+
+.prov-lista {
+    background: var(--panel);
+    border: 1px solid var(--linea);
+    border-radius: 16px;
+    padding: 14px;
+}
+
+.prov-buscador {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid var(--linea);
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 13.5px;
+    color: var(--gris);
+    margin-bottom: 10px;
+}
+
+.prov-buscador:focus { border-color: var(--rosa); outline: none; }
+
+.prov-item {
+    border-radius: 11px;
+    padding: 11px 13px;
+    margin-bottom: 3px;
+    cursor: pointer;
+    border-left: 3px solid transparent;
+    transition: .15s;
+}
+
+.prov-item:hover { background: #fafafb; }
+.prov-item.activo { background: var(--rosa-claro); border-left-color: var(--rosa); }
+.prov-item .nom { font-size: 14px; font-weight: 600; }
+.prov-item .ruc { font-size: 11.5px; color: var(--gris-claro); margin-top: 2px; }
+.prov-item .marca { font-size: 10.5px; color: var(--gris-claro); margin-top: 3px; }
+.prov-item .marca.sin { color: var(--aviso); }
+
+/* ---------------- columna derecha: el detalle ---------------- */
+
+.prov-panel {
+    background: var(--panel);
+    border: 1px solid var(--linea);
+    border-radius: 16px;
+    padding: 24px 26px;
+    margin-bottom: 18px;
+}
+
+.prov-cab {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--linea);
+    margin-bottom: 16px;
+}
+
+.prov-cab h2 { font-size: 21px; }
+.prov-cab .ruc { font-size: 13px; color: var(--gris); margin-top: 2px; }
+
+.prov-datos {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.prov-datos .et {
+    font-size: 10.5px;
+    letter-spacing: .4px;
+    text-transform: uppercase;
+    color: var(--gris-claro);
+}
+
+.prov-datos .va { font-size: 14px; font-weight: 600; margin-top: 3px; }
+
+/* ---------------- encargados ---------------- */
+
+.prov-encargados {
+    background: #fafafb;
+    border-radius: 12px;
+    padding: 15px 17px;
+}
+
+.enc-fila {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--linea);
+}
+
+.enc-fila:last-of-type { border-bottom: none; }
+.enc-fila .nom { font-size: 13.5px; font-weight: 600; }
+.enc-fila .mail { font-size: 11.5px; color: var(--gris-claro); }
+
+.btn-mini {
+    border: 1px solid var(--linea);
+    background: var(--panel);
+    border-radius: 7px;
+    padding: 5px 11px;
+    font-family: inherit;
+    font-size: 11.5px;
+    color: var(--gris);
+    cursor: pointer;
+    margin-left: 5px;
+}
+
+.btn-mini:hover { border-color: var(--rosa); color: var(--rosa); }
+
+.sin-acceso { font-size: 13px; color: var(--aviso); margin-bottom: 11px; }
+
+/* ---------------- órdenes de compra ---------------- */
+
+.oc-tarjeta {
+    border: 1px solid var(--linea);
+    border-radius: 13px;
+    padding: 16px 18px;
+    margin-top: 14px;
+}
+
+.oc-lin { display: flex; justify-content: space-between; align-items: center; }
+.oc-cod { font-size: 15px; font-weight: 700; }
+.oc-fecha { font-size: 11.5px; color: var(--gris-claro); margin: 3px 0 11px; }
+
+.oc-totales { margin-top: 11px; margin-left: auto; width: 230px; }
+
+.oc-totales .fila {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12.5px;
+    padding: 3px 0;
+    color: var(--gris);
+}
+
+.oc-totales .fila.total {
+    font-size: 15.5px;
+    font-weight: 700;
+    color: var(--tinta);
+    border-top: 1px solid var(--linea);
+    margin-top: 5px;
+    padding-top: 8px;
+}
+
+.oc-motivo { margin-top: 9px; font-size: 12.5px; color: var(--gris); font-style: italic; }
+
+.pastilla-estado.espera { background: #fffbeb; color: var(--aviso); }
+
+/* ---------------- líneas del formulario de orden ---------------- */
+
+.lineas-orden { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+.lineas-orden th {
+    font-size: 10px;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+    color: var(--gris-claro);
+    text-align: left;
+    padding: 6px 4px;
+}
+.lineas-orden td { padding: 4px; }
+.lineas-orden input {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid var(--linea);
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 13px;
+}
+.lineas-orden input:focus { border-color: var(--rosa); outline: none; }
+.lineas-orden .quitar {
+    border: none;
+    background: none;
+    color: var(--gris-claro);
+    cursor: pointer;
+    font-size: 15px;
+}
+.lineas-orden .quitar:hover { color: var(--error); }
+
+@media (max-width: 1000px) {
+    .prov-grid { grid-template-columns: 1fr; }
+    .prov-datos { grid-template-columns: 1fr 1fr; }
+}

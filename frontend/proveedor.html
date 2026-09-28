@@ -7,7 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
 
-    <title>Mis solicitudes | Vonvi Studio Perú</title>
+    <title>Mis órdenes | Vonvi Studio Perú</title>
     <link rel="icon" type="image/png" href="img/icon.png">
 
     <link rel="stylesheet" href="CSS/estilos.css">
@@ -23,26 +23,70 @@
 
     <style>
         /* Portal del proveedor. Estilos propios de esta pagina */
-        .pagina-proveedor { padding: 125px 0 70px; }    
 
-        .tarjeta-solicitud {
+        .pagina-proveedor { padding: 125px 0 70px; }
+        .pagina-proveedor h1 { font-size: 30px; margin: 0 0 6px; }
+        .pagina-proveedor .intro { color: #8a8a8a; font-size: 14.5px; margin: 0 0 24px; }
+
+        .orden {
             background: #fff;
             border: 1px solid #eceaee;
             border-radius: 14px;
             padding: 20px 22px;
-            margin-bottom: 14px;
+            margin-bottom: 16px;
         }
 
-        .tarjeta-solicitud h3 { margin: 0 0 4px; font-size: 17px; }
-        .tarjeta-solicitud .sub { margin: 0; color: #8a8a8a; font-size: 14px; }
-        .tarjeta-solicitud .acciones { display: flex; gap: 10px; margin-top: 14px; }
+        .orden-cab {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .orden .codigo { font-size: 17px; font-weight: 700; }
+        .orden .fechas { font-size: 12.5px; color: #9ca3af; margin: 4px 0 14px; }
+
+        .orden .detalle { width: 100%; border-collapse: collapse; }
+
+        .orden .detalle th {
+            font-size: 10.5px;
+            letter-spacing: .5px;
+            text-transform: uppercase;
+            color: #9ca3af;
+            text-align: left;
+            padding: 7px 0;
+            border-bottom: 1px solid #eceaee;
+        }
+
+        .orden .detalle td { font-size: 13.5px; padding: 9px 0; border-bottom: 1px solid #f6f6f7; }
+        .orden .detalle th:not(:first-child),
+        .orden .detalle td:not(:first-child) { text-align: right; }
+
+        .orden .totales { margin: 12px 0 0 auto; width: 240px; }
+
+        .orden .totales .fila {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            padding: 4px 0;
+            color: #6b7280;
+        }
+
+        .orden .totales .fila.total {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1f2430;
+            border-top: 1px solid #eceaee;
+            margin-top: 5px;
+            padding-top: 9px;
+        }
+
+        .orden .acciones { display: flex; gap: 10px; margin-top: 18px; }
 
         .marca-estado {
             display: inline-block;
-            margin-top: 12px;
             padding: 5px 14px;
             border-radius: 999px;
-            font-size: 13px;
+            font-size: 12.5px;
             font-weight: 600;
             background: #f4f4f5;
             color: #6b6b6b;
@@ -50,8 +94,14 @@
 
         .marca-estado.aceptada { background: #f0fdf4; color: #16a34a; }
         .marca-estado.rechazada { background: #fef2f2; color: #dc2626; }
-        .motivo { margin: 8px 0 0; font-style: italic; color: #8a8a8a; }
-        .pagina-proveedor h1 { font-size: 30px; margin: 0 0 22px; }
+        .marca-estado.enviada { background: #fffbeb; color: #b45309; }
+
+        .motivo { margin: 14px 0 0; font-style: italic; color: #8a8a8a; font-size: 13.5px; }
+
+        @media (max-width: 600px) {
+            .orden .totales { width: 100%; }
+            .orden .acciones { flex-direction: column; }
+        }
     </style>
 
 </head>
@@ -74,9 +124,10 @@
 
     <main class="contenedor pagina-proveedor">
 
-    <h1>Sus pedidos</h1>
+        <h1>Sus pedidos</h1>
+        <p class="intro">Estas son las órdenes de compra que Vonvi Studio le ha enviado.</p>
 
-        <div id="listaSolicitudes"></div>
+        <div id="listaOrdenes"></div>
 
     </main>
 

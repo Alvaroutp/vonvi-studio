@@ -191,4 +191,24 @@ router.put('/admin/encargados/:id/clave', requiereSesion, requiereRol('admin'), 
     }
 });
 
+// Encargados de una empresa
+router.get('/admin/proveedores/:id/encargados', requiereSesion, requiereRol('admin'),
+    async (req, res) => {
+        try {
+            const [filas] = await db.query(
+                `SELECT id, nombres, apellidos, email, telefono, creado_en
+                   FROM usuarios
+                  WHERE proveedor_id = ?
+                  ORDER BY id`,
+                [Number(req.params.id)]
+            );
+
+            res.json({ ok: true, encargados: filas });
+
+        } catch (error) {
+            console.error(error.message);
+            res.status(500).json({ ok: false, mensaje: 'No se pudo listar los encargados' });
+        }
+    });
+
 module.exports = router;
