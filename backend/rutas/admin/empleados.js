@@ -1,12 +1,12 @@
 const express = require('express');
 const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
-const db = require('../../db');
+
 const { requiereSesion, requiereRol } = require('../../sesion');
+const usuarioDAO = require('../../dao/usuarioDAO');
 
 const router = express.Router();
 
-//Armar contraseña
 function claveTemporal() {
     const letras = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
     const numeros = '23456789';
@@ -16,7 +16,6 @@ function claveTemporal() {
     return clave;
 }
 
-//Revisa lo que llego del formulario
 function leerEmpleado(body) {
     const nombres = (body.nombres || '').trim();
     const apellidos = (body.apellidos || '').trim();
@@ -30,61 +29,66 @@ function leerEmpleado(body) {
     return { nombres, apellidos, email, telefono: telefono || null };
 }
 
-//Listar empleados
+
 router.get('/admin/empleados', requiereSesion, requiereRol('admin'), async (req, res) => {
-    const [filas] = await db.query(
-        `SELECT id, nombres, apellidos, email, telefono, rol, creado_en
-         FROM usuarios
-         WHERE rol IN ('empleado')
-         ORDER BY creado_en DESC`
-    );
-    res.json({ ok: true, empleados: filas });
+    try {
+        const empleados = await usuarioDAO.listarEmpleados();
+        res.json({ ok: true, empleados });
+
+    } catch (error) {
+        console.error(error.message);
+        res.status(500).json({ ok: false, mensaje: 'No se pudo listar los empleados' });
+    }
 });
 
-//Crear un empleado
+
 router.post('/admin/empleados', requiereSesion, requiereRol('admin'), async (req, res) => {
-    const datos = leerEmpleado(req.body);
-    if (datos.error) return res.status(400).json({ ok: false, mensaje: datos.error });
-
-    const clave = claveTemporal();
-    const cifrada = await bcrypt.hash(clave, 10);
-
     try {
-        const [r] = await db.query(
-            `INSERT INTO usuarios (nombres, apellidos, email, password, telefono, rol)
-             VALUES (?, ?, ?, ?, ?, 'empleado')`,
-            [datos.nombres, datos.apellidos, datos.email, cifrada, datos.telefono]
-        );
-    
-        res.status(201).json({ ok: true, id: r.insertId, clave_temporal: clave });
-    } catch (e) {
-        if (e.code === 'ER_DUP_ENTRY') {
+        const datos = leerEmpleado(req.body);
+        if (datos.error) return res.status(400).json({ ok: false, mensaje: datos.error });
+
+        const clave = claveTemporal();
+        const cifrada = await bcrypt.hash(clave, 10);
+
+        const id = await usuarioDAO.crearEmpleado(datos, cifrada);
+
+        res.status(201).json({ ok: true, id: id, clave_temporal: clave });
+
+    } catch (error) {
+        if (error.code === 'ER_DUP_ENTRY') {
             return res.status(400).json({ ok: false, mensaje: 'Ese correo ya esta registrado' });
         }
-        throw e;
+        console.error(error.message);
+        res.status(500).json({ ok: false, mensaje: 'No se pudo crear el empleado' });
     }
 });
 
-//Borrar
+
 router.delete('/admin/empleados/:id', requiereSesion, requiereRol('admin'), async (req, res) => {
-    const id = Number(req.params.id);
-
-    if (id === req.usuario.id) {
-        return res.status(400).json({ ok: false, mensaje: 'No puedes borrar tu propia cuenta' });
-    }
-
-    const [filas] = await db.query("SELECT id FROM usuarios WHERE id = ? AND rol = 'empleado'", [id]);
-    if (filas.length === 0) return res.status(404).json({ ok: false, mensaje: 'Ese empleado no existe' });
-
     try {
-        await db.query('DELETE FROM usuarios WHERE id = ?', [id]);
-        res.json({ ok: true });
-    } catch (e) {
-        if (e.code === 'ER_ROW_IS_REFERENCED_2') {
-            return res.status(400).json({ ok: false, mensaje: 'No se puede borrar, tiene registros asociados' });
+        const id = Number(req.params.id);
+
+        if (id === req.usuario.id) {
+            return res.status(400).json({ ok: false, mensaje: 'No puedes borrar tu propia cuenta' });
         }
-        throw e;
+
+        if (!await usuarioDAO.existeEmpleado(id)) {
+            return res.status(404).json({ ok: false, mensaje: 'Ese empleado no existe' });
+        }
+
+        await usuarioDAO.borrarEmpleado(id);
+        res.json({ ok: true });
+
+    } catch (error) {
+        if (error.code === 'ER_ROW_IS_REFERENCED_2') {
+            return res.status(400).json({
+                ok: false, mensaje: 'No se puede borrar, tiene registros asociados'
+            });
+        }
+        console.error(error.message);
+        res.status(500).json({ ok: false, mensaje: 'No se pudo borrar el empleado' });
     }
 });
+
 
 module.exports = router;

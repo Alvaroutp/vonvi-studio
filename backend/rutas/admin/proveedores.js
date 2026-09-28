@@ -1,8 +1,11 @@
 const express = require('express');
 const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
-const db = require('../../db');
+
 const { requiereSesion, requiereRol } = require('../../sesion');
+const proveedorDAO = require('../../dao/proveedorDAO');
+const usuarioDAO = require('../../dao/usuarioDAO');
+const ordenDAO = require('../../dao/ordenDAO');
 
 const router = express.Router();
 
@@ -15,46 +18,47 @@ function claveTemporal() {
     return clave;
 }
 
+
 function validarRUC(ruc) {
     return typeof ruc === 'string' && /^[0-9]{11}$/.test(ruc);
 }
 
-// Listar proveedores con conteo de encargados y ordenes
+
+function leerEmpresa(body) {
+    return {
+        razon_social: (body.razon_social || '').trim(),
+        ruc: (body.ruc || '').trim(),
+        direccion: (body.direccion || '').trim() || null,
+        telefono: (body.telefono || '').trim() || null,
+        email: (body.email || '').trim().toLowerCase() || null,
+    };
+}
+
+
+
 router.get('/admin/proveedores', requiereSesion, requiereRol('admin'), async (req, res) => {
     try {
-        const [filas] = await db.query(
-            `SELECT p.id, p.razon_social, p.ruc, p.direccion, p.telefono, p.email, p.creado_en,
-                    (SELECT COUNT(*) FROM usuarios u WHERE u.proveedor_id = p.id) AS encargados,
-                    (SELECT COUNT(*) FROM ordenes_compra o WHERE o.proveedor_id = p.id) AS ordenes
-             FROM proveedores p
-             ORDER BY p.creado_en DESC`
-        );
-
-        res.json({ ok: true, proveedores: filas });
+        res.json({ ok: true, proveedores: await proveedorDAO.listar() });
     } catch (error) {
         console.error(error.message);
         res.status(500).json({ ok: false, mensaje: 'No se pudo listar proveedores' });
     }
 });
 
-// Crear proveedor
+
 router.post('/admin/proveedores', requiereSesion, requiereRol('admin'), async (req, res) => {
     try {
-        const razon_social = (req.body.razon_social || '').trim();
-        const ruc = (req.body.ruc || '').trim();
-        const direccion = (req.body.direccion || '').trim() || null;
-        const telefono = (req.body.telefono || '').trim() || null;
-        const email = (req.body.email || '').trim().toLowerCase() || null;
+        const datos = leerEmpresa(req.body);
 
-        if (!razon_social) return res.status(400).json({ ok: false, mensaje: 'Escribe la razón social' });
-        if (!validarRUC(ruc)) return res.status(400).json({ ok: false, mensaje: 'RUC debe tener 11 dígitos' });
+        if (!datos.razon_social) {
+            return res.status(400).json({ ok: false, mensaje: 'Escribe la razón social' });
+        }
+        if (!validarRUC(datos.ruc)) {
+            return res.status(400).json({ ok: false, mensaje: 'RUC debe tener 11 dígitos' });
+        }
 
-        const [r] = await db.query(
-            'INSERT INTO proveedores (razon_social, ruc, direccion, telefono, email) VALUES (?, ?, ?, ?, ?)',
-            [razon_social, ruc, direccion, telefono, email]
-        );
+        res.status(201).json({ ok: true, id: await proveedorDAO.crear(datos) });
 
-        res.status(201).json({ ok: true, id: r.insertId });
     } catch (error) {
         if (error.code === 'ER_DUP_ENTRY') {
             return res.status(400).json({ ok: false, mensaje: 'Ese RUC ya está registrado' });
@@ -64,151 +68,186 @@ router.post('/admin/proveedores', requiereSesion, requiereRol('admin'), async (r
     }
 });
 
-// Obtener un proveedor
+
 router.get('/admin/proveedores/:id', requiereSesion, requiereRol('admin'), async (req, res) => {
     try {
-        const id = Number(req.params.id);
-        const [filas] = await db.query('SELECT * FROM proveedores WHERE id = ?', [id]);
-        if (filas.length === 0) return res.status(404).json({ ok: false, mensaje: 'Proveedor no encontrado' });
-        res.json({ ok: true, proveedor: filas[0] });
+        const proveedor = await proveedorDAO.buscarPorId(Number(req.params.id));
+
+        if (!proveedor) {
+            return res.status(404).json({ ok: false, mensaje: 'Proveedor no encontrado' });
+        }
+
+        res.json({ ok: true, proveedor });
+
     } catch (error) {
         console.error(error.message);
         res.status(500).json({ ok: false, mensaje: 'No se pudo obtener el proveedor' });
     }
 });
 
-// Actualizar proveedor
+
 router.put('/admin/proveedores/:id', requiereSesion, requiereRol('admin'), async (req, res) => {
     try {
         const id = Number(req.params.id);
-        const razon_social = (req.body.razon_social || '').trim();
-        const ruc = (req.body.ruc || '').trim();
-        const direccion = (req.body.direccion || '').trim() || null;
-        const telefono = (req.body.telefono || '').trim() || null;
-        const email = (req.body.email || '').trim().toLowerCase() || null;
 
-        if (!razon_social) return res.status(400).json({ ok: false, mensaje: 'Escribe la razón social' });
-        if (!validarRUC(ruc)) return res.status(400).json({ ok: false, mensaje: 'RUC debe tener 11 dígitos' });
+        if (!await proveedorDAO.existe(id)) {
+            return res.status(404).json({ ok: false, mensaje: 'Ese proveedor no existe' });
+        }
 
-        await db.query('UPDATE proveedores SET razon_social = ?, ruc = ?, direccion = ?, telefono = ?, email = ? WHERE id = ?',
-            [razon_social, ruc, direccion, telefono, email, id]);
+        const datos = leerEmpresa(req.body);
 
+        if (!datos.razon_social) {
+            return res.status(400).json({ ok: false, mensaje: 'Escribe la razón social' });
+        }
+        if (!validarRUC(datos.ruc)) {
+            return res.status(400).json({ ok: false, mensaje: 'RUC debe tener 11 dígitos' });
+        }
+
+        await proveedorDAO.actualizar(id, datos);
         res.json({ ok: true });
+
     } catch (error) {
-        if (error.code === 'ER_DUP_ENTRY') return res.status(400).json({ ok: false, mensaje: 'Ese RUC ya está registrado' });
+        if (error.code === 'ER_DUP_ENTRY') {
+            return res.status(400).json({ ok: false, mensaje: 'Ese RUC ya está registrado' });
+        }
         console.error(error.message);
         res.status(500).json({ ok: false, mensaje: 'No se pudo actualizar el proveedor' });
     }
 });
 
-// Borrar proveedor (no permitir si tiene ordenes)
+
 router.delete('/admin/proveedores/:id', requiereSesion, requiereRol('admin'), async (req, res) => {
     try {
         const id = Number(req.params.id);
-        const [prov] = await db.query('SELECT id FROM proveedores WHERE id = ?', [id]);
-        if (prov.length === 0) return res.status(404).json({ ok: false, mensaje: 'Ese proveedor no existe' });
 
-        const [ordenes] = await db.query('SELECT COUNT(*) AS c FROM ordenes_compra WHERE proveedor_id = ?', [id]);
-        if (ordenes[0].c > 0) return res.status(400).json({ ok: false, mensaje: 'No se puede borrar un proveedor con órdenes' });
+        if (!await proveedorDAO.existe(id)) {
+            return res.status(404).json({ ok: false, mensaje: 'Ese proveedor no existe' });
+        }
 
-        // Primero las cuentas de sus encargados: solo existen para esta empresa
-        await db.query('DELETE FROM usuarios WHERE proveedor_id = ?', [id]);
-        await db.query('DELETE FROM proveedores WHERE id = ?', [id]);
+        if (await ordenDAO.contarPorProveedor(id) > 0) {
+            return res.status(400).json({
+                ok: false, mensaje: 'No se puede borrar un proveedor con órdenes'
+            });
+        }
+
+        await usuarioDAO.borrarPorProveedor(id);
+        await proveedorDAO.borrar(id);
+
         res.json({ ok: true });
+
     } catch (error) {
         console.error(error.message);
         res.status(500).json({ ok: false, mensaje: 'No se pudo borrar el proveedor' });
     }
 });
 
-// Encargados: crear
-router.post('/admin/proveedores/:id/encargados', requiereSesion, requiereRol('admin'), async (req, res) => {
-    try {
-        const proveedorId = Number(req.params.id);
-        const nombres = (req.body.nombres || '').trim();
-        const apellidos = (req.body.apellidos || '').trim();
-        const email = (req.body.email || '').trim().toLowerCase();
-        const telefono = (req.body.telefono || '').trim() || null;
 
-        if (!nombres || !apellidos) return res.status(400).json({ ok: false, mensaje: 'Nombres y apellidos obligatorios' });
-        if (!email.includes('@')) return res.status(400).json({ ok: false, mensaje: 'Correo no válido' });
-
-        const clave = claveTemporal();
-        const cifrada = await bcrypt.hash(clave, 10);
-
-        const [prov] = await db.query('SELECT id FROM proveedores WHERE id = ?', [proveedorId]);
-        if (prov.length === 0) return res.status(404).json({ ok: false, mensaje: 'Proveedor no existe' });
-
-        const [r] = await db.query(
-            'INSERT INTO usuarios (nombres, apellidos, email, password, telefono, rol, proveedor_id) VALUES (?, ?, ?, ?, ?, "proveedor", ?)',
-            [nombres, apellidos, email, cifrada, telefono, proveedorId]
-        );
-
-        res.status(201).json({ ok: true, id: r.insertId, clave_temporal: clave });
-    } catch (error) {
-        if (error.code === 'ER_DUP_ENTRY') return res.status(400).json({ ok: false, mensaje: 'Ese correo ya está registrado' });
-        console.error(error.message);
-        res.status(500).json({ ok: false, mensaje: 'No se pudo crear el encargado' });
-    }
-});
-
-// Actualizar encargado
-router.put('/admin/encargados/:id', requiereSesion, requiereRol('admin'), async (req, res) => {
-    try {
-        const id = Number(req.params.id);
-        const nombres = (req.body.nombres || '').trim();
-        const apellidos = (req.body.apellidos || '').trim();
-        const telefono = (req.body.telefono || '').trim() || null;
-
-        if (!nombres || !apellidos) return res.status(400).json({ ok: false, mensaje: 'Nombres y apellidos obligatorios' });
-
-        const [u] = await db.query('SELECT id FROM usuarios WHERE id = ? AND rol = "proveedor"', [id]);
-        if (u.length === 0) return res.status(404).json({ ok: false, mensaje: 'Encargado no existe' });
-
-        await db.query('UPDATE usuarios SET nombres = ?, apellidos = ?, telefono = ? WHERE id = ?', [nombres, apellidos, telefono, id]);
-        res.json({ ok: true });
-    } catch (error) {
-        console.error(error.message);
-        res.status(500).json({ ok: false, mensaje: 'No se pudo actualizar el encargado' });
-    }
-});
-
-// Generar/actualizar clave temporal para encargado
-router.put('/admin/encargados/:id/clave', requiereSesion, requiereRol('admin'), async (req, res) => {
-    try {
-        const id = Number(req.params.id);
-        const [u] = await db.query('SELECT id FROM usuarios WHERE id = ? AND rol = "proveedor"', [id]);
-        if (u.length === 0) return res.status(404).json({ ok: false, mensaje: 'Encargado no existe' });
-
-        const clave = claveTemporal();
-        const cifrada = await bcrypt.hash(clave, 10);
-        await db.query('UPDATE usuarios SET password = ? WHERE id = ?', [cifrada, id]);
-
-        res.json({ ok: true, clave_temporal: clave });
-    } catch (error) {
-        console.error(error.message);
-        res.status(500).json({ ok: false, mensaje: 'No se pudo generar la clave' });
-    }
-});
-
-// Encargados de una empresa
 router.get('/admin/proveedores/:id/encargados', requiereSesion, requiereRol('admin'),
     async (req, res) => {
         try {
-            const [filas] = await db.query(
-                `SELECT id, nombres, apellidos, email, telefono, creado_en
-                   FROM usuarios
-                  WHERE proveedor_id = ?
-                  ORDER BY id`,
-                [Number(req.params.id)]
-            );
-
-            res.json({ ok: true, encargados: filas });
+            const encargados = await usuarioDAO.listarEncargados(Number(req.params.id));
+            res.json({ ok: true, encargados });
 
         } catch (error) {
             console.error(error.message);
             res.status(500).json({ ok: false, mensaje: 'No se pudo listar los encargados' });
         }
     });
+
+
+router.post('/admin/proveedores/:id/encargados', requiereSesion, requiereRol('admin'),
+    async (req, res) => {
+        try {
+            const proveedorId = Number(req.params.id);
+
+            const datos = {
+                nombres: (req.body.nombres || '').trim(),
+                apellidos: (req.body.apellidos || '').trim(),
+                email: (req.body.email || '').trim().toLowerCase(),
+                telefono: (req.body.telefono || '').trim() || null,
+            };
+
+            if (!datos.nombres || !datos.apellidos) {
+                return res.status(400).json({
+                    ok: false, mensaje: 'Nombres y apellidos obligatorios'
+                });
+            }
+            if (!datos.email.includes('@')) {
+                return res.status(400).json({ ok: false, mensaje: 'Correo no válido' });
+            }
+
+            if (!await proveedorDAO.existe(proveedorId)) {
+                return res.status(404).json({ ok: false, mensaje: 'Proveedor no existe' });
+            }
+
+            const clave = claveTemporal();
+            const cifrada = await bcrypt.hash(clave, 10);
+
+            const id = await usuarioDAO.crearEncargado(proveedorId, datos, cifrada);
+
+            res.status(201).json({ ok: true, id: id, clave_temporal: clave });
+
+        } catch (error) {
+            if (error.code === 'ER_DUP_ENTRY') {
+                return res.status(400).json({
+                    ok: false, mensaje: 'Ese correo ya está registrado'
+                });
+            }
+            console.error(error.message);
+            res.status(500).json({ ok: false, mensaje: 'No se pudo crear el encargado' });
+        }
+    });
+
+
+router.put('/admin/encargados/:id', requiereSesion, requiereRol('admin'), async (req, res) => {
+    try {
+        const id = Number(req.params.id);
+
+        const datos = {
+            nombres: (req.body.nombres || '').trim(),
+            apellidos: (req.body.apellidos || '').trim(),
+            telefono: (req.body.telefono || '').trim() || null,
+        };
+
+        if (!datos.nombres || !datos.apellidos) {
+            return res.status(400).json({ ok: false, mensaje: 'Nombres y apellidos obligatorios' });
+        }
+
+        if (!await usuarioDAO.existeEncargado(id)) {
+            return res.status(404).json({ ok: false, mensaje: 'Encargado no existe' });
+        }
+
+        await usuarioDAO.actualizarEncargado(id, datos);
+        res.json({ ok: true });
+
+    } catch (error) {
+        console.error(error.message);
+        res.status(500).json({ ok: false, mensaje: 'No se pudo actualizar el encargado' });
+    }
+});
+
+
+router.put('/admin/encargados/:id/clave', requiereSesion, requiereRol('admin'),
+    async (req, res) => {
+        try {
+            const id = Number(req.params.id);
+
+            if (!await usuarioDAO.existeEncargado(id)) {
+                return res.status(404).json({ ok: false, mensaje: 'Encargado no existe' });
+            }
+
+            const clave = claveTemporal();
+            const cifrada = await bcrypt.hash(clave, 10);
+
+            await usuarioDAO.cambiarPassword(id, cifrada);
+
+            res.json({ ok: true, clave_temporal: clave });
+
+        } catch (error) {
+            console.error(error.message);
+            res.status(500).json({ ok: false, mensaje: 'No se pudo generar la clave' });
+        }
+    });
+
 
 module.exports = router;
