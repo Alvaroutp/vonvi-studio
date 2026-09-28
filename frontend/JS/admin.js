@@ -846,7 +846,7 @@ const Admin = {
                 { id: 'razon_social', etiqueta: 'Razón social', requerido: true,
                   valor: empresa ? empresa.razon_social : '',
                   placeholder: 'Textiles Lima S.A.C' },
-                { id: 'ruc', etiqueta: 'RUC', requerido: true,
+                { id: 'ruc', etiqueta: 'RUC', requerido: true, contador: 11,
                   valor: empresa ? empresa.ruc : '', placeholder: '20512345678' },
                 { id: 'direccion', etiqueta: 'Dirección',
                   valor: empresa ? (empresa.direccion || '') : '',
@@ -1623,7 +1623,10 @@ const Admin = {
                 <form id="formCatalogo">
                     ${campos.map((c) => `
                         <div class="campo">
-                            <label for="c_${c.id}">${U.esc(c.etiqueta)}</label>
+                            <label for="c_${c.id}">
+                                ${U.esc(c.etiqueta)}
+                                ${c.contador ? `<span class="contador" id="n_${c.id}">0/${c.contador}</span>` : ''}
+                            </label>
                             ${this.campo(c)}
                         </div>`).join('')}
 
@@ -1650,6 +1653,19 @@ const Admin = {
 
         const primero = capa.querySelector('input, select, textarea');
         if (primero) primero.focus();
+                campos.filter((c) => c.contador).forEach((c) => {
+            const entrada = capa.querySelector('#c_' + c.id);
+            const marca = capa.querySelector('#n_' + c.id);
+
+            const pintar = () => {
+                const largo = entrada.value.trim().length;
+                marca.textContent = largo + '/' + c.contador;
+                marca.classList.toggle('completo', largo === c.contador);
+            };
+
+            entrada.addEventListener('input', pintar);
+            pintar();
+        });
 
         capa.querySelector('#formCatalogo').addEventListener('submit', async (ev) => {
             ev.preventDefault();

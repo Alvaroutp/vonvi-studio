@@ -469,7 +469,9 @@ ul { list-style: none; }
 .campo { margin-bottom: 15px; }
 
 .campo label {
-    display: block;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     font-size: 13px;
     font-weight: 600;
     margin-bottom: 6px;
@@ -1110,4 +1112,13 @@ ul { list-style: none; }
 @media (max-width: 1000px) {
     .prov-grid { grid-template-columns: 1fr; }
     .prov-datos { grid-template-columns: 1fr 1fr; }
+}
+.contador {
+    font-size: 12px;
+    font-weight: 600;
+    color: #9aa0a6;
+}
+
+.contador.completo {
+    color: #1e8e3e;
 }

@@ -147,9 +147,6 @@ CREATE TABLE cotizaciones (
     FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE SET NULL
 );
 
--- =====================================================================
---  Tabla ordenes_compra y orden_items
--- =====================================================================
 CREATE TABLE ordenes_compra (
     id INT AUTO_INCREMENT PRIMARY KEY,
     codigo VARCHAR(30) NOT NULL UNIQUE,
