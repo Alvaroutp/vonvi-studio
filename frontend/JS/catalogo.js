@@ -81,6 +81,7 @@ const Catalogo = {
                 <div class="imagen-producto">
                     <img src="${U.esc(p.imagen || 'img/logo.png')}" alt="${U.esc(p.nombre)}" loading="lazy">
                     ${p.categoria ? `<span class="etiqueta-cat">${U.esc(p.categoria)}</span>` : ''}
+                    ${p.stock === 0 ? '<span class="etiqueta-agotado">Agotado</span>' : ''}
                 </div>
                 <div class="contenido-producto">
                     <h3>${U.esc(p.nombre)}</h3>

@@ -152,7 +152,19 @@ async function leerProducto(body) {
 
     if (!await categoriaDAO.existe(categoriaId)) return { error: 'Esa categoría no existe' };
 
+    // Si el formulario no manda stock se deja en null y el DAO no lo toca
+    let stock = null;
+
+    if (body.stock !== undefined && body.stock !== '') {
+        stock = Number(body.stock);
+
+        if (isNaN(stock) || stock < 0 || !Number.isInteger(stock)) {
+            return { error: 'El stock tiene que ser un número entero de 0 para arriba' };
+        }
+    }
+
     return {
+        stock,
         nombre,
         slug: aSlug(nombre),
         categoriaId,
@@ -239,6 +251,43 @@ router.put('/admin/productos/:id', requiereSesion, requiereRol('admin'), async (
 });
 
 
+router.get('/admin/productos/elegibles', requiereSesion, requiereRol('admin'),
+    async (req, res) => {
+        try {
+            const productos = await productoDAO.listarParaElegir();
+            res.json({ ok: true, productos });
+
+        } catch (error) {
+            console.error(error.message);
+            res.status(500).json({ ok: false, mensaje: 'No se pudo listar los productos' });
+        }
+    });
+
+
+router.put('/admin/productos/:id/stock', requiereSesion, requiereRol('admin'),
+    async (req, res) => {
+        try {
+            const stock = Number(req.body.stock);
+
+            if (isNaN(stock) || stock < 0 || !Number.isInteger(stock)) {
+                return res.status(400).json({
+                    ok: false, mensaje: 'El stock tiene que ser un número entero de 0 para arriba'
+                });
+            }
+
+            if (await productoDAO.ajustarStock(Number(req.params.id), stock) === 0) {
+                return res.status(404).json({ ok: false, mensaje: 'Ese producto no existe' });
+            }
+
+            res.json({ ok: true, mensaje: 'Stock corregido' });
+
+        } catch (error) {
+            console.error(error.message);
+            res.status(500).json({ ok: false, mensaje: 'No se pudo cambiar el stock' });
+        }
+    });
+
+
 router.put('/admin/productos/:id/activar', requiereSesion, requiereRol('admin'),
     async (req, res) => {
         try {
@@ -280,6 +329,12 @@ router.delete('/admin/productos/:id', requiereSesion, requiereRol('admin'), asyn
         res.json({ ok: true, mensaje: 'Producto eliminado' });
 
     } catch (error) {
+        if (error.code === 'ER_ROW_IS_REFERENCED_2') {
+            return res.status(400).json({
+                ok: false,
+                mensaje: 'No se puede borrar: este producto aparece en órdenes de compra',
+            });
+        }
         console.error('Error borrando producto:', error.message);
         res.status(500).json({ ok: false, mensaje: 'No se pudo eliminar el producto' });
     }

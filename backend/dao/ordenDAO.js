@@ -3,7 +3,7 @@ const db = require('../db');
 async function listarPorProveedor(proveedorId) {
     const [ordenes] = await db.query(
         `SELECT id, codigo, estado, fecha_entrega, respuesta,
-                subtotal, igv, total, creado_en, respondido_en
+                subtotal, igv, total, creado_en, respondido_en, recibido_en
            FROM ordenes_compra
           WHERE proveedor_id = ?
           ORDER BY creado_en DESC`,
@@ -15,7 +15,7 @@ async function listarPorProveedor(proveedorId) {
     const ids = ordenes.map((o) => o.id);
 
     const [lineas] = await db.query(
-        `SELECT id, orden_id, descripcion, cantidad, precio_unitario, subtotal
+        `SELECT id, orden_id, producto_id, descripcion, cantidad, precio_unitario, subtotal
            FROM orden_items
           WHERE orden_id IN (?)
           ORDER BY id`,
@@ -42,6 +42,25 @@ async function contarPorProveedor(proveedorId) {
 async function existe(id) {
     const [filas] = await db.query('SELECT id FROM ordenes_compra WHERE id = ?', [id]);
     return filas.length > 0;
+}
+
+
+async function estadoDe(id) {
+    const [filas] = await db.query('SELECT estado FROM ordenes_compra WHERE id = ?', [id]);
+    return filas[0] ? filas[0].estado : null;
+}
+
+
+async function itemsDeOrden(ordenId) {
+    const [filas] = await db.query(
+        `SELECT id, producto_id, descripcion, cantidad
+           FROM orden_items
+          WHERE orden_id = ?
+          ORDER BY id`,
+        [ordenId]
+    );
+
+    return filas;
 }
 
 
@@ -72,10 +91,11 @@ async function crear(orden) {
 
 async function agregarItem(ordenId, item) {
     await db.query(
-        `INSERT INTO orden_items (orden_id, descripcion, cantidad,
+        `INSERT INTO orden_items (orden_id, producto_id, descripcion, cantidad,
                                   precio_unitario, subtotal)
-         VALUES (?, ?, ?, ?, ?)`,
-        [ordenId, item.descripcion, item.cantidad, item.precio_unitario, item.subtotal]
+         VALUES (?, ?, ?, ?, ?, ?)`,
+        [ordenId, item.producto_id, item.descripcion, item.cantidad,
+         item.precio_unitario, item.subtotal]
     );
 }
 
@@ -98,13 +118,28 @@ async function responder(id, proveedorId, estado, respuesta) {
 }
 
 
+async function marcarRecibida(id) {
+    const [r] = await db.query(
+        `UPDATE ordenes_compra
+            SET estado = 'recibida', recibido_en = NOW()
+          WHERE id = ? AND estado = 'aceptada'`,
+        [id]
+    );
+
+    return r.affectedRows;
+}
+
+
 module.exports = {
     listarPorProveedor,
     contarPorProveedor,
     existe,
+    estadoDe,
+    itemsDeOrden,
     ultimoNumeroDelAnio,
     crear,
     agregarItem,
     borrar,
     responder,
+    marcarRecibida,
 };

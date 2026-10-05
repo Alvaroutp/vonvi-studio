@@ -1,6 +1,3 @@
-/* =====================================================================
-   admin.css  ·  Panel de administración
-   ===================================================================== */
 
 :root {
     --rosa: #ec4f95;
@@ -20,8 +17,6 @@
 
 * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
 
-/* hidden es la regla de menor prioridad del navegador; sin esto, cualquier
-   display:flex posterior deja el elemento visible aunque tenga hidden. */
 [hidden] { display: none !important; }
 
 body {
@@ -34,7 +29,6 @@ body {
 a { text-decoration: none; color: inherit; }
 ul { list-style: none; }
 
-/* ---------------- Lateral ---------------- */
 
 .admin-lateral {
     width: 250px;
@@ -110,7 +104,6 @@ ul { list-style: none; }
 
 .admin-lateral-pie a:hover, .admin-lateral-pie button:hover { color: var(--rosa); }
 
-/* ---------------- Contenido ---------------- */
 
 .admin-contenido {
     flex: 1;
@@ -160,10 +153,6 @@ ul { list-style: none; }
     cursor: pointer;
 }
 
-/* ---------------- Métricas ---------------- */
-
-/* Tres por fila: son 6 tarjetas y así quedan 2 filas parejas
-   en vez de 5 + 1 suelta. */
 .tarjetas-metrica {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -198,7 +187,6 @@ ul { list-style: none; }
 .tarjeta-metrica > div { min-width: 0; }
 .tarjeta-metrica small { display: block; font-size: 12.5px; color: var(--gris); margin-bottom: 3px; }
 
-/* nowrap: sin esto "S/ 1,036.00" se partía en dos líneas */
 .tarjeta-metrica strong {
     font-size: 21px;
     color: var(--tinta);
@@ -263,7 +251,6 @@ ul { list-style: none; }
 
 .sin-datos { color: var(--gris-claro); font-size: 14px; padding: 20px 0; }
 
-/* ---------------- Tablas ---------------- */
 
 .tabla-admin {
     width: 100%;
@@ -366,7 +353,6 @@ ul { list-style: none; }
 .paginacion button:hover { border-color: var(--rosa); color: var(--rosa); }
 .paginacion button.activa { background: var(--rosa); color: #fff; border-color: var(--rosa); }
 
-/* ---------------- Filtros ---------------- */
 
 .filtros-admin {
     display: flex;
@@ -399,7 +385,6 @@ ul { list-style: none; }
 
 .filtros-admin input:focus, .filtros-admin select:focus { border-color: var(--rosa); }
 
-/* ---------------- Botones ---------------- */
 
 .btn-principal, .btn-secundario {
     display: inline-flex;
@@ -452,7 +437,6 @@ ul { list-style: none; }
 
 .titulo-seccion-admin { font-size: 19px; margin: 32px 0 16px; }
 
-/* ---------------- Detalle del pedido ---------------- */
 
 .admin-detalle-cabecera {
     display: flex;
@@ -631,7 +615,6 @@ ul { list-style: none; }
 .item-precio strong { display: block; font-size: 16px; }
 .item-precio small { font-size: 12px; color: var(--gris-claro); }
 
-/* ---------------- Cotizaciones ---------------- */
 
 .lista-cotizaciones { display: grid; gap: 15px; }
 
@@ -697,7 +680,6 @@ ul { list-style: none; }
 
 .cot-acciones { display: flex; gap: 9px; flex-wrap: wrap; }
 
-/* ---------------- Modal ---------------- */
 
 .capa-modal {
     position: fixed;
@@ -773,7 +755,6 @@ ul { list-style: none; }
     margin: 12px 0;
 }
 
-/* ---------------- Compartido ---------------- */
 
 .cargando {
     display: flex;
@@ -823,8 +804,6 @@ ul { list-style: none; }
 .aviso-flotante.error { background: var(--error); }
 .aviso-flotante.aviso { background: var(--aviso); }
 
-/* ---------------- Responsive ---------------- */
-
 @media (max-width: 1100px) {
     .admin-columnas { grid-template-columns: 1fr; }
 }
@@ -846,10 +825,6 @@ ul { list-style: none; }
     .datos-admin dt { margin-top: 10px; }
     .fila-barra { grid-template-columns: 100px 1fr 30px; font-size: 12px; }
 }
-/* =====================================================================
-   CATÁLOGO DEL PANEL
-   Vistas de categorías, productos y el árbol de atributos y detalles.
-   ===================================================================== */
 
 .migas { display:flex; align-items:center; gap:8px; flex-wrap:wrap;
          margin-bottom:18px; font-size:.9rem; color:var(--gris); }
@@ -895,7 +870,7 @@ ul { list-style: none; }
 
 .sin-detalles { padding:16px 22px; color:var(--gris-claro); font-size:.9rem; }
 .pie-atributo { padding:12px 22px; }
-/* Caja donde se muestra la clave temporal recien generada */
+
 .clave-nueva {
     border: 1px solid #C9A227;
     background: #FFFBEB;
@@ -919,9 +894,7 @@ ul { list-style: none; }
 .clave-nueva small {
     color: #8A6D1F;
 }
-/* =====================================================================
-   PROVEEDORES Y ÓRDENES DE COMPRA
-   ===================================================================== */
+
 
 .prov-grid {
     display: grid;
@@ -930,7 +903,6 @@ ul { list-style: none; }
     align-items: start;
 }
 
-/* ---------------- columna izquierda: la lista ---------------- */
 
 .prov-lista {
     background: var(--panel);
@@ -968,7 +940,6 @@ ul { list-style: none; }
 .prov-item .marca { font-size: 10.5px; color: var(--gris-claro); margin-top: 3px; }
 .prov-item .marca.sin { color: var(--aviso); }
 
-/* ---------------- columna derecha: el detalle ---------------- */
 
 .prov-panel {
     background: var(--panel);
@@ -1006,7 +977,6 @@ ul { list-style: none; }
 
 .prov-datos .va { font-size: 14px; font-weight: 600; margin-top: 3px; }
 
-/* ---------------- encargados ---------------- */
 
 .prov-encargados {
     background: #fafafb;
@@ -1043,7 +1013,6 @@ ul { list-style: none; }
 
 .sin-acceso { font-size: 13px; color: var(--aviso); margin-bottom: 11px; }
 
-/* ---------------- órdenes de compra ---------------- */
 
 .oc-tarjeta {
     border: 1px solid var(--linea);
@@ -1078,8 +1047,10 @@ ul { list-style: none; }
 .oc-motivo { margin-top: 9px; font-size: 12.5px; color: var(--gris); font-style: italic; }
 
 .pastilla-estado.espera { background: #fffbeb; color: var(--aviso); }
+.pastilla-estado.listo { background: #eff6ff; color: #1d4ed8; }
 
-/* ---------------- líneas del formulario de orden ---------------- */
+.sin-stock { color: var(--error); font-weight: 600; }
+
 
 .lineas-orden { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
 .lineas-orden th {
@@ -1091,6 +1062,16 @@ ul { list-style: none; }
     padding: 6px 4px;
 }
 .lineas-orden td { padding: 4px; }
+.lineas-orden select {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid var(--linea);
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 13px;
+    background: #fff;
+}
+
 .lineas-orden input {
     width: 100%;
     padding: 8px 10px;

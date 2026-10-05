@@ -1,9 +1,3 @@
-/* =====================================================================
-   tienda.css  ·  Estilos de las páginas nuevas
-   =====================================================================
-   Se apoya en la paleta original: rosa #ec4f95 y tipografía Poppins.
-   No reemplaza a estilos.css, lo complementa.
-   ===================================================================== */
 
 :root {
     --rosab:#ff83bd;
@@ -24,9 +18,6 @@
     --radio: 16px;
 }
 
-/* =====================================================================
-   HEADER: acciones, sesión y carrito
-   ===================================================================== */
 
 .acciones-header {
     display: flex;
@@ -34,8 +25,7 @@
     gap: 12px;
 }
 
-/* Se limita la altura del logo: si el archivo tuviera otra proporción,
-   estiraría el header y taparía el contenido de la página. */
+
 .logo img {
     max-height: 52px;
     width: auto;
@@ -160,12 +150,7 @@
     animation: latido .4s ease;
 }
 
-/**
- * Menú hamburguesa.
- * Se le da tamaño propio en vez de dejar que lo defina el icono:
- * si Font Awesome tarda o no carga, el botón quedaría de 0x0 píxeles
- * y sería imposible tocarlo en el celular.
- */
+
 .menu-movil {
     width: 44px;
     height: 44px;
@@ -176,7 +161,7 @@
 }
 
 .menu-movil::before {
-    content: '\2630';           /* respaldo visible sin Font Awesome */
+    content: '\2630';         
     font-size: 24px;
     line-height: 1;
     color: var(--rosa);
@@ -192,16 +177,7 @@
     100% { transform: scale(1); }
 }
 
-/* =====================================================================
-   PIEZAS REUTILIZABLES
-   ===================================================================== */
 
-/**
- * El atributo hidden de HTML equivale a display:none, pero es la regla de
- * menor prioridad del navegador: cualquier display:flex o display:block que
- * escribamos después lo anula y el elemento se queda visible.
- * Esta línea hace que hidden gane siempre.
- */
 [hidden] { display: none !important; }
 
 .cargando {
@@ -318,7 +294,6 @@
 
 .mini { font-size: 12.5px; color: var(--gris-claro); }
 
-/* Botón volver arriba: antes existía en el HTML pero nunca se mostraba */
 #btnTop {
     opacity: 0;
     visibility: hidden;
@@ -329,9 +304,6 @@
 
 #btnTop.visible { opacity: 1; visibility: visible; }
 
-/* =====================================================================
-   CATEGORÍAS
-   ===================================================================== */
 
 .categorias { padding: 70px 0; }
 
@@ -440,13 +412,27 @@
 .pie-categoria .cantidad { color: var(--gris); }
 .pie-categoria .desde { color: var(--rosa); font-weight: 700; }
 
-/* Tarjeta de producto: extras sobre el estilo original */
 .etiqueta-cat {
     position: absolute;
     top: 14px;
     left: 14px;
     background: rgba(255, 255, 255, .95);
     color: var(--rosa);
+    padding: 5px 13px;
+    border-radius: 20px;
+    font-size: 11.5px;
+    font-weight: 600;
+}
+
+.dato-stock.hay { color: #15803d; font-weight: 600; }
+.dato-stock.no { color: #dc2626; font-weight: 600; }
+
+.etiqueta-agotado {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    background: rgba(220, 38, 38, .95);
+    color: #fff;
     padding: 5px 13px;
     border-radius: 20px;
     font-size: 11.5px;
@@ -466,9 +452,6 @@
 
 .minimo { display: block; font-size: 12.5px; color: var(--gris-claro); }
 
-/* =====================================================================
-   CONFIGURADOR
-   ===================================================================== */
 
 .configurador { padding: 130px 0 80px; }
 
@@ -660,7 +643,6 @@
 
 .chip-color.elegido small { color: var(--rosa); font-weight: 600; }
 
-/* Subida del diseño */
 .zona-subida {
     border: 2px dashed var(--linea);
     border-radius: 14px;
@@ -1023,9 +1005,6 @@
 .nota-envio i, .nota-produccion i { color: var(--rosa); margin-right: 5px; }
 .aviso-sesion { background: #fffbeb; color: #92400e; margin-top: 16px; }
 
-/* =====================================================================
-   CHECKOUT
-   ===================================================================== */
 
 .bloque-checkout {
     background: var(--panel);
@@ -1225,9 +1204,6 @@
 
 .acciones-exito { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
 
-/* =====================================================================
-   AUTENTICACIÓN
-   ===================================================================== */
 
 .pagina-auth {
     min-height: 100vh;
@@ -1325,9 +1301,6 @@
 .auth-pie a { color: var(--rosa); font-weight: 600; }
 .auth-pie a:hover { text-decoration: underline; }
 
-/* =====================================================================
-   CUENTA: pestañas, pedidos y línea de tiempo
-   ===================================================================== */
 
 .pestanas {
     display: flex;
@@ -1613,9 +1586,6 @@
 .tarjeta-panel h2 { font-size: 19px; margin-bottom: 5px; }
 .tarjeta-panel .sub { font-size: 13.5px; color: var(--gris); margin-bottom: 22px; }
 
-/* =====================================================================
-   CONTACTO: aviso de autorrelleno
-   ===================================================================== */
 
 .aviso-autorrelleno {
     background: #eff6ff;
@@ -1637,9 +1607,6 @@
 .aviso-autorrelleno a { color: inherit; font-weight: 700; text-decoration: underline; }
 .aviso-autorrelleno i { margin-right: 6px; }
 
-/* =====================================================================
-   RESPONSIVE
-   ===================================================================== */
 
 @media (max-width: 1100px) {
     .config-grid { grid-template-columns: 1fr; gap: 34px; }

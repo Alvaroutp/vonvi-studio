@@ -1,14 +1,3 @@
-/* =====================================================================
-   configurador.js  ·  producto.html
-   =====================================================================
-   Dibuja las opciones del producto (talla, color, material...) según lo
-   que devuelve la API, permite subir la estampa y muestra el precio en
-   vivo.
-
-   IMPORTANTE: el precio NO se calcula aquí. Cada vez que el usuario
-   cambia algo se le pregunta al backend. Si el cálculo viviera en el
-   navegador, cualquiera podría abrir la consola y agregar un polo a S/ 1.
-   ===================================================================== */
 
 const Configurador = {
 
@@ -69,6 +58,15 @@ const Configurador = {
         document.getElementById('datoEntrega').innerHTML =
             `<i class="fa-regular fa-clock"></i> Producción: ${p.dias_produccion} día(s) hábiles`;
 
+        const stock = document.getElementById('datoStock');
+        if (p.stock > 0) {
+            stock.className = 'dato-stock hay';
+            stock.innerHTML = `<i class="fa-solid fa-box"></i> ${p.stock} disponible(s)`;
+        } else {
+            stock.className = 'dato-stock no';
+            stock.innerHTML = '<i class="fa-solid fa-box-open"></i> Agotado';
+        }
+
         const minimo = document.getElementById('datoMinimo');
         if (p.cantidad_minima > 1) {
             minimo.innerHTML = `<i class="fa-solid fa-layer-group"></i> Pedido mínimo: ${p.cantidad_minima} unidades`;
@@ -76,7 +74,7 @@ const Configurador = {
             minimo.hidden = true;
         }
 
-        // Escalas de descuento por volumen
+
         const aviso = document.getElementById('avisoEscalas');
         if (p.escalas && p.escalas.length) {
             aviso.innerHTML = p.escalas
@@ -85,13 +83,7 @@ const Configurador = {
         }
     },
 
-    /**
-     * Dibuja un control distinto según el tipo de atributo:
-     *   color  → círculos de color
-     *   radio  → botones seleccionables
-     *   numero → campo numérico con su unidad
-     *   select → lista desplegable
-     */
+
     pintarAtributos() {
         const zona = document.getElementById('camposAtributos');
         zona.innerHTML = '';
@@ -196,7 +188,7 @@ const Configurador = {
         input.addEventListener('input', () => this.cotizarConEspera());
     },
 
-    /* ---------------- Subida de la estampa ---------------- */
+
 
     prepararEstampa() {
         const bloque = document.getElementById('bloqueEstampa');
@@ -234,8 +226,6 @@ const Configurador = {
     },
 
     async subirArchivo(archivo) {
-        // Se valida el tamaño antes de subir: así el usuario no espera
-        // a que se transfieran 40 MB para recibir el rechazo.
         if (archivo.size > 10 * 1024 * 1024) {
             U.aviso('El archivo supera los 10 MB', 'error');
             return;
@@ -257,7 +247,6 @@ const Configurador = {
             document.getElementById('archivoSubido').hidden = false;
             zona.hidden = true;
 
-            // Vista previa sobre la foto del producto
             if (archivo.type.startsWith('image/')) {
                 const preview = document.getElementById('previewEstampa');
                 preview.src = URL.createObjectURL(archivo);
@@ -275,9 +264,6 @@ const Configurador = {
         }
     },
 
-    /* ---------------- Precio en vivo ---------------- */
-
-    /** Espera a que el usuario deje de escribir antes de consultar. */
     cotizarConEspera() {
         clearTimeout(this.temporizador);
         this.temporizador = setTimeout(() => this.cotizar(), 400);
@@ -330,7 +316,6 @@ const Configurador = {
         }
     },
 
-    /* ---------------- Agregar al carrito ---------------- */
 
     async agregarAlCarrito() {
         const boton = document.getElementById('btnAgregar');

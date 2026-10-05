@@ -524,15 +524,10 @@ const Admin = {
         });
     },
 
-        // =================================================================
-    // PROVEEDORES Y ORDENES DE COMPRA
-    // El admin registra empresas, les crea cuentas de acceso y les manda
-    // ordenes de compra. La pantalla son dos columnas: la lista a la
-    // izquierda, y todo lo de la empresa elegida a la derecha.
-    // =================================================================
 
-    provSel: null,      // id de la empresa elegida
-    provLista: [],      // las empresas, para filtrar sin volver a pedirlas
+
+    provSel: null,      
+    provLista: [],      
 
     async proveedores() {
         const zona = this.zona();
@@ -548,12 +543,12 @@ const Admin = {
 
         this.provLista = r.proveedores;
 
-        // Si la elegida ya no existe (se borro), se pasa a la primera
+
         if (!this.provLista.some((p) => p.id === this.provSel)) {
             this.provSel = this.provLista.length ? this.provLista[0].id : null;
         }
 
-        // La clave recien generada se muestra una sola vez y se borra
+
         const reciente = this.claveNueva;
         this.claveNueva = null;
 
@@ -600,7 +595,7 @@ const Admin = {
     },
 
 
-    // Solo la columna izquierda. El texto filtra por nombre o por RUC
+
     pintarLista(texto) {
         const caja = document.getElementById('listaProv');
         const busca = texto.trim().toLowerCase();
@@ -637,7 +632,7 @@ const Admin = {
     },
 
 
-    // Toda la columna derecha: datos, encargados y ordenes de la elegida
+
     async verProveedor() {
         const caja = document.getElementById('detalleProv');
 
@@ -666,8 +661,8 @@ const Admin = {
             return;
         }
 
-        // El CSS tiene tres colores de pastilla: ambar, verde y rojo
-        const color = { enviada: 'espera', aceptada: 'si', rechazada: 'no' };
+
+        const color = { enviada: 'espera', aceptada: 'si', rechazada: 'no', recibida: 'listo' };
 
         const sinAcceso = encargados.length === 0;
 
@@ -758,8 +753,12 @@ const Admin = {
                             <span class="oc-cod">${U.esc(o.codigo)}</span>
                             <div>
                                 <span class="pastilla-estado ${color[o.estado]}">${o.estado}</span>
-                                <button type="button" class="btn-mini"
-                                        data-borrar-oc="${o.id}">Borrar</button>
+                                ${o.estado === 'aceptada' ? `
+                                    <button type="button" class="btn-mini"
+                                            data-recibir-oc="${o.id}">Recibir</button>` : ''}
+                                ${o.estado === 'recibida' ? '' : `
+                                    <button type="button" class="btn-mini"
+                                            data-borrar-oc="${o.id}">Borrar</button>`}
                             </div>
                         </div>
 
@@ -767,6 +766,7 @@ const Admin = {
                             Emitida el ${U.fecha(o.creado_en)}
                             ${o.fecha_entrega ? ' · Entrega esperada: ' + U.fecha(o.fecha_entrega) : ''}
                             ${o.respondido_en ? ' · Respondida el ' + U.fecha(o.respondido_en) : ''}
+                            ${o.recibido_en ? ' · Recibida el ' + U.fecha(o.recibido_en) : ''}
                         </p>
 
                         <table class="tabla-admin">
@@ -798,7 +798,6 @@ const Admin = {
 
             </div>`;
 
-        // ---- los botones, que recien existen ahora ----
 
         caja.querySelector('[data-editar-emp]')
             .addEventListener('click', () => this.formEmpresa(p));
@@ -826,6 +825,19 @@ const Admin = {
         const btnOrden = caja.querySelector('[data-nueva-orden]');
         if (btnOrden) btnOrden.addEventListener('click', () => this.formOrden(p));
 
+        caja.querySelectorAll('[data-recibir-oc]').forEach((b) => {
+            b.addEventListener('click', async () => {
+                if (!confirm('¿Ya llegó la mercadería?\n\nSe va a sumar al stock de cada producto.')) {
+                    return;
+                }
+                try {
+                    const r = await API.put(`/admin/ordenes/${b.dataset.recibirOc}/recibir`);
+                    U.aviso(r.mensaje || 'Stock actualizado');
+                    this.proveedores();
+                } catch (e) { U.aviso(e.message, 'error'); }
+            });
+        });
+
         caja.querySelectorAll('[data-borrar-oc]').forEach((b) => {
             b.addEventListener('click', () => {
                 const o = ordenes.find((x) => String(x.id) === b.dataset.borrarOc);
@@ -835,7 +847,6 @@ const Admin = {
     },
 
 
-    // ---------------- la empresa ----------------
 
     formEmpresa(empresa) {
         const nueva = !empresa;
@@ -889,13 +900,11 @@ const Admin = {
     },
 
 
-    // ---------------- los encargados ----------------
+
 
     formEncargado(empresa, encargado) {
         const nuevo = !encargado;
 
-        // Al editar no va el correo: es el usuario con el que inicia sesion
-        // y el servidor no lo cambia
         const campos = [
             { id: 'nombres', etiqueta: 'Nombres', requerido: true,
               valor: encargado ? encargado.nombres : '', placeholder: 'Mario' },
@@ -946,7 +955,6 @@ const Admin = {
     },
 
 
-    // ---------------- las ordenes ----------------
 
     async borrarOrden(orden) {
         if (!confirm(`¿Borrar la orden ${orden.codigo}?`)) return;
@@ -961,9 +969,30 @@ const Admin = {
     },
 
 
-    // Este formulario no usa modal() porque tiene una tabla de lineas
-    // que se agregan y se quitan, y totales que se recalculan solos
-    formOrden(empresa) {
+    async formOrden(empresa) {
+        let catalogo;
+
+        try {
+            const lista = await API.get('/admin/productos/elegibles');
+            catalogo = lista.productos;
+        } catch (e) {
+            U.aviso(e.message, 'error');
+            return;
+        }
+
+        if (catalogo.length === 0) {
+            U.aviso('Primero crea productos en el catálogo', 'error');
+            return;
+        }
+
+        const opciones = catalogo.map((p) =>
+            `<option value="${p.id}">${U.esc(p.categoria)} · ${U.esc(p.nombre)}</option>`
+        ).join('');
+
+        const ahora = new Date();
+        const hoy = new Date(ahora.getTime() - ahora.getTimezoneOffset() * 60000)
+            .toISOString().slice(0, 10);
+
         const capa = document.createElement('div');
         capa.className = 'capa-modal';
 
@@ -979,13 +1008,13 @@ const Admin = {
 
                     <div class="campo">
                         <label for="fechaEntrega">Fecha de entrega esperada</label>
-                        <input type="date" id="fechaEntrega">
+                        <input type="date" id="fechaEntrega" min="${hoy}">
                     </div>
 
                     <table class="lineas-orden">
                         <thead>
                             <tr>
-                                <th>Descripción</th>
+                                <th>Producto</th>
                                 <th style="width:92px">Cantidad</th>
                                 <th style="width:112px">P. unitario</th>
                                 <th style="width:28px"></th>
@@ -1028,7 +1057,6 @@ const Admin = {
 
         const cuerpo = capa.querySelector('#cuerpoLineas');
 
-        // Suma las lineas cada vez que se escribe algo
         const recalcular = () => {
             let subtotal = 0;
 
@@ -1049,7 +1077,12 @@ const Admin = {
             const fila = document.createElement('tr');
 
             fila.innerHTML = `
-                <td><input type="text" data-desc placeholder="Polos blancos algodon 20/1"></td>
+                <td>
+                    <select data-prod>
+                        <option value="" disabled selected hidden>Elige un producto</option>
+                        ${opciones}
+                    </select>
+                </td>
                 <td><input type="number" data-cant min="1" value="1"></td>
                 <td><input type="number" data-precio min="0" step="0.01" placeholder="0.00"></td>
                 <td><button type="button" class="quitar" title="Quitar">&times;</button></td>`;
@@ -1059,6 +1092,11 @@ const Admin = {
             fila.querySelector('.quitar').addEventListener('click', () => {
                 fila.remove();
                 recalcular();
+            });
+
+            fila.querySelector('[data-prod]').addEventListener('change', () => {
+                const precio = fila.querySelector('[data-precio]');
+                if (!precio.value) precio.focus();
             });
 
             fila.querySelectorAll('input').forEach((i) => i.addEventListener('input', recalcular));
@@ -1077,7 +1115,7 @@ const Admin = {
             const items = [];
             cuerpo.querySelectorAll('tr').forEach((fila) => {
                 items.push({
-                    descripcion: fila.querySelector('[data-desc]').value.trim(),
+                    producto_id: Number(fila.querySelector('[data-prod]').value),
                     cantidad: Number(fila.querySelector('[data-cant]').value),
                     precio_unitario: Number(fila.querySelector('[data-precio]').value),
                 });
@@ -1291,14 +1329,15 @@ const Admin = {
                 </div>` : `
                 <table class="tabla-admin">
                     <thead>
-                        <tr><th>Producto</th><th>Precio base</th><th>Atributos</th>
-                            <th>Mínimo</th><th>Estado</th><th></th></tr>
+                        <tr><th>Producto</th><th>Precio base</th><th>Stock</th>
+                            <th>Atributos</th><th>Mínimo</th><th>Estado</th><th></th></tr>
                     </thead>
                     <tbody>
                         ${r.productos.map((p) => `
                             <tr class="fila-clic ${p.activo ? '' : 'inactiva'}" data-entrar="${p.id}">
                                 <td><strong>${U.esc(p.nombre)}</strong><small>${U.esc(p.slug)}</small></td>
                                 <td>${U.soles(p.precio_base)}</td>
+                                <td class="${p.stock === 0 ? 'sin-stock' : ''}">${p.stock} u.</td>
                                 <td>${p.total_atributos}</td>
                                 <td>${p.cantidad_minima} u.</td>
                                 <td>
@@ -1378,6 +1417,8 @@ const Admin = {
                   valor: producto ? producto.precio_base : '', requerido: true },
                 { id: 'descripcion', etiqueta: 'Descripción', tipo: 'textarea',
                   valor: producto ? (producto.descripcion || '') : '' },
+                { id: 'stock', etiqueta: 'Stock (unidades)', tipo: 'number',
+                  valor: producto ? producto.stock : 0 },
                 { id: 'cantidadMinima', etiqueta: 'Cantidad mínima', tipo: 'number',
                   valor: producto ? producto.cantidad_minima : 1 },
                 { id: 'diasProduccion', etiqueta: 'Días de producción', tipo: 'number',
@@ -1673,7 +1714,6 @@ const Admin = {
             const error = capa.querySelector('#errorCatalogo');
             error.hidden = true;
 
-            // Primero se suben las imagenes, y se guarda la ruta que devuelve el servidor
             for (const c of campos.filter((x) => x.tipo === 'imagen')) {
                 const entrada = capa.querySelector('#c_' + c.id);
                 if (entrada.files.length === 0) continue;
