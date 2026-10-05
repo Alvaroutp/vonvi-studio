@@ -1,8 +1,4 @@
-/* =====================================================================
-   cuenta.js  ·  cuenta.html
-   =====================================================================
-   Historial de compras + línea de tiempo de fabricación.
-   ===================================================================== */
+
 
 const Cuenta = {
 
@@ -21,7 +17,6 @@ const Cuenta = {
         this.perfil();
         this.filtros();
 
-        // Si venimos del checkout, se abre directo el seguimiento
         const codigo = U.parametro('pedido');
         if (codigo) { await this.verPedido(codigo); return; }
 
@@ -30,7 +25,6 @@ const Cuenta = {
         if (location.hash === '#perfil') this.abrirPanel('perfil');
     },
 
-    /* ---------------- Pestañas ---------------- */
 
     pestanas() {
         document.querySelectorAll('.pestana').forEach((btn) => {
@@ -45,7 +39,6 @@ const Cuenta = {
         document.getElementById('panelPerfil').classList.toggle('activo', nombre === 'perfil');
     },
 
-    /* ---------------- Historial ---------------- */
 
     filtros() {
         document.getElementById('btnFiltrar')
@@ -119,7 +112,6 @@ const Cuenta = {
         }
     },
 
-    /* ---------------- Detalle + seguimiento ---------------- */
 
     async verPedido(codigo) {
         const zona = document.getElementById('detallePedido');
@@ -294,7 +286,6 @@ const Cuenta = {
         }
     },
 
-    /* ---------------- Perfil ---------------- */
 
     perfil() {
         const u = API.usuario;

@@ -1,12 +1,4 @@
-/* =====================================================================
-   comun.js  ·  Lo que se ejecuta en TODAS las páginas
-   =====================================================================
-   - Rellena el año del footer          (bug 5 del análisis)
-   - Hace funcionar el botón "subir"    (bug 4)
-   - Menú móvil
-   - Contadores animados, solo si existen  (bugs 1 y 3)
-   - Header dinámico: carrito + sesión
-   ===================================================================== */
+
 
 document.addEventListener('DOMContentLoaded', () => {
     anioFooter();
@@ -19,7 +11,6 @@ document.addEventListener('DOMContentLoaded', () => {
     PanelCarrito.enganchar();
 });
 
-/** Muestra un aviso dejado por otra página antes de redirigir. */
 function avisoPendiente() {
     const mensaje = sessionStorage.getItem('vonvi_aviso');
     if (!mensaje) return;
@@ -27,20 +18,12 @@ function avisoPendiente() {
     setTimeout(() => U.aviso(mensaje, 'aviso'), 300);
 }
 
-/* ---------------------------------------------------------------
-   Año del copyright
-   Antes el <span id="anio"> quedaba vacío en las 6 páginas.
-   --------------------------------------------------------------- */
 function anioFooter() {
     document.querySelectorAll('#anio').forEach((el) => {
         el.textContent = new Date().getFullYear();
     });
 }
 
-/* ---------------------------------------------------------------
-   Botón "volver arriba"
-   El HTML y el CSS existían, pero no había JavaScript: no hacía nada.
-   --------------------------------------------------------------- */
 function botonSubir() {
     const btn = document.getElementById('btnTop');
     if (!btn) return;
@@ -52,20 +35,11 @@ function botonSubir() {
     btn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
 }
 
-/* ---------------------------------------------------------------
-   Menú hamburguesa
-   --------------------------------------------------------------- */
 function abrirMenu() {
     const menu = document.getElementById('menu');
     if (menu) menu.classList.toggle('activo');
 }
 
-/* ---------------------------------------------------------------
-   Aparición de las tarjetas al hacer scroll.
-   Se usa IntersectionObserver en vez de escuchar el scroll:
-   el navegador avisa cuando el elemento entra en pantalla, en vez
-   de recalcular posiciones en cada píxel.
-   --------------------------------------------------------------- */
 function animacionTarjetas() {
     const tarjetas = document.querySelectorAll('.card-producto, .card-categoria');
     if (!tarjetas.length) return;
@@ -87,16 +61,7 @@ function animacionTarjetas() {
     tarjetas.forEach((t) => observador.observe(t));
 }
 
-/* ---------------------------------------------------------------
-   Contadores animados.
 
-   Antes esta función buscaba .estadisticas, que solo existe en
-   index.html, y lanzaba un TypeError en las otras 5 páginas.
-   Ahora: si no hay contadores, no hace nada.
-
-   Además acepta data-numero Y data-valor: nosotros.html usaba
-   data-valor y mostraba "NaN" en bucle infinito.
-   --------------------------------------------------------------- */
 function contadores() {
     const elementos = document.querySelectorAll('.contador');
     if (!elementos.length) return;
@@ -110,7 +75,6 @@ function contadores() {
 
         const paso = (ahora) => {
             const avance = Math.min((ahora - inicio) / duracion, 1);
-            // easing: arranca rápido y frena al final
             const suave = 1 - Math.pow(1 - avance, 3);
             el.textContent = Math.floor(objetivo * suave).toLocaleString('es-PE');
             if (avance < 1) requestAnimationFrame(paso);
@@ -136,9 +100,6 @@ function contadores() {
     elementos.forEach((el) => observador.observe(el));
 }
 
-/* ---------------------------------------------------------------
-   Acordeón de preguntas frecuentes
-   --------------------------------------------------------------- */
 function acordeon() {
     const preguntas = document.querySelectorAll('.pregunta');
     if (!preguntas.length) return;
@@ -162,9 +123,6 @@ function acordeon() {
     });
 }
 
-/* =====================================================================
-   HEADER: carrito y sesión
-   ===================================================================== */
 const Header = {
 
     async iniciar() {
@@ -172,7 +130,6 @@ const Header = {
         await this.actualizarCarrito();
     },
 
-    /** Muestra "Iniciar sesión" o el nombre del usuario. */
     pintarSesion() {
         const zona = document.getElementById('zonaSesion');
         if (!zona) return;
@@ -219,7 +176,7 @@ const Header = {
         });
     },
 
-    /** Pone el número de artículos en la burbuja del carrito. */
+
     async actualizarCarrito() {
         const burbuja = document.getElementById('contadorCarrito');
         if (!burbuja) return;
@@ -237,22 +194,11 @@ const Header = {
     },
 };
 
-/* =====================================================================
-   PANEL DEL CARRITO (sidebar tipo Temu / AliExpress)
-   =====================================================================
-   En vez de llevar a carrito.html, el ícono del carrito abre este
-   panel deslizable. Usa exactamente la misma lógica de Carrito
-   (carrito.js) que ya pinta la página completa: solo cambia el
-   contenedor donde se dibuja.
 
-   carrito.html sigue existiendo tal cual, por si alguien entra por
-   un enlace directo o guardado.
-   ===================================================================== */
 const PanelCarrito = {
 
     creado: false,
 
-    /** Conecta el clic del ícono "Carrito" del header con el panel. */
     enganchar() {
         const enPaginaCarrito = /(^|\/)carrito\.html$/.test(location.pathname);
 

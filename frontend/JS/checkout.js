@@ -1,8 +1,4 @@
-/* =====================================================================
-   checkout.js  ·  checkout.html
-   =====================================================================
-   Los datos de contacto se AUTORRELLENAN desde la cuenta del usuario.
-   ===================================================================== */
+
 
 const Checkout = {
 
@@ -13,8 +9,6 @@ const Checkout = {
         const zona = document.getElementById('contenidoCheckout');
         if (!zona) return;
 
-        // Sin cuenta no se puede cerrar la compra: el pedido necesita dueño
-        // para que después aparezca en el historial y el seguimiento.
         if (!API.haySesion()) {
             location.href = `login.html?volver=${encodeURIComponent('checkout.html')}`;
             return;
@@ -213,7 +207,6 @@ const Checkout = {
     },
 
     conectarEventos() {
-        // Mostrar u ocultar los campos de dirección
         document.querySelectorAll('input[name="entrega"]').forEach((r) => {
             r.addEventListener('change', () => {
                 const esDelivery = r.value === 'delivery' && r.checked;
@@ -227,7 +220,6 @@ const Checkout = {
             });
         });
 
-        // Mostrar u ocultar los campos de tarjeta
         document.querySelectorAll('input[name="pago"]').forEach((r) => {
             r.addEventListener('change', () => {
                 const esTarjeta = r.value === 'tarjeta' && r.checked;
@@ -236,7 +228,6 @@ const Checkout = {
             });
         });
 
-        // Formato del número de tarjeta: 4111 1111 1111 1111
         const tarjeta = document.getElementById('numeroTarjeta');
         tarjeta.addEventListener('input', () => {
             const digitos = tarjeta.value.replace(/\D/g, '').slice(0, 19);
@@ -274,7 +265,6 @@ const Checkout = {
         boton.innerHTML = '<span class="spinner"></span> Registrando pedido...';
 
         try {
-            // 1) Crear el pedido
             const r = await API.post('/pedidos', {
                 tipoEntrega,
                 telefonoContacto: telefono,
@@ -288,7 +278,6 @@ const Checkout = {
 
             this.pedido = r.pedido;
 
-            // 2) Pago simulado
             boton.innerHTML = '<span class="spinner"></span> Procesando pago...';
             let pago = null;
             try {
@@ -298,8 +287,7 @@ const Checkout = {
                     numeroTarjeta: document.getElementById('numeroTarjeta').value.replace(/\s/g, ''),
                 });
             } catch (e) {
-                // El pedido YA está registrado: si el pago falla no se pierde,
-                // simplemente queda pendiente de cobro.
+
                 U.aviso('El pedido se registró, pero el pago quedó pendiente', 'aviso');
             }
 

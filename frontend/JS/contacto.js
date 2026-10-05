@@ -1,10 +1,4 @@
-/* =====================================================================
-   contacto.js  ·  contacto.html
-   =====================================================================
-   AUTORRELLENO: si el usuario tiene la sesión iniciada, el nombre, el
-   correo y el celular se completan solos desde su cuenta y quedan
-   bloqueados (el backend los toma de la cuenta de todos modos).
-   ===================================================================== */
+
 
 const Contacto = {
 
@@ -32,9 +26,6 @@ const Contacto = {
             return;
         }
 
-        // Se piden los datos frescos al servidor: los guardados en el
-        // navegador pueden estar desactualizados si el usuario cambió
-        // su teléfono desde otro dispositivo.
         let u = API.usuario;
         try {
             const r = await API.get('/auth/perfil');
@@ -50,7 +41,6 @@ const Contacto = {
         correo.value = u.email;
         telefono.value = u.telefono || '';
 
-        // El nombre y el correo salen de la cuenta y no se editan aquí
         nombre.readOnly = true;
         correo.readOnly = true;
         nombre.classList.add('autorrelleno');
@@ -105,7 +95,6 @@ const Contacto = {
             });
 
             exito.hidden = false;
-            // Con sesión no se borran los datos personales autorrellenados
             document.getElementById('mensaje').value = '';
             document.getElementById('producto').selectedIndex = 0;
             if (!API.haySesion()) form.reset();

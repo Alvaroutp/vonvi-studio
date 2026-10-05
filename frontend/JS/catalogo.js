@@ -41,8 +41,6 @@ const Catalogo = {
         const grid = document.getElementById('gridCategorias');
         const resultados = document.getElementById('resultadosBusqueda');
 
-        // Mismo buscador que el del panel. Aqui se espera 350 ms y se
-        // piden dos letras porque cada busqueda es un viaje al servidor
         U.buscador(input, async (texto) => {
             if (!texto) {
                 resultados.hidden = true;

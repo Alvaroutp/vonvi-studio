@@ -1780,7 +1780,6 @@ const Admin = {
             const error = capa.querySelector('#errorCatalogo');
             error.hidden = true;
 
-            // Primero se suben las imagenes, y se guarda la ruta que devuelve el servidor
             for (const c of campos.filter((x) => x.tipo === 'imagen')) {
                 const entrada = capa.querySelector('#c_' + c.id);
                 if (entrada.files.length === 0) continue;

@@ -1,15 +1,8 @@
-/* =====================================================================
-   proveedor.js  ·  proveedor.html
-   =====================================================================
-   El portal del proveedor. Solo ve las ordenes de compra de SU empresa
-   y puede aceptarlas o rechazarlas.
 
-   Nunca manda el id de su empresa: el servidor lo saca de la sesion.
-   ===================================================================== */
 
 const Proveedor = {
 
-    // Se ejecuta al abrir la pagina
+
     async iniciar() {
         if (!API.haySesion()) {
             location.href = 'login.html';
@@ -18,7 +11,7 @@ const Proveedor = {
 
         const u = API.usuario;
 
-        // Esta pagina es solo para proveedores
+
         if (!u || u.rol !== 'proveedor') {
             location.href = 'index.html';
             return;
@@ -28,7 +21,7 @@ const Proveedor = {
     },
 
 
-    // Pide las ordenes y las dibuja
+
     async pintar() {
         const zona = document.getElementById('listaOrdenes');
         U.cargando(zona, 'Cargando tus órdenes...');
@@ -47,7 +40,7 @@ const Proveedor = {
             return;
         }
 
-        // Las que esperan respuesta van primero; las ya respondidas, abajo
+
         const ordenadas = r.ordenes.slice().sort((a, b) => {
             if (a.estado === b.estado) return 0;
             return a.estado === 'enviada' ? -1 : 1;
@@ -58,9 +51,8 @@ const Proveedor = {
     },
 
 
-    // El HTML de una orden de compra
+
     tarjeta(o) {
-        // Solo las que no han sido respondidas llevan botones
         const puedeResponder = o.estado === 'enviada';
 
         return `
@@ -120,7 +112,6 @@ const Proveedor = {
     },
 
 
-    // Enchufa los clics de los botones que acaban de pintarse
     conectar() {
         document.querySelectorAll('[data-si]').forEach((b) => {
             b.addEventListener('click', () => {
@@ -139,7 +130,6 @@ const Proveedor = {
     },
 
 
-    // Manda la respuesta al servidor
     async responder(id, accion, respuesta = '') {
         try {
             await API.put('/proveedor/ordenes/' + id + '/responder', {

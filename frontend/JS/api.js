@@ -23,11 +23,6 @@ const API = {
     haySesion() { return !!this.token; },
     esAdmin() { const u = this.usuario; return !!u && u.rol === 'admin'; },
 
-    /**
-     * Token del carrito de invitado.
-     * Permite armar el carrito sin tener cuenta; al iniciar sesión
-     * el backend fusiona ese carrito con el del usuario.
-     */
     get tokenCarrito() { return localStorage.getItem('vonvi_carrito'); },
     set tokenCarrito(v) {
         if (v) localStorage.setItem('vonvi_carrito', v);
@@ -45,7 +40,6 @@ const API = {
     async pedir(ruta, opciones = {}) {
         const cabeceras = { ...(opciones.headers || {}) };
 
-        // FormData necesita que el navegador ponga su propio Content-Type
         const esFormData = opciones.body instanceof FormData;
         if (!esFormData && opciones.body) cabeceras['Content-Type'] = 'application/json';
 
@@ -94,7 +88,6 @@ const API = {
     patch(ruta, body) { return this.pedir(ruta, { method: 'PATCH', body }); },
     borrar(ruta) { return this.pedir(ruta, { method: 'DELETE' }); },
 
-    /* ---------------- Atajos ---------------- */
 
     async login(email, password) {
         const r = await this.post('/auth/login', { email, password });
@@ -112,7 +105,6 @@ const API = {
         return r;
     },
 
-    /** Traspasa el carrito de invitado a la cuenta recién iniciada. */
     async sincronizarCarrito() {
         if (!this.tokenCarrito) return;
         try {
@@ -122,7 +114,6 @@ const API = {
     },
 };
 
-/** Error con el código HTTP y el detalle por campo que devuelve la API. */
 class ErrorAPI extends Error {
     constructor(mensaje, status, detalles) {
         super(mensaje);
@@ -131,9 +122,6 @@ class ErrorAPI extends Error {
     }
 }
 
-/* =====================================================================
-   Utilidades compartidas
-   ===================================================================== */
 
 const U = {
 
@@ -157,10 +145,6 @@ const U = {
         });
     },
 
-    /**
-     * Escapa el texto antes de meterlo en innerHTML.
-     * Sin esto, un producto llamado <script>... se ejecutaría en la página.
-     */
     esc(texto) {
         const div = document.createElement('div');
         div.textContent = texto == null ? '' : String(texto);
@@ -171,9 +155,6 @@ const U = {
         return new URLSearchParams(location.search).get(nombre);
     },
 
-    // Adaptado de la funcion debounce de Underscore.js, que publica
-    // David Walsh. Devuelve una version de la funcion que espera a que
-    // dejes de escribir antes de correr, en vez de correr con cada tecla
     esperar(funcion, ms) {
         let temporizador;
 
@@ -183,9 +164,6 @@ const U = {
         };
     },
 
-    // El mismo buscador para las dos pantallas. Lo unico que cambia de
-    // una a otra es que se hace con el texto, y eso llega de afuera
-    // como funcion. Un texto vacio significa "no hay busqueda, muestra todo"
     buscador(entrada, alBuscar, opciones = {}) {
         if (!entrada) return;
 
@@ -198,7 +176,6 @@ const U = {
         });
     },
 
-    /** Aviso flotante en la esquina. */
     aviso(mensaje, tipo = 'exito') {
         let caja = document.getElementById('avisoFlotante');
         if (!caja) {
@@ -212,7 +189,6 @@ const U = {
         this._t = setTimeout(() => caja.classList.remove('mostrar'), 3200);
     },
 
-    /** Estado vacío o de error dentro de un contenedor. */
     vacio(contenedor, icono, titulo, texto, boton) {
         contenedor.innerHTML = `
             <div class="estado-vacio">

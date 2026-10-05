@@ -206,7 +206,6 @@ const Configurador = {
             if (input.files.length) this.subirArchivo(input.files[0]);
         });
 
-        // Arrastrar y soltar
         ['dragenter', 'dragover'].forEach((ev) =>
             zona.addEventListener(ev, (e) => { e.preventDefault(); zona.classList.add('arrastrando'); }));
         ['dragleave', 'drop'].forEach((ev) =>

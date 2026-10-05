@@ -1,10 +1,6 @@
-/* =====================================================================
-   carrito.js  ·  carrito.html
-   ===================================================================== */
+
 
 const Carrito = {
-
-    /** id del contenedor que se está pintando ahora mismo (página completa o panel). */
     contenedorActual: 'contenidoCarrito',
 
     async iniciar() {
@@ -13,17 +9,10 @@ const Carrito = {
         await this.pintarEn('contenidoCarrito');
     },
 
-    /** Compatibilidad: vuelve a pintar el último contenedor usado. */
     async pintar() {
         return this.pintarEn(this.contenedorActual);
     },
 
-    /**
-     * Pinta el carrito dentro de cualquier contenedor: la página
-     * carrito.html (#contenidoCarrito) o el panel lateral tipo
-     * Temu/AliExpress (#panelCarritoContenido). Es la misma lógica,
-     * solo cambia dónde se dibuja.
-     */
     async pintarEn(idContenedor) {
         const zona = document.getElementById(idContenedor);
         if (!zona) return;
@@ -55,9 +44,6 @@ const Carrito = {
 
         const envio = resumen.subtotal >= 250 ? 0 : 12;
 
-        // En el panel lateral se usa un layout de una sola columna
-        // (más angosto que la página completa), por eso el resumen
-        // va debajo de los ítems en vez de al costado.
         zona.innerHTML = `
             <div class="carrito-grid ${esPanel ? 'carrito-grid-panel' : ''}">
 

@@ -1,8 +1,4 @@
-/* =====================================================================
-   auth.js  ·  login.html y registro.html
-   ===================================================================== */
 
-/** Pinta los errores campo por campo que devuelve la API. */
 function pintarErrores(detalles) {
     document.querySelectorAll('.error[data-error]').forEach((e) => { e.textContent = ''; });
     (detalles || []).forEach((d) => {
@@ -11,7 +7,6 @@ function pintarErrores(detalles) {
     });
 }
 
-/** Botón del ojito para ver la contraseña. */
 function verPassword() {
     document.querySelectorAll('.ver-password').forEach((btn) => {
         btn.addEventListener('click', () => {
@@ -25,15 +20,11 @@ function verPassword() {
     });
 }
 
-/* ---------------------------------------------------------------
-   LOGIN
-   --------------------------------------------------------------- */
 const Login = {
     iniciar() {
         const form = document.getElementById('formLogin');
         if (!form) return;
 
-        // Si ya hay sesión, no tiene sentido mostrar el login
         if (API.haySesion()) { location.href = this.destino(); return; }
 
         verPassword();
@@ -68,16 +59,6 @@ const Login = {
         });
     },
 
-    /**
-     * A dónde ir después de entrar.
-     *
-     * Se valida que sea una ruta interna: sin esto, un enlace como
-     * login.html?volver=https://sitio-malo.com llevaría al usuario fuera del
-     * sitio creyendo que sigue en él.
-     *
-     * Y si un cliente traía ?volver=admin/... se ignora: mandarlo al panel
-     * haría que el panel lo devuelva al login, y el login otra vez al panel.
-     */
     destino() {
         if (API.usuario && API.usuario.rol === 'proveedor') return 'proveedor.html';
 
@@ -94,9 +75,7 @@ const Login = {
         },
     };
 
-/* ---------------------------------------------------------------
-   REGISTRO
-   --------------------------------------------------------------- */
+
 const Registro = {
     iniciar() {
         const form = document.getElementById('formRegistro');
@@ -151,7 +130,6 @@ const Registro = {
         });
     },
 
-    /** Barra visual de fuerza de la contraseña. */
     medidorFuerza() {
         const input = document.getElementById('password');
         const barra = document.getElementById('barraFuerza');
