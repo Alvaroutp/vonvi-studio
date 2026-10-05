@@ -524,10 +524,15 @@ const Admin = {
         });
     },
 
+        // =================================================================
+    // PROVEEDORES Y ORDENES DE COMPRA
+    // El admin registra empresas, les crea cuentas de acceso y les manda
+    // ordenes de compra. La pantalla son dos columnas: la lista a la
+    // izquierda, y todo lo de la empresa elegida a la derecha.
+    // =================================================================
 
-
-    provSel: null,      
-    provLista: [],      
+    provSel: null,      // id de la empresa elegida
+    provLista: [],      // las empresas, para filtrar sin volver a pedirlas
 
     async proveedores() {
         const zona = this.zona();
@@ -543,12 +548,12 @@ const Admin = {
 
         this.provLista = r.proveedores;
 
-
+        // Si la elegida ya no existe (se borro), se pasa a la primera
         if (!this.provLista.some((p) => p.id === this.provSel)) {
             this.provSel = this.provLista.length ? this.provLista[0].id : null;
         }
 
-
+        // La clave recien generada se muestra una sola vez y se borra
         const reciente = this.claveNueva;
         this.claveNueva = null;
 
@@ -585,8 +590,8 @@ const Admin = {
 
         this.pintarLista('');
 
-        document.getElementById('buscarProv')
-            .addEventListener('input', (ev) => this.pintarLista(ev.target.value));
+        U.buscador(document.getElementById('buscarProv'),
+            (texto) => this.pintarLista(texto));
 
         zona.querySelector('[data-nueva-empresa]')
             .addEventListener('click', () => this.formEmpresa(null));
@@ -595,7 +600,7 @@ const Admin = {
     },
 
 
-
+    // Solo la columna izquierda. El texto filtra por nombre o por RUC
     pintarLista(texto) {
         const caja = document.getElementById('listaProv');
         const busca = texto.trim().toLowerCase();
@@ -632,7 +637,7 @@ const Admin = {
     },
 
 
-
+    // Toda la columna derecha: datos, encargados y ordenes de la elegida
     async verProveedor() {
         const caja = document.getElementById('detalleProv');
 
@@ -661,7 +666,7 @@ const Admin = {
             return;
         }
 
-
+        // El CSS tiene tres colores de pastilla: ambar, verde y rojo
         const color = { enviada: 'espera', aceptada: 'si', rechazada: 'no', recibida: 'listo' };
 
         const sinAcceso = encargados.length === 0;
@@ -798,6 +803,7 @@ const Admin = {
 
             </div>`;
 
+        // ---- los botones, que recien existen ahora ----
 
         caja.querySelector('[data-editar-emp]')
             .addEventListener('click', () => this.formEmpresa(p));
@@ -847,6 +853,7 @@ const Admin = {
     },
 
 
+    // ---------------- la empresa ----------------
 
     formEmpresa(empresa) {
         const nueva = !empresa;
@@ -900,11 +907,13 @@ const Admin = {
     },
 
 
-
+    // ---------------- los encargados ----------------
 
     formEncargado(empresa, encargado) {
         const nuevo = !encargado;
 
+        // Al editar no va el correo: es el usuario con el que inicia sesion
+        // y el servidor no lo cambia
         const campos = [
             { id: 'nombres', etiqueta: 'Nombres', requerido: true,
               valor: encargado ? encargado.nombres : '', placeholder: 'Mario' },
@@ -955,6 +964,7 @@ const Admin = {
     },
 
 
+    // ---------------- las ordenes ----------------
 
     async borrarOrden(orden) {
         if (!confirm(`¿Borrar la orden ${orden.codigo}?`)) return;
@@ -969,6 +979,8 @@ const Admin = {
     },
 
 
+    // Este formulario no usa modal() porque tiene una tabla de lineas
+    // que se agregan y se quitan, y totales que se recalculan solos
     async formOrden(empresa) {
         let catalogo;
 
@@ -989,6 +1001,9 @@ const Admin = {
             `<option value="${p.id}">${U.esc(p.categoria)} · ${U.esc(p.nombre)}</option>`
         ).join('');
 
+        // La fecha de hoy en formato aaaa-mm-dd, segun el reloj de quien
+        // esta usando la pantalla. El menos del desfase es para que a las
+        // 7 de la noche en Lima no salte ya al dia siguiente
         const ahora = new Date();
         const hoy = new Date(ahora.getTime() - ahora.getTimezoneOffset() * 60000)
             .toISOString().slice(0, 10);
@@ -1057,6 +1072,7 @@ const Admin = {
 
         const cuerpo = capa.querySelector('#cuerpoLineas');
 
+        // Suma las lineas cada vez que se escribe algo
         const recalcular = () => {
             let subtotal = 0;
 
@@ -1094,6 +1110,8 @@ const Admin = {
                 recalcular();
             });
 
+            // El precio no se rellena solo: lo que le pagas al proveedor
+            // no tiene nada que ver con lo que le cobras al cliente
             fila.querySelector('[data-prod]').addEventListener('change', () => {
                 const precio = fila.querySelector('[data-precio]');
                 if (!precio.value) precio.focus();
@@ -1200,9 +1218,14 @@ const Admin = {
                     <h2>Categorías</h2>
                     <p class="sub">${r.total} categoría(s). Entra a una para ver sus productos.</p>
                 </div>
-                <button type="button" class="btn-principal" data-nueva>
-                    <i class="fa-solid fa-plus"></i> Nueva categoría
-                </button>
+                <div class="acciones-cabecera">
+                    <button type="button" class="btn-secundario" data-excel>
+                        <i class="fa-solid fa-file-excel"></i> Descargar Excel
+                    </button>
+                    <button type="button" class="btn-principal" data-nueva>
+                        <i class="fa-solid fa-plus"></i> Nueva categoría
+                    </button>
+                </div>
             </div>
 
             ${r.total === 0 ? `
@@ -1244,6 +1267,10 @@ const Admin = {
 
         zona.querySelector('[data-nueva]').addEventListener('click', () => this.formCategoria(null));
 
+
+        zona.querySelector('[data-excel]')
+            .addEventListener('click', (ev) => this.descargarExcel(ev.currentTarget));
+
         zona.querySelectorAll('[data-entrar]').forEach((fila) => {
             fila.addEventListener('click', (ev) => {
                 if (ev.target.closest('button')) return;   // los botones no navegan
@@ -1271,6 +1298,45 @@ const Admin = {
                 } catch (e) { U.aviso(e.message, 'error'); }
             });
         });
+    },
+
+
+    // El Excel no se puede pedir con un enlace normal: un enlace no manda
+    // el token y el servidor contestaria 401. Hay que pedirlo con fetch,
+    // recibir el archivo y dispararle la descarga a mano
+    async descargarExcel(boton) {
+        const original = boton.innerHTML;
+
+        boton.disabled = true;
+        boton.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Generando...';
+
+        try {
+            const respuesta = await fetch(API.base + '/admin/reportes/productos', {
+                headers: { Authorization: 'Bearer ' + API.token },
+            });
+
+            if (!respuesta.ok) throw new Error('No se pudo generar el reporte');
+
+            // El archivo llega en crudo; createObjectURL le inventa una
+            // direccion temporal para poder enlazarlo
+            const archivo = await respuesta.blob();
+            const direccion = URL.createObjectURL(archivo);
+
+            const enlace = document.createElement('a');
+            enlace.href = direccion;
+            enlace.download = 'productos-vonvi-' + new Date().toISOString().slice(0, 10) + '.xlsx';
+            enlace.click();
+
+            URL.revokeObjectURL(direccion);
+            U.aviso('Reporte descargado');
+
+        } catch (e) {
+            U.aviso(e.message, 'error');
+
+        } finally {
+            boton.disabled = false;
+            boton.innerHTML = original;
+        }
     },
 
 
@@ -1714,6 +1780,7 @@ const Admin = {
             const error = capa.querySelector('#errorCatalogo');
             error.hidden = true;
 
+            // Primero se suben las imagenes, y se guarda la ruta que devuelve el servidor
             for (const c of campos.filter((x) => x.tipo === 'imagen')) {
                 const entrada = capa.querySelector('#c_' + c.id);
                 if (entrada.files.length === 0) continue;

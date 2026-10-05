@@ -38,41 +38,36 @@ const Catalogo = {
 
     prepararBuscador() {
         const input = document.getElementById('buscador');
-        if (!input) return;
-
         const grid = document.getElementById('gridCategorias');
         const resultados = document.getElementById('resultadosBusqueda');
-        let temporizador;
 
-        input.addEventListener('input', () => {
-            clearTimeout(temporizador);
-            const texto = input.value.trim();
-
-            if (texto.length < 2) {
+        // Mismo buscador que el del panel. Aqui se espera 350 ms y se
+        // piden dos letras porque cada busqueda es un viaje al servidor
+        U.buscador(input, async (texto) => {
+            if (!texto) {
                 resultados.hidden = true;
                 grid.hidden = false;
                 return;
             }
 
-            temporizador = setTimeout(async () => {
-                try {
-                    const r = await API.get(`/productos?buscar=${encodeURIComponent(texto)}`);
-                    grid.hidden = true;
-                    resultados.hidden = false;
+            try {
+                const r = await API.get(`/productos?buscar=${encodeURIComponent(texto)}`);
 
-                    if (!r.productos.length) {
-                        U.vacio(resultados, 'fa-solid fa-magnifying-glass', 'Sin resultados',
-                            `No encontramos productos para "${texto}". Escríbenos y lo cotizamos a medida.`,
-                            { href: 'contacto.html', texto: 'Solicitar cotización' });
-                        return;
-                    }
+                grid.hidden = true;
+                resultados.hidden = false;
 
-                    resultados.innerHTML = r.productos
-                        .map((p) => Catalogo.tarjetaProducto(p)).join('');
+                if (!r.productos.length) {
+                    U.vacio(resultados, 'fa-solid fa-magnifying-glass', 'Sin resultados',
+                        `No encontramos productos para "${texto}". Escríbenos y lo cotizamos a medida.`,
+                        { href: 'contacto.html', texto: 'Solicitar cotización' });
+                    return;
+                }
 
-                } catch (e) { }
-            }, 350);
-        });
+                resultados.innerHTML = r.productos
+                    .map((p) => Catalogo.tarjetaProducto(p)).join('');
+
+            } catch (e) { }
+        }, { minimo: 2, espera: 350 });
     },
 
     tarjetaProducto(p) {

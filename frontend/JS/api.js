@@ -171,6 +171,33 @@ const U = {
         return new URLSearchParams(location.search).get(nombre);
     },
 
+    // Adaptado de la funcion debounce de Underscore.js, que publica
+    // David Walsh. Devuelve una version de la funcion que espera a que
+    // dejes de escribir antes de correr, en vez de correr con cada tecla
+    esperar(funcion, ms) {
+        let temporizador;
+
+        return function (...datos) {
+            clearTimeout(temporizador);
+            temporizador = setTimeout(() => funcion(...datos), ms);
+        };
+    },
+
+    // El mismo buscador para las dos pantallas. Lo unico que cambia de
+    // una a otra es que se hace con el texto, y eso llega de afuera
+    // como funcion. Un texto vacio significa "no hay busqueda, muestra todo"
+    buscador(entrada, alBuscar, opciones = {}) {
+        if (!entrada) return;
+
+        const minimo = opciones.minimo || 0;
+        const correr = this.esperar(alBuscar, opciones.espera || 0);
+
+        entrada.addEventListener('input', () => {
+            const texto = entrada.value.trim();
+            correr(texto.length < minimo ? '' : texto);
+        });
+    },
+
     /** Aviso flotante en la esquina. */
     aviso(mensaje, tipo = 'exito') {
         let caja = document.getElementById('avisoFlotante');
