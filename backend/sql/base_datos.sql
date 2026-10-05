@@ -2,7 +2,6 @@ DROP DATABASE IF EXISTS vonvi_studio;
 CREATE DATABASE vonvi_studio CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE vonvi_studio;
 
--- Tabla de proveedores (empresas)
 CREATE TABLE proveedores (
     id INT AUTO_INCREMENT PRIMARY KEY,
     razon_social VARCHAR(180) NOT NULL,
@@ -43,7 +42,8 @@ CREATE TABLE productos (
     nombre          VARCHAR(120)  NOT NULL,
     slug            VARCHAR(120)  NOT NULL UNIQUE,
     descripcion     TEXT              NULL,
-    precio          DECIMAL(10,2) NOT NULL,                                                  
+    precio          DECIMAL(10,2) NOT NULL,
+    stock           INT           NOT NULL DEFAULT 0,
     imagen          VARCHAR(180)      NULL,
     cantidad_minima INT           NOT NULL DEFAULT 1,
     dias_produccion INT           NOT NULL DEFAULT 3,
@@ -151,7 +151,7 @@ CREATE TABLE ordenes_compra (
     id INT AUTO_INCREMENT PRIMARY KEY,
     codigo VARCHAR(30) NOT NULL UNIQUE,
     proveedor_id INT NOT NULL,
-    estado ENUM('enviada','aceptada','rechazada') NOT NULL DEFAULT 'enviada',
+    estado ENUM('enviada','aceptada','rechazada','recibida') NOT NULL DEFAULT 'enviada',
     fecha_entrega DATE NULL,
     respuesta VARCHAR(500) NULL,
     subtotal DECIMAL(10,2) NOT NULL DEFAULT 0.00,
@@ -159,15 +159,18 @@ CREATE TABLE ordenes_compra (
     total DECIMAL(10,2) NOT NULL DEFAULT 0.00,
     creado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     respondido_en DATETIME NULL,
+    recibido_en DATETIME NULL,
     FOREIGN KEY (proveedor_id) REFERENCES proveedores(id)
 );
 
 CREATE TABLE orden_items (
     id INT AUTO_INCREMENT PRIMARY KEY,
     orden_id INT NOT NULL,
+    producto_id INT NULL,
     descripcion VARCHAR(500) NOT NULL,
     cantidad INT NOT NULL,
     precio_unitario DECIMAL(10,2) NOT NULL,
     subtotal DECIMAL(10,2) NOT NULL,
-    FOREIGN KEY (orden_id) REFERENCES ordenes_compra(id) ON DELETE CASCADE
+    FOREIGN KEY (orden_id) REFERENCES ordenes_compra(id) ON DELETE CASCADE,
+    FOREIGN KEY (producto_id) REFERENCES productos(id)
 );
