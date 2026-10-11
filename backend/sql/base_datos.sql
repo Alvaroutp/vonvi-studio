@@ -132,6 +132,19 @@ CREATE TABLE pedido_items (
     FOREIGN KEY (producto_id) REFERENCES productos(id) ON DELETE SET NULL
 );
 
+CREATE TABLE pedido_historial (
+    id         INT AUTO_INCREMENT PRIMARY KEY,
+    pedido_id  INT          NOT NULL,
+    estado     VARCHAR(30)  NOT NULL,
+    comentario VARCHAR(300) NULL,
+    usuario_id INT          NULL,
+    creado_en  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    INDEX (pedido_id),
+    FOREIGN KEY (pedido_id)  REFERENCES pedidos(id)  ON DELETE CASCADE,
+    FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE SET NULL
+);
+
 CREATE TABLE cotizaciones (
     id         INT AUTO_INCREMENT PRIMARY KEY,
     usuario_id INT NULL,
@@ -143,6 +156,7 @@ CREATE TABLE cotizaciones (
     producto_interes     VARCHAR(120) NULL,
     mensaje              TEXT         NULL,
     preferencia_contacto ENUM('correo','whatsapp','llamada') NOT NULL DEFAULT 'whatsapp',
+    acepta_promociones   TINYINT(1)   NOT NULL DEFAULT 0,
     estado               ENUM('nueva','en_proceso','respondida','cerrada') NOT NULL DEFAULT 'nueva',
     creado_en            DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
 

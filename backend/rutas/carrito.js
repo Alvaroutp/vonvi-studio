@@ -17,8 +17,6 @@ async function sesionOpcional(req, res, next) {
     }
 }
 
-router.use(sesionOpcional);
-
 
 function quienEs(req) {
     return {
@@ -37,7 +35,7 @@ function fallo(res, error, mensaje) {
 }
 
 
-router.get('/carrito', async (req, res) => {
+router.get('/carrito', sesionOpcional, async (req, res) => {
     const { usuarioId, token } = quienEs(req);
 
     try {
@@ -49,7 +47,7 @@ router.get('/carrito', async (req, res) => {
 });
 
 
-router.post('/carrito/items', async (req, res) => {
+router.post('/carrito/items', sesionOpcional, async (req, res) => {
     const { usuarioId, token } = quienEs(req);
 
     try {
@@ -62,7 +60,7 @@ router.post('/carrito/items', async (req, res) => {
 });
 
 
-router.put('/carrito/items/:id', async (req, res) => {
+router.put('/carrito/items/:id', sesionOpcional, async (req, res) => {
     const { usuarioId, token } = quienEs(req);
 
     try {
@@ -77,7 +75,7 @@ router.put('/carrito/items/:id', async (req, res) => {
 });
 
 
-router.delete('/carrito/items/:id', async (req, res) => {
+router.delete('/carrito/items/:id', sesionOpcional, async (req, res) => {
     const { usuarioId, token } = quienEs(req);
 
     try {
@@ -90,7 +88,7 @@ router.delete('/carrito/items/:id', async (req, res) => {
 });
 
 
-router.delete('/carrito', async (req, res) => {
+router.delete('/carrito', sesionOpcional, async (req, res) => {
     const { usuarioId, token } = quienEs(req);
 
     try {
@@ -101,7 +99,7 @@ router.delete('/carrito', async (req, res) => {
     }
 });
 
-router.post('/carrito/fusionar', async (req, res) => {
+router.post('/carrito/fusionar', sesionOpcional, async (req, res) => {
     const { usuarioId, token } = quienEs(req);
 
     try {

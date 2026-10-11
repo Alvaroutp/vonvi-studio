@@ -19,6 +19,8 @@ SET FOREIGN_KEY_CHECKS = 0;
 TRUNCATE TABLE carrito_item_opciones;
 TRUNCATE TABLE carrito_items;
 TRUNCATE TABLE carritos;
+TRUNCATE TABLE cotizaciones;
+TRUNCATE TABLE pedido_historial;
 TRUNCATE TABLE pedido_items;
 TRUNCATE TABLE pedidos;
 TRUNCATE TABLE orden_items;
