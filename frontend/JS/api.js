@@ -12,8 +12,17 @@ const API = {
     },
 
     get usuario() {
-        try { return JSON.parse(localStorage.getItem('vonvi_usuario')); }
-        catch (e) { return null; }
+        try {
+            const u = JSON.parse(localStorage.getItem('vonvi_usuario'));
+            if (!u) return null;
+
+            // El servidor manda nombres y apellidos por separado, pero
+            // varias pantallas los necesitan juntos. Se arman aqui una
+            // sola vez en vez de repetirlo en cada pagina
+            u.nombreCompleto = ((u.nombres || '') + ' ' + (u.apellidos || '')).trim();
+
+            return u;
+        } catch (e) { return null; }
     },
     set usuario(u) {
         if (u) localStorage.setItem('vonvi_usuario', JSON.stringify(u));

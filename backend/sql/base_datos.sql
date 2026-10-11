@@ -75,12 +75,15 @@ CREATE TABLE pedidos (
     id         INT AUTO_INCREMENT PRIMARY KEY,
     codigo     VARCHAR(20) NOT NULL UNIQUE,
     usuario_id INT         NOT NULL,
-    estado ENUM('recibido','diseno_enviado','por_aprobar','en_produccion','control','listo','cancelado') NOT NULL DEFAULT 'recibido',
+    carrito_id INT         NULL,
+    estado ENUM('recibido','diseno_enviado','por_aprobar','en_produccion','control','listo','entregado','cancelado') NOT NULL DEFAULT 'recibido',
     nombre_contacto   VARCHAR(160) NOT NULL,
     email_contacto    VARCHAR(120) NOT NULL,
     telefono_contacto VARCHAR(20)  NOT NULL,
 
     tipo_entrega ENUM('recojo','delivery') NOT NULL DEFAULT 'delivery',
+    departamento VARCHAR(60)  NULL,
+    provincia    VARCHAR(60)  NULL,
     distrito     VARCHAR(60)  NULL,
     direccion    VARCHAR(180) NULL,
     referencia   VARCHAR(180) NULL,
@@ -96,6 +99,7 @@ CREATE TABLE pedidos (
 
     notas     VARCHAR(500) NULL,
     creado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    fecha_entrega_estimada DATE NULL,
 
     fecha_recibido   DATETIME NULL,
     fecha_diseno     DATETIME NULL,
@@ -103,7 +107,9 @@ CREATE TABLE pedidos (
     fecha_produccion DATETIME NULL,
     fecha_control    DATETIME NULL,
     fecha_listo      DATETIME NULL,
+    fecha_entregado  DATETIME NULL,
 
+    INDEX (carrito_id),
     FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
 );
 
