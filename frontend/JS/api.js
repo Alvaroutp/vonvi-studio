@@ -15,10 +15,6 @@ const API = {
         try {
             const u = JSON.parse(localStorage.getItem('vonvi_usuario'));
             if (!u) return null;
-
-            // El servidor manda nombres y apellidos por separado, pero
-            // varias pantallas los necesitan juntos. Se arman aqui una
-            // sola vez en vez de repetirlo en cada pagina
             u.nombreCompleto = ((u.nombres || '') + ' ' + (u.apellidos || '')).trim();
 
             return u;
@@ -43,8 +39,6 @@ const API = {
         this.usuario = null;
         this.tokenCarrito = null;
     },
-
-    /* ---------------- Peticiones ---------------- */
 
     async pedir(ruta, opciones = {}) {
         const cabeceras = { ...(opciones.headers || {}) };
@@ -71,10 +65,9 @@ const API = {
         }
 
         let datos = null;
-        try { datos = await respuesta.json(); } catch (e) { /* respuesta sin cuerpo */ }
+        try { datos = await respuesta.json(); } catch (e) {  }
 
         if (!respuesta.ok) {
-            // La sesión venció: se limpia y se manda al login
             if (respuesta.status === 401 && this.token) {
                 this.cerrarSesion();
                 if (!location.pathname.includes('login')) {
@@ -119,7 +112,7 @@ const API = {
         try {
             await this.post('/carrito/fusionar', {});
             this.tokenCarrito = null;
-        } catch (e) { /* si falla, el carrito del usuario sigue intacto */ }
+        } catch (e) { }
     },
 };
 
