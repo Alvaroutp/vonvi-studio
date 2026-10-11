@@ -20,6 +20,7 @@ app.use(express.static(path.join(__dirname, '..', 'frontend')));
 
 app.use('/api', require('./rutas/usuarios'));
 app.use('/api', require('./rutas/catalogo'));
+app.use('/api', require('./rutas/carrito'));
 app.use('/api', require('./rutas/pedidos'));
 app.use('/api', require('./rutas/admin'));
 app.use('/api', require('./rutas/proveedor'));

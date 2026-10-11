@@ -42,8 +42,6 @@ const Carrito = {
             return;
         }
 
-        const envio = resumen.subtotal >= 250 ? 0 : 12;
-
         zona.innerHTML = `
             <div class="carrito-grid ${esPanel ? 'carrito-grid-panel' : ''}">
 
@@ -61,19 +59,14 @@ const Carrito = {
                         <span>${resumen.total_articulos} artículo(s)</span>
                         <span>${U.soles(resumen.subtotal)}</span>
                     </div>
-                    <div class="linea">
-                        <span>Envío estimado</span>
-                        <span>${envio === 0 ? '<em class="gratis">Gratis</em>' : U.soles(envio)}</span>
-                    </div>
-                    ${envio > 0 ? `
-                        <p class="nota-envio">
-                            <i class="fa-solid fa-truck-fast"></i>
-                            Te faltan ${U.soles(250 - resumen.subtotal)} para el envío gratis.
-                        </p>` : ''}
+                    <p class="nota-envio">
+                        <i class="fa-solid fa-truck-fast"></i>
+                        El recojo o el envío se elige al confirmar el pedido.
+                    </p>
 
                     <div class="linea total">
                         <span>Total</span>
-                        <strong>${U.soles(resumen.subtotal + envio)}</strong>
+                        <strong>${U.soles(resumen.subtotal)}</strong>
                     </div>
 
                     <p class="nota-produccion">
@@ -122,7 +115,7 @@ const Carrito = {
                     ${(i.estampa_nombre && !esPanel) ? `
                         <p class="item-estampa">
                             <i class="fa-regular fa-image"></i>
-                            <a href="${API.base.replace('/api', '')}${U.esc(i.estampa_url)}" target="_blank" rel="noopener">
+                            <a href="${U.esc(i.estampa_url)}" target="_blank" rel="noopener">
                                 ${U.esc(i.estampa_nombre)}
                             </a>
                         </p>` : ''}
@@ -133,7 +126,8 @@ const Carrito = {
                 <div class="item-acciones">
                     <div class="control-cantidad chico">
                         <button type="button" data-accion="menos" aria-label="Quitar uno">&minus;</button>
-                        <input type="number" value="${i.cantidad}" min="1" data-accion="cantidad">
+                        <input type="number" value="${i.cantidad}"
+                               min="${i.cantidad_minima}" data-accion="cantidad">
                         <button type="button" data-accion="mas" aria-label="Agregar uno">+</button>
                     </div>
 
@@ -161,8 +155,18 @@ const Carrito = {
             fila.querySelector('[data-accion="mas"]').addEventListener('click',
                 () => this.cambiar(id, Number(input.value) + 1));
 
-            fila.querySelector('[data-accion="menos"]').addEventListener('click',
-                () => { const n = Number(input.value) - 1; if (n >= 1) this.cambiar(id, n); });
+            const minimo = Number(input.min) || 1;
+
+            fila.querySelector('[data-accion="menos"]').addEventListener('click', () => {
+                const n = Number(input.value) - 1;
+
+                if (n < minimo) {
+                    U.aviso(`El pedido mínimo es ${minimo} unidad(es)`, 'error');
+                    return;
+                }
+
+                this.cambiar(id, n);
+            });
 
             input.addEventListener('change', () => this.cambiar(id, Number(input.value)));
 
