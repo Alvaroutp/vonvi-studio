@@ -86,7 +86,9 @@ router.get('/productos/:slug', async (req, res) => {
         }));
 
         producto.escalas = [];
-        producto.permite_estampa = false;
+
+        producto.permite_estampa = true;
+        producto.estampa_obligatoria = false;
 
         res.json({ ok: true, producto });
 

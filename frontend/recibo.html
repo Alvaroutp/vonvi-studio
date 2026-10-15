@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Recibo de tu pedido en Vonvi Studio Perú.">
+
+    <title>Recibo | Vonvi Studio Perú</title>
+    <link rel="icon" type="image/png" href="img/icon.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: "Poppins", Arial, Helvetica, sans-serif;
+            background: #eef0f4;
+            color: #22262e;
+            padding: 28px 16px 60px;
+            font-size: 14px;
+        }
+
+        .hoja {
+            max-width: 720px;
+            margin: 0 auto;
+            background: #fff;
+            border-radius: 14px;
+            padding: 38px 42px 44px;
+            box-shadow: 0 10px 34px rgba(31, 36, 48, .09);
+        }
+
+        .cargando, .problema { text-align: center; color: #6c7482; padding: 50px 10px; }
+        .problema strong { display: block; color: #22262e; font-size: 17px; margin-bottom: 6px; }
+
+        /* ---------- cabecera ---------- */
+        .cabecera { display: flex; justify-content: space-between; align-items: flex-start;
+                    gap: 20px; padding-bottom: 20px; border-bottom: 2px solid #22262e; }
+        .cabecera .logo { font-size: 20px; font-weight: 700; letter-spacing: -.4px; }
+        .cabecera .logo span { color: #ec4f95; }
+        .cabecera .datos { font-size: 11.5px; color: #6c7482; line-height: 1.6; margin-top: 5px; }
+
+        .caja-numero { border: 1.5px solid #22262e; border-radius: 9px; padding: 10px 16px;
+                       text-align: center; min-width: 182px; }
+        .caja-numero small { display: block; font-size: 9.5px; letter-spacing: 1.4px;
+                             text-transform: uppercase; color: #6c7482; }
+        .caja-numero strong { display: block; font-size: 17px; margin-top: 3px; letter-spacing: -.3px; }
+        .caja-numero time { display: block; font-size: 11px; color: #6c7482; margin-top: 3px; }
+
+        /* ---------- bloques ---------- */
+        .columnas { display: flex; gap: 30px; margin-top: 24px; }
+        .columnas section { flex: 1; }
+
+        h2 { font-size: 10px; letter-spacing: 1.3px; text-transform: uppercase;
+             color: #ec4f95; margin-bottom: 7px; }
+        .columnas p { font-size: 13px; line-height: 1.6; color: #3b434f; }
+        .columnas p strong { color: #22262e; }
+
+        /* ---------- tabla ---------- */
+        table { width: 100%; border-collapse: collapse; margin-top: 26px; }
+        thead th { text-align: left; font-size: 9.5px; letter-spacing: 1.1px; text-transform: uppercase;
+                   color: #6c7482; border-bottom: 1.5px solid #dfe3e8; padding: 0 10px 8px 0; }
+        thead th.der, td.der { text-align: right; padding-right: 0; }
+        tbody td { padding: 12px 10px 12px 0; border-bottom: 1px solid #eef0f4; vertical-align: top;
+                   font-size: 13px; }
+        tbody td strong { display: block; }
+        tbody td small { color: #6c7482; font-size: 11.5px; }
+
+        /* ---------- totales ---------- */
+        .totales { margin-left: auto; width: 268px; margin-top: 18px; }
+        .totales div { display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px;
+                       color: #3b434f; }
+        .totales div.separa { border-top: 1px solid #eef0f4; margin-top: 5px; padding-top: 9px; }
+        .totales div.final { border-top: 1.5px solid #22262e; margin-top: 6px; padding-top: 10px;
+                             font-size: 17px; color: #22262e; }
+        .totales div.final strong { font-weight: 700; }
+
+        .pagado { display: inline-flex; align-items: center; gap: 7px; margin-top: 22px;
+                  background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0;
+                  border-radius: 20px; padding: 7px 15px; font-size: 12.5px; font-weight: 600; }
+
+        .pie { margin-top: 30px; padding-top: 16px; border-top: 1px solid #eef0f4;
+               font-size: 11px; color: #96a0ad; line-height: 1.6; }
+
+        /* ---------- botones ---------- */
+        .acciones { max-width: 720px; margin: 0 auto 16px; display: flex; gap: 10px;
+                    justify-content: flex-end; }
+        .acciones button, .acciones a {
+            font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer;
+            border-radius: 9px; padding: 10px 18px; text-decoration: none; border: 0;
+        }
+        .acciones .imprimir { background: #ec4f95; color: #fff; }
+        .acciones .volver { background: #fff; color: #3b434f; border: 1px solid #dfe3e8; }
+
+        /* ---------- al imprimir se va todo lo que no es el recibo ---------- */
+        @media print {
+            body { background: #fff; padding: 0; }
+            .acciones { display: none; }
+            .hoja { box-shadow: none; border-radius: 0; max-width: none; padding: 0; }
+            table { page-break-inside: auto; }
+            tbody tr { page-break-inside: avoid; }
+        }
+
+        @media (max-width: 620px) {
+            .hoja { padding: 24px 20px 30px; }
+            .cabecera { flex-direction: column; }
+            .columnas { flex-direction: column; gap: 18px; }
+            .totales { width: 100%; }
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <div class="acciones" id="acciones" hidden>
+        <a href="cuenta.html" class="volver">Volver a mis pedidos</a>
+        <button type="button" class="imprimir" onclick="window.print()">Imprimir o guardar PDF</button>
+    </div>
+
+    <div class="hoja" id="hoja">
+        <p class="cargando">Cargando tu recibo...</p>
+    </div>
+
+    <script src="JS/api.js"></script>
+    <script>
+        // Esta pagina no tiene su propio archivo de JS: es una sola
+        // pantalla y todo lo que hace es pedir el recibo y pintarlo
+
+        function problema(titulo, detalle) {
+            document.getElementById('hoja').innerHTML =
+                `<div class="problema"><strong>${U.esc(titulo)}</strong>${U.esc(detalle || '')}</div>`;
+        }
+
+        function fila(l) {
+            const opciones = (l.detalle || [])
+                .map((o) => `${U.esc(o.atributo)}: ${U.esc(o.valor)}`).join(' · ');
+
+            return `
+                <tr>
+                    <td>
+                        <strong>${U.esc(l.descripcion)}</strong>
+                        ${opciones ? `<small>${opciones}</small>` : ''}
+                    </td>
+                    <td class="der">${l.cantidad}</td>
+                    <td class="der">${U.soles(l.precio_unitario)}</td>
+                    <td class="der">${U.soles(l.subtotal)}</td>
+                </tr>`;
+        }
+
+        function pintar(r) {
+            const e = r.entrega;
+            const productos = r.lineas.reduce((s, l) => s + Number(l.subtotal), 0);
+            const entrega = e.tipo === 'recojo'
+                ? 'Recojo en tienda'
+                : [e.direccion, e.distrito, e.provincia, e.departamento]
+                    .filter(Boolean).map(U.esc).join(', ');
+
+            document.getElementById('hoja').innerHTML = `
+                <div class="cabecera">
+                    <div>
+                        <p class="logo">Vonvi <span>Studio</span> Perú</p>
+                        <p class="datos">
+                            ${U.esc(r.emisor.direccion)}<br>
+                            ${U.esc(r.emisor.telefono)} · ${U.esc(r.emisor.email)}
+                        </p>
+                    </div>
+                    <div class="caja-numero">
+                        <small>Recibo</small>
+                        <strong>${U.esc(r.numero)}</strong>
+                        <time>${U.fecha(r.emitido_en)}</time>
+                    </div>
+                </div>
+
+                <div class="columnas">
+                    <section>
+                        <h2>Cliente</h2>
+                        <p>
+                            <strong>${U.esc(r.cliente.nombre)}</strong>
+                            ${U.esc(r.cliente.email)}<br>
+                            ${U.esc(r.cliente.telefono)}
+                        </p>
+                    </section>
+                    <section>
+                        <h2>Entrega</h2>
+                        <p>${entrega}</p>
+                    </section>
+                </div>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Descripción</th>
+                            <th class="der">Cant.</th>
+                            <th class="der">P. unit.</th>
+                            <th class="der">Importe</th>
+                        </tr>
+                    </thead>
+                    <tbody>${r.lineas.map(fila).join('')}</tbody>
+                </table>
+
+                <div class="totales">
+                    <div><span>Productos</span><span>${U.soles(productos)}</span></div>
+                    <div><span>Envío</span><span>${r.envio > 0 ? U.soles(r.envio) : 'Gratis'}</span></div>
+                    <div class="separa"><span>Op. gravada</span><span>${U.soles(r.montos.gravado)}</span></div>
+                    <div><span>IGV (18%)</span><span>${U.soles(r.montos.igv)}</span></div>
+                    <div class="final"><span>Total</span><strong>${U.soles(r.montos.total)}</strong></div>
+                </div>
+
+                <p class="pagado">
+                    Pagado con ${U.esc(r.pago.metodo)}${r.pago.ultimos4 ? ` ****${U.esc(r.pago.ultimos4)}` : ''}
+                    · ref. ${U.esc(r.pago.referencia)}
+                </p>
+
+                <p class="pie">
+                    Este documento es el comprobante interno de tu compra en Vonvi Studio Perú.
+                    No constituye una boleta ni una factura electrónica ante SUNAT.
+                    Los precios ya incluyen el IGV.
+                </p>`;
+
+            document.getElementById('acciones').hidden = false;
+            document.title = `Recibo ${r.numero} | Vonvi Studio Perú`;
+        }
+
+        (async () => {
+            const codigo = U.parametro('p');
+
+            if (!codigo) return problema('Falta el número del pedido',
+                'Abre el recibo desde la página de tu pedido.');
+
+            if (!API.haySesion()) {
+                location.href = `login.html?volver=${encodeURIComponent('recibo.html?p=' + codigo)}`;
+                return;
+            }
+
+            try {
+                const r = await API.get(`/pedidos/${encodeURIComponent(codigo)}/recibo`);
+                pintar(r.recibo);
+
+            } catch (error) {
+                problema('No pudimos mostrar tu recibo', error.message);
+            }
+        })();
+    </script>
+
+</body>
+
+</html>

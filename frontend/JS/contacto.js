@@ -29,9 +29,9 @@ const Contacto = {
         let u = API.usuario;
         try {
             const r = await API.get('/auth/perfil');
-            u = r.usuario;
-            API.usuario = u;
-        } catch (e) { /* si falla, se usan los datos locales */ }
+            API.usuario = r.usuario;
+            u = API.usuario;
+        } catch (e) { }
 
         const nombre = document.getElementById('nombre');
         const correo = document.getElementById('correo');

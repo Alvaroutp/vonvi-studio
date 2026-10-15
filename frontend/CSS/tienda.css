@@ -277,7 +277,14 @@
 .btn-secundario.chico,
 .btn-principal.chico { padding: 9px 18px; font-size: 13.5px; }
 
-.ancho-total { width: 100%; text-align: center; justify-content: center; }
+.ancho-total {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    text-align: center;
+}
 
 .pastilla {
     display: inline-block;

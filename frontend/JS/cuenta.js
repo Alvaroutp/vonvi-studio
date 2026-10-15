@@ -243,6 +243,10 @@ const Cuenta = {
                    class="btn-secundario" target="_blank" rel="noopener">
                     <i class="fab fa-whatsapp"></i> Consultar por WhatsApp
                 </a>
+                ${p.estado_pago === 'pagado' ? `
+                    <a href="recibo.html?p=${encodeURIComponent(p.codigo)}" class="btn-secundario">
+                        <i class="fa-regular fa-file-lines"></i> Ver recibo
+                    </a>` : ''}
                 ${(!p.cancelado && p.estado_orden < 4) ? `
                     <button type="button" class="btn-texto peligro" id="btnCancelar">
                         Cancelar pedido

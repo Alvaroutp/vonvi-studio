@@ -12,8 +12,13 @@ const API = {
     },
 
     get usuario() {
-        try { return JSON.parse(localStorage.getItem('vonvi_usuario')); }
-        catch (e) { return null; }
+        try {
+            const u = JSON.parse(localStorage.getItem('vonvi_usuario'));
+            if (!u) return null;
+            u.nombreCompleto = ((u.nombres || '') + ' ' + (u.apellidos || '')).trim();
+
+            return u;
+        } catch (e) { return null; }
     },
     set usuario(u) {
         if (u) localStorage.setItem('vonvi_usuario', JSON.stringify(u));
@@ -34,8 +39,6 @@ const API = {
         this.usuario = null;
         this.tokenCarrito = null;
     },
-
-    /* ---------------- Peticiones ---------------- */
 
     async pedir(ruta, opciones = {}) {
         const cabeceras = { ...(opciones.headers || {}) };
@@ -62,10 +65,9 @@ const API = {
         }
 
         let datos = null;
-        try { datos = await respuesta.json(); } catch (e) { /* respuesta sin cuerpo */ }
+        try { datos = await respuesta.json(); } catch (e) {  }
 
         if (!respuesta.ok) {
-            // La sesión venció: se limpia y se manda al login
             if (respuesta.status === 401 && this.token) {
                 this.cerrarSesion();
                 if (!location.pathname.includes('login')) {
@@ -110,7 +112,7 @@ const API = {
         try {
             await this.post('/carrito/fusionar', {});
             this.tokenCarrito = null;
-        } catch (e) { /* si falla, el carrito del usuario sigue intacto */ }
+        } catch (e) { }
     },
 };
 
