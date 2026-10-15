@@ -7,3 +7,5 @@ INSERT INTO usuarios (id, nombres, apellidos, email, password, telefono, rol) VA
 (2, 'María', 'Fernández', 'maria@example.com',
     '$2b$10$74VkFfuCPJ9DZqxS3VHjFeICD3FPnpfUBIn8pSSuHSY0QIovPMTui',
     '987654321', 'cliente');
+
+    
