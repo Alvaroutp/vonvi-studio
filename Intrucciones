@@ -6,7 +6,7 @@ module.exports = {
     bd: {
         host: 'localhost',
         user: 'root',
-        password: '060304',
+        password: '00000',
         database: 'vonvi_studio'
     }
 };
