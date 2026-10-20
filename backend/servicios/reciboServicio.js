@@ -2,10 +2,6 @@ const seguimientoDAO = require('../dao/seguimientoDAO');
 const seguimientoServicio = require('./seguimientoServicio');
 
 
-// El recibo del pedido. No es una boleta electronica de SUNAT: es el
-// comprobante interno que el cliente imprime o guarda en PDF.
-
-
 const IGV = 0.18;
 
 const EMISOR = {
@@ -23,9 +19,6 @@ class ErrorRecibo extends Error {
    }
 }
 
-
-// En Perú el precio que se muestra ya trae el IGV adentro. Para el
-// recibo hay que separarlo: lo que cuesta sin impuesto y el impuesto
 function separarIgv(total) {
     const gravado = Number((total / (1 + IGV)).toFixed(2));
 
@@ -39,7 +32,6 @@ function separarIgv(total) {
 async function recibo(usuario, codigo) {
     const pedido = await seguimientoServicio.suyo(usuario, codigo);
 
-    // Un recibo de algo que nadie pago no es un recibo
     if (pedido.estado_pago !== 'pagado') {
         throw new ErrorRecibo('Este pedido todavía no está pagado', 409);
 }
@@ -47,8 +39,6 @@ async function recibo(usuario, codigo) {
     const lineas = await seguimientoDAO.lineas(pedido.id);
 
     return {
-        // El recibo lleva el mismo numero del pedido: una compra, un
-        // numero, y el cliente no tiene que acordarse de dos codigos
         numero: pedido.codigo,
         emitido_en: pedido.creado_en,
         emisor: EMISOR,

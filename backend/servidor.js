@@ -22,6 +22,8 @@ app.use('/api', require('./rutas/usuarios'));
 app.use('/api', require('./rutas/catalogo'));
 app.use('/api', require('./rutas/carrito'));
 app.use('/api', require('./rutas/pedidos'));
+app.use('/api', require('./rutas/cotizaciones'));
+app.use('/api', require('./rutas/seguimiento'));
 app.use('/api', require('./rutas/admin'));
 app.use('/api', require('./rutas/proveedor'));
 app.use('/api', require('./rutas/archivos'));

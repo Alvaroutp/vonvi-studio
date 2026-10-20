@@ -1,9 +1,4 @@
 const db = require('../db');
-
-
-// Las columnas de fecha que se pueden escribir. Esta lista existe para
-// que el nombre de la columna NUNCA venga de afuera: abajo se arma SQL
-// pegando texto, y pegar texto que mando el navegador es una inyeccion
 const COLUMNAS_FECHA = [
     'fecha_recibido', 'fecha_diseno', 'fecha_aprobacion',
     'fecha_produccion', 'fecha_control', 'fecha_listo', 'fecha_entregado',
@@ -28,9 +23,6 @@ async function transaccion(trabajo) {
     }
 }
 
-
-// Arma el WHERE segun lo que eligio el admin en los filtros. Cada
-// pedazo guarda su interrogante aparte, nunca el valor pegado al texto
 function filtrar(f) {
     const partes = [];
     const datos = [];
@@ -80,8 +72,6 @@ async function listar(f, limite, salto) {
     return filas;
 }
 
-
-// El admin puede abrir cualquier pedido, por eso aqui no va el usuario
 async function buscarPorCodigo(codigo) {
     const [filas] = await db.query('SELECT * FROM pedidos WHERE codigo = ?', [codigo]);
     return filas[0] || null;
@@ -109,9 +99,6 @@ async function historial(pedidoId) {
     return filas;
 }
 
-
-// Cambia el estado solo si el pedido sigue en el estado que creiamos.
-// Si otro empleado lo movio mientras tanto, devuelve 0 y no pisa nada
 async function cambiarEstado(cx, pedidoId, estadoAnterior, estadoNuevo, columnaFecha) {
     let sql = 'UPDATE pedidos SET estado = ?';
 
@@ -135,8 +122,6 @@ async function agregarHistorial(cx, pedidoId, estado, comentario, usuarioId) {
     );
 }
 
-
-// Al cancelar un pedido ya pagado, lo que se habia descontado vuelve
 async function devolverStock(cx, productoId, cantidad) {
     const [r] = await cx.query(
         'UPDATE productos SET stock = stock + ? WHERE id = ?', [cantidad, productoId]

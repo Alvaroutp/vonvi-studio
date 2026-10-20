@@ -1,12 +1,5 @@
 const adminPedidoDAO = require('../dao/adminPedidoDAO');
 
-
-// La maquina de estados del pedido. Todo lo que se puede y no se puede
-// hacer esta en las dos tablas de abajo, no repartido en ifs.
-
-
-// El catalogo. El orden es el de la cadena de fabricacion y es lo que
-// usa la pantalla para pintar la insignia de color
 const ESTADOS = [
     { id: 1, codigo: 'recibido', nombre: 'Recibido', orden: 1,
       color_hex: '#6b7280', fecha: 'fecha_recibido' },
@@ -33,10 +26,6 @@ const ESTADOS = [
       color_hex: '#dc2626', fecha: null },
 ];
 
-
-// A donde puede ir cada estado. Lo que no esta en la lista no se puede:
-// no se salta pasos, no se vuelve atras, y cancelar solo se permite
-// mientras no haya empezado la produccion
 const SIGUIENTES = {
     recibido: ['diseno_enviado', 'cancelado'],
     diseno_enviado: ['por_aprobar', 'cancelado'],
@@ -64,15 +53,10 @@ function buscarEstado(codigo) {
     return ESTADOS.find((e) => e.codigo === codigo) || null;
 }
 
-
-// Lo que ve la pantalla: sin el nombre de la columna de fecha, que es
-// cosa interna de la base
 function catalogo() {
     return ESTADOS.map(({ fecha, ...resto }) => resto);
 }
 
-
-// Le pega al pedido el nombre y el color de su estado
 function decorar(pedido) {
     const e = buscarEstado(pedido.estado) || ESTADOS[0];
 
@@ -85,10 +69,6 @@ function decorar(pedido) {
     };
 }
 
-
-// Las opciones se guardaron como "Talla: M, Color: Blanco" para que el
-// pedido se pueda leer aunque borren ese color. Aqui se vuelven a
-// separar porque la pantalla las pinta como pastillas
 function opcionesEnLista(texto) {
     if (!texto) return [];
 
@@ -109,9 +89,6 @@ function armarItem(fila) {
     };
 }
 
-
-// El pedido nace en "recibido" pero esa primera fila no la escribe
-// nadie, asi que se arma con la fecha que guardo el pedido
 function armarHistorial(pedido, filas) {
     const lista = filas.map((h) => {
         const e = buscarEstado(h.estado) || ESTADOS[0];
@@ -180,7 +157,6 @@ async function cambiar(usuario, codigo, nuevo, comentario) {
         throw new ErrorEstado(`El pedido ya está en "${destino.nombre}"`);
     }
 
-    // Aqui manda la maquina de estados, no el que apreto el boton
     const permitidos = SIGUIENTES[pedido.estado] || [];
 
     if (!permitidos.includes(nuevo)) {
@@ -211,8 +187,6 @@ async function cambiar(usuario, codigo, nuevo, comentario) {
 
         await adminPedidoDAO.agregarHistorial(cx, pedido.id, nuevo, texto, usuario.id);
 
-        // Si se cancela algo que ya estaba pagado, el stock que se bajo
-        // al cobrar tiene que volver
         if (nuevo === 'cancelado' && pedido.estado_pago === 'pagado') {
             for (const linea of lineas) {
                 if (linea.producto_id) {

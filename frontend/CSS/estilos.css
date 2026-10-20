@@ -49,10 +49,6 @@ ul {
     margin: auto;
 }
 
-/*==========================
-HEADER
-==========================*/
-
 header {
     width: 100%;
     background: #ffffff;
@@ -116,15 +112,6 @@ nav ul li a.activo {
     color: #ec4f95;
     cursor: pointer;
 }
-
-/* =========================================================
-   El panel "Mis Favoritos" fue reemplazado por el carrito.
-   Sus estilos vivían aquí; ahora están en tienda.css.
-   ========================================================= */
-
-/*==========================
-HERO
-==========================*/
 
 .hero {
     padding-top: 190px;
@@ -228,10 +215,6 @@ HERO
     box-shadow: 0 20px 40px rgba(0, 0, 0, .12);
 }
 
-/*==========================
-TITULOS
-==========================*/
-
 .titulo-seccion {
     text-align: center;
     margin-bottom: 30px;
@@ -269,9 +252,6 @@ TITULOS
     line-height: 28px;
 }
 
-/*==========================
-PRODUCTOS
-==========================*/
 .botones-card {
 
     display: flex;
@@ -407,9 +387,6 @@ PRODUCTOS
     background: #ff6aa9;
 }
 
-/*==========================
-SERVICIOS
-==========================*/
 
 .servicios {
     padding: 100px 0;
@@ -457,10 +434,6 @@ SERVICIOS
     line-height: 28px;
 }
 
-/*==========================
-ESTADISTICAS
-==========================*/
-
 .estadisticas {
     background: linear-gradient(135deg, #ec4f95, #ff78b2);
     padding: 80px 0;
@@ -482,10 +455,6 @@ ESTADISTICAS
 .estadistica p {
     font-size: 18px;
 }
-
-/*==========================
-GALERIA
-==========================*/
 
 .galeria {
     padding: 100px 0;
@@ -510,10 +479,6 @@ GALERIA
     transform: scale(1.05);
     box-shadow: 0 15px 30px rgba(0, 0, 0, .15);
 }
-
-/*==========================
-VIDEOS
-==========================*/
 
 .videos {
     padding: 100px 0;
@@ -549,9 +514,6 @@ VIDEOS
     color: #333;
 }
 
-/*==========================
-CONTACTO
-==========================*/
 
 .contacto {
     padding: 100px 0;
@@ -642,10 +604,6 @@ CONTACTO
     background: #ff6aa9;
 }
 
-/*==========================
-FOOTER
-==========================*/
-
 footer {
     background: #242424;
     color: #fff;
@@ -722,8 +680,6 @@ footer hr {
     color: #bfbfbf;
 }
 
-/*WHATSAPP*/
-
 .whatsapp {
     position: fixed;
     bottom: 25px;
@@ -745,8 +701,6 @@ footer hr {
 .whatsapp:hover {
     transform: scale(1.1);
 }
-
-/*ANIMACIONES*/
 
 
 
@@ -776,10 +730,6 @@ footer hr {
     animation: aparecer .8s ease;
 }
 
-/*====================================
-CLASES PARA JAVASCRIPT
-====================================*/
-
 section {
     opacity: 1;
     transform: translateY(0);
@@ -790,10 +740,6 @@ section {
     opacity: 1 !important;
     transform: translateY(0) !important;
 }
-
-/*====================================
-MODAL
-====================================*/
 
 .modal {
     position: fixed;
@@ -858,10 +804,6 @@ MODAL
     color: #ec4f95;
 }
 
-/*====================================
-BUSCADOR
-====================================*/
-
 .buscador {
     width: 100%;
     max-width: 500px;
@@ -881,10 +823,6 @@ BUSCADOR
     border-color: #ec4f95;
 }
 
-/*====================================
-FILTRO
-====================================*/
-
 .filtros {
     display: flex;
     justify-content: center;
@@ -899,10 +837,6 @@ FILTRO
     border: 1px solid #ddd;
     outline: none;
 }
-
-/*====================================
-TABLA
-====================================*/
 
 .tabla-precios {
     padding: 100px 0;
@@ -934,10 +868,6 @@ TABLA
     background: #fff3f8;
 }
 
-/*====================================
-BOTON IR ARRIBA
-====================================*/
-
 #btnTop {
     position: fixed;
     right: 25px;
@@ -948,8 +878,6 @@ BOTON IR ARRIBA
     color: #fff;
     border: none;
     border-radius: 50%;
-    /* Antes era display:none y nunca se mostraba porque no había JS que lo
-       cambiara. Ahora se muestra u oculta con la clase .visible (tienda.css). */
     display: flex;
     justify-content: center;
     align-items: center;
@@ -963,11 +891,6 @@ BOTON IR ARRIBA
     transform: translateY(-6px);
     background: #ff6aa9;
 }
-
-/*====================================
-CLIENTES
-====================================*/
-
 .clientes {
     padding: 100px 0;
     background: #fff;
@@ -990,10 +913,6 @@ CLIENTES
     filter: none;
     transform: scale(1.05);
 }
-
-/*====================================
-TESTIMONIOS
-====================================*/
 
 .testimonios {
     padding: 100px 0;
@@ -1084,11 +1003,6 @@ TESTIMONIOS
 }
 
 
-
-/*==========================
-HERO PAGINA
-==========================*/
-
 .hero-pagina {
     margin-top: 85px;
     padding: 90px 0;
@@ -1108,10 +1022,6 @@ HERO PAGINA
     margin: auto;
     line-height: 30px;
 }
-
-/*==========================
-NOSOTROS
-==========================*/
 
 .nosotros {
     padding: 100px 0;
@@ -1173,10 +1083,6 @@ NOSOTROS
     margin-bottom: 10px;
 }
 
-/*==========================
-MISIÓN Y VISIÓN
-==========================*/
-
 .mision-vision {
     padding: 90px 0;
     background: #fafafa;
@@ -1216,10 +1122,6 @@ MISIÓN Y VISIÓN
     line-height: 30px;
 }
 
-/*==========================
-EQUIPO
-==========================*/
-
 .equipo {
     padding: 100px 0;
 }
@@ -1257,10 +1159,6 @@ EQUIPO
     color: #666;
     margin: 15px 20px 25px;
 }
-
-/*==========================
-LOGROS
-==========================*/
 
 .logros {
     padding: 100px 0;
@@ -1303,10 +1201,6 @@ LOGROS
     margin-bottom: 10px;
 }
 
-/*==========================
-CTA
-==========================*/
-
 .cta {
     padding: 90px 0;
     background: linear-gradient(135deg, #ec4f95, #ff79ae);
@@ -1328,13 +1222,6 @@ CTA
     line-height: 30px;
     font-size: 18px;
 }
-
-
-/**productos/
-
-/*=================================================
-PÁGINA PRODUCTOS
-=================================================*/
 
 .productos-destacados {
     padding: 100px 0;
@@ -1432,10 +1319,6 @@ PÁGINA PRODUCTOS
     line-height: 30px;
     margin-bottom: 35px;
 }
-
-/*====================================
-FAQ ACORDEÓN
-====================================*/
 
 .faq {
 
@@ -1551,10 +1434,6 @@ FAQ ACORDEÓN
 
 }
 
-/* =========================================================
-   AJUSTES DEL HEADER NUEVO
-   El header pasó de "Favoritos + Cotiza Aquí" a "Sesión + Carrito".
-   ========================================================= */
 
 header .contenedor {
     gap: 20px;
@@ -1563,7 +1442,6 @@ header .contenedor {
 
 nav ul { flex-wrap: wrap; }
 
-/* El formulario de contacto necesita separar el título de los radios */
 .formulario .titulo-radio {
     display: block;
     margin-top: 14px;
@@ -1581,6 +1459,21 @@ nav ul { flex-wrap: wrap; }
     margin-top: 15px;
 }
 
-/* Las imágenes de la galería y del equipo se recortan en vez de deformarse */
 .grid-galeria img { aspect-ratio: 4 / 3; object-fit: cover; }
 .miembro img { aspect-ratio: 1; object-fit: cover; }
+
+@media (max-width: 480px) {
+
+    .formulario {
+        padding: 24px 18px;
+    }
+
+    .formulario input,
+    .formulario select,
+    .formulario textarea,
+    .formulario button {
+        width: 100%;
+        max-width: 100%;
+    }
+
+}

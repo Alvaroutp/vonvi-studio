@@ -2,6 +2,7 @@ const crypto = require('crypto');
 
 const pedidoDAO = require('../dao/pedidoDAO');
 const carritoServicio = require('./carritoServicio');
+const seguimientoServicio = require('./seguimientoServicio');
 
 
 // Las reglas del pedido viven aqui. Este archivo no recibe req ni res,
@@ -86,10 +87,7 @@ function revisarDatos(datos) {
 
 // El pedido tal como lo espera la pantalla
 async function armar(pedido) {
-    return {
-        ...pedido,
-        items: await pedidoDAO.items(pedido.id),
-    };
+    return seguimientoServicio.decorar(pedido);
 }
 
 
@@ -240,7 +238,8 @@ async function pagar(usuario, codigo, datos) {
 
 
 async function mios(usuario) {
-    return pedidoDAO.listarDe(usuario.id);
+    const filas = await pedidoDAO.listarDe(usuario.id);
+    return filas.map(seguimientoServicio.decorarFila);
 }
 
 

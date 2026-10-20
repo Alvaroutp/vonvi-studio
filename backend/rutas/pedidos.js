@@ -6,16 +6,6 @@ const { requiereSesion } = require('../sesion');
 const router = express.Router();
 
 
-// Esta capa solo habla HTTP: lee la peticion, llama al servicio y
-// responde. Aqui no hay reglas de negocio ni SQL.
-
-
-// Para comprar hay que tener cuenta: el pedido necesita un dueno.
-// Va ruta por ruta y NUNCA con router.use: este archivo se monta en
-// /api sin prefijo, asi que un router.use le pediria sesion a toda la
-// api, hasta para subir un diseno siendo invitado
-
-
 function fallo(res, error, mensaje) {
     if (error.codigo) {
         return res.status(error.codigo).json({ ok: false, mensaje: error.message });
