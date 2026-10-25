@@ -60,7 +60,9 @@ async function buscarActivoPorId(id) {
 }
 
 
-async function listarParaAdmin(categoriaId) {
+async function listarParaAdmin(categoriaId, buscar) {
+    const texto = buscar ? '%' + buscar + '%' : null;
+
     const [filas] = await db.query(
         `SELECT p.id, p.categoria_id, p.nombre, p.slug, p.descripcion,
                 p.precio AS precio_base, p.stock,
@@ -71,11 +73,12 @@ async function listarParaAdmin(categoriaId) {
            JOIN categorias c ON c.id = p.categoria_id
            LEFT JOIN atributos a ON a.producto_id = p.id
           WHERE (? IS NULL OR p.categoria_id = ?)
+            AND (? IS NULL OR p.nombre LIKE ? OR c.nombre LIKE ?)
           GROUP BY p.id, p.categoria_id, p.nombre, p.slug, p.descripcion,
                    p.precio, p.stock, p.imagen, p.cantidad_minima, p.dias_produccion,
                    p.activo, c.nombre
           ORDER BY c.id, p.id`,
-        [categoriaId, categoriaId]
+        [categoriaId, categoriaId, texto, texto, texto]
     );
 
     return filas;

@@ -24,16 +24,26 @@ function enNumero(fila) {
   };
 }
 
-async function tablero() {
+function fecha(valor) {
+  const texto = (valor || '').trim();
+
+  return /^\d{4}-\d{2}-\d{2}$/.test(texto) ? texto : null;
+}
+
+async function tablero(rango = {}) {
+  const desde = fecha(rango.desde);
+  const hasta = fecha(rango.hasta);
+
   const [resumen, clientes, nuevas, estados, top] = await Promise.all([
-    metricaDAO.resumen(),
-    metricaDAO.contarClientes(),
-    metricaDAO.cotizacionesNuevas(),
-    metricaDAO.porEstado(),
-    metricaDAO.topProductos(CUANTOS_TOP),
+    metricaDAO.resumen(desde, hasta),
+    metricaDAO.contarClientes(desde, hasta),
+    metricaDAO.cotizacionesNuevas(desde, hasta),
+    metricaDAO.porEstado(desde, hasta),
+    metricaDAO.topProductos(CUANTOS_TOP, desde, hasta),
   ]);
 
   return {
+    rango: { desde, hasta },
     resumen: enNumero(resumen),
     clientes,
     cotizaciones: { nuevas },

@@ -170,7 +170,7 @@
 .menu-movil:has(i.fa-bars)::before { content: none; }
 .menu-movil i { font-size: 26px; }
 
-@keyframes latido {
+@keyframes latido{
     0% { transform: scale(.4); }
     60% { transform: scale(1.25); }
     100% { transform: scale(1); }
@@ -201,7 +201,9 @@
     flex-shrink: 0;
 }
 
-@keyframes girar { to { transform: rotate(360deg); } }
+@keyframes girar{ to { transform: rotate(360deg); }
+}
+
 
 .estado-vacio {
     text-align: center;
@@ -384,23 +386,6 @@
 
 .card-categoria:hover .imagen-categoria img { transform: scale(1.08); }
 
-.icono-categoria {
-    position: absolute;
-    bottom: -22px;
-    right: 22px;
-    width: 52px;
-    height: 52px;
-    background: var(--rosa);
-    color: #fff;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 20px;
-    box-shadow: 0 6px 18px rgba(236, 79, 149, .35);
-    border: 3px solid #fff;
-}
-
 .contenido-categoria { padding: 32px 24px 24px; }
 .contenido-categoria h3 { font-size: 19px; margin-bottom: 8px; color: var(--tinta); }
 .contenido-categoria p { font-size: 14px; color: var(--gris); line-height: 1.6; min-height: 44px; }
@@ -493,10 +478,17 @@
     height: auto !important;
     object-fit: contain !important;
     filter: drop-shadow(0 6px 14px rgba(0, 0, 0, .28));
-    animation: aparecer .45s ease;
+    animation: aparecerEstampa .45s ease;
 }
 
-@keyframes aparecer {
+/* Se llama "aparecerEstampa" y no "aparecer" a secas porque estilos.css
+   ya tiene una animacion con ese nombre para la entrada de las
+   secciones. Los @keyframes no se limitan al archivo donde se escriben:
+   son de toda la pagina, y como tienda.css se carga despues, el nombre
+   repetido pisaba al otro. Las secciones terminaban entrando con el
+   translate(-50%,-50%) de la estampa, se dibujaban corridas y encogidas
+   y recien al terminar la animacion caian en su sitio */
+@keyframes aparecerEstampa {
     from { opacity: 0; transform: translate(-50%, -50%) scale(.75); }
     to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
 }
@@ -670,11 +662,12 @@
     animation: sacudir .4s;
 }
 
-@keyframes sacudir {
+@keyframes sacudir{
     0%, 100% { transform: translateX(0); }
     25% { transform: translateX(-8px); }
     75% { transform: translateX(8px); }
 }
+
 
 .zona-subida i { font-size: 32px; color: var(--rosa); margin-bottom: 12px; }
 .zona-subida p { font-size: 14.5px; color: var(--tinta); margin-bottom: 5px; }
@@ -989,9 +982,27 @@
 
 .linea.total strong { font-size: 25px; color: var(--rosa); }
 
+/* En el carrito el total es lo primero del resumen, asi que no lleva la
+   raya de arriba: ahi arriba ya esta la que cierra la lista de productos */
+.carrito-resumen .linea.total:first-child {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: none;
+}
+
+/* La cantidad de articulos va junto al total y no en su propia linea,
+   que repetia el mismo monto dos veces */
+.linea.total small {
+    display: block;
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--gris);
+    margin-top: 2px;
+}
+
 .gratis { color: var(--exito); font-style: normal; font-weight: 600; }
 
-.nota-envio, .nota-produccion, .aviso-sesion {
+.nota-produccion, .aviso-sesion {
     font-size: 12.5px;
     color: var(--gris);
     background: var(--fondo);
@@ -1001,7 +1012,7 @@
     line-height: 1.55;
 }
 
-.nota-envio i, .nota-produccion i { color: var(--rosa); margin-right: 5px; }
+.nota-produccion i { color: var(--rosa); margin-right: 5px; }
 .aviso-sesion { background: #fffbeb; color: #92400e; margin-top: 16px; }
 
 
@@ -1115,18 +1126,12 @@
 .tarjeta-radio strong i { color: var(--rosa); margin-right: 6px; }
 .tarjeta-radio small { font-size: 12.5px; color: var(--gris); }
 
-.aviso-simulado {
-    background: #fffbeb;
-    border-left: 3px solid var(--aviso);
-    border-radius: 10px;
-    padding: 14px 16px;
-    font-size: 13px;
-    color: #92400e;
-    line-height: 1.6;
-    margin-bottom: 20px;
+/* El contador de digitos de la tarjeta. Mientras falten numeros se ve
+   gris como cualquier texto de ayuda; al completar los 16 se pone verde */
+#contadorTarjeta.completo {
+    color: #16a34a;
+    font-weight: 600;
 }
-
-.aviso-simulado i { margin-right: 6px; }
 
 .caja-datos-pago {
     background: var(--fondo);
@@ -1215,7 +1220,7 @@
     animation: movimientoDegradado 15s ease infinite;
 }
 
-@keyframes movimientoDegradado {
+@keyframes movimientoDegradado{
     0% {
         background-position: 0% 50%;
     }
@@ -1226,6 +1231,7 @@
         background-position: 0% 50%;
     }
 }
+
 
 .caja-auth {
     background: var(--panel);
@@ -1410,8 +1416,6 @@
 .pedido-cuerpo i { color: var(--rosa); margin-right: 5px; }
 .pedido-cuerpo .pago.pagado { color: var(--exito); }
 .pedido-cuerpo .pago.pagado i { color: var(--exito); }
-.pedido-cuerpo .pago.pendiente { color: var(--aviso); }
-.pedido-cuerpo .pago.pendiente i { color: var(--aviso); }
 
 .pedido-pie {
     display: flex;
@@ -1495,10 +1499,11 @@
     animation: pulso 2s infinite;
 }
 
-@keyframes pulso {
+@keyframes pulso{
     0%, 100% { box-shadow: 0 0 0 5px rgba(236, 79, 149, .2); }
     50% { box-shadow: 0 0 0 10px rgba(236, 79, 149, .08); }
 }
+
 
 .paso-datos { padding-top: 4px; }
 .paso-datos strong { display: block; font-size: 15px; color: var(--gris-claro); }
@@ -1562,7 +1567,6 @@
 }
 
 .estado-pago.pagado { background: #f0fdf4; color: var(--exito); }
-.estado-pago.pendiente { background: #fffbeb; color: #92400e; }
 
 .acciones-detalle {
     display: flex;
@@ -1606,7 +1610,7 @@
 .aviso-autorrelleno i { margin-right: 6px; }
 
 
-@media (max-width: 1100px) {
+@media (max-width: 1100px){
     .config-grid { grid-template-columns: 1fr; gap: 34px; }
     .config-visual { position: static; }
     .visual-principal { max-width: 430px; margin: 0 auto; }
@@ -1614,7 +1618,8 @@
     .carrito-resumen, .checkout-resumen { position: static; }
 }
 
-@media (max-width: 992px) {
+
+@media (max-width: 992px){
     .acciones-header { gap: 8px; }
     .btn-sesion span { display: none; }
     .btn-carrito span:not(.burbuja) { display: none; }
@@ -1622,7 +1627,8 @@
     .detalle-columnas { grid-template-columns: 1fr; }
 }
 
-@media (max-width: 768px) {
+
+@media (max-width: 768px){
     .configurador { padding: 110px 0 60px; }
     .config-opciones h1 { font-size: 26px; }
 
@@ -1653,7 +1659,8 @@
     .filtros-cuenta input { width: 100%; }
 }
 
-@media (max-width: 480px) {
+
+@media (max-width: 480px){
     .grid-categorias { grid-template-columns: 1fr; }
     .opciones-entrega, .opciones-pago { grid-template-columns: 1fr; }
     .bloque-checkout, .bloque-detalle, .carrito-resumen, .checkout-resumen { padding: 20px; }

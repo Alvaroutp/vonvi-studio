@@ -89,9 +89,8 @@ const Cuenta = {
                         <span><i class="fa-solid fa-box"></i> ${p.total_articulos} artículo(s)</span>
                         <span><i class="fa-solid fa-${p.tipo_entrega === 'recojo' ? 'store' : 'truck-fast'}"></i>
                               ${p.tipo_entrega === 'recojo' ? 'Recojo en tienda' : 'Delivery'}</span>
-                        <span class="pago ${U.esc(p.estado_pago)}">
-                            <i class="fa-solid fa-${p.estado_pago === 'pagado' ? 'circle-check' : 'clock'}"></i>
-                            ${p.estado_pago === 'pagado' ? 'Pagado' : 'Pago pendiente'}
+                        <span class="pago pagado">
+                            <i class="fa-solid fa-circle-check"></i> Pagado
                         </span>
                     </div>
 
@@ -221,19 +220,15 @@ const Cuenta = {
                     <div class="linea"><span>Subtotal</span><span>${U.soles(p.subtotal)}</span></div>
                     <div class="linea"><span>Envío</span><span>${Number(p.costo_envio) === 0 ? 'Gratis' : U.soles(p.costo_envio)}</span></div>
                     <div class="linea total"><span>Total</span><strong>${U.soles(p.total)}</strong></div>
-                    <p class="estado-pago ${U.esc(p.estado_pago)}">
-                        <i class="fa-solid fa-${p.estado_pago === 'pagado' ? 'circle-check' : 'clock'}"></i>
-                        ${p.estado_pago === 'pagado' ? 'Pagado' : 'Pago pendiente'}
+                    <p class="estado-pago pagado">
+                        <i class="fa-solid fa-circle-check"></i>
+                        Pagado
                     </p>
                     ${p.pagos.length ? `
                         <p class="mini">
                             ${U.esc(p.pagos[0].metodo)}${p.pagos[0].ultimos4 ? ` ****${U.esc(p.pagos[0].ultimos4)}` : ''}
                             · ref. ${U.esc(p.pagos[0].referencia)}
                         </p>` : ''}
-                    ${p.estado_pago !== 'pagado' ? `
-                        <button type="button" class="btn-principal ancho-total" id="btnPagarAhora">
-                            Pagar ahora
-                        </button>` : ''}
                 </section>
 
             </div>
@@ -243,10 +238,9 @@ const Cuenta = {
                    class="btn-secundario" target="_blank" rel="noopener">
                     <i class="fab fa-whatsapp"></i> Consultar por WhatsApp
                 </a>
-                ${p.estado_pago === 'pagado' ? `
-                    <a href="recibo.html?p=${encodeURIComponent(p.codigo)}" class="btn-secundario">
-                        <i class="fa-regular fa-file-lines"></i> Ver recibo
-                    </a>` : ''}
+                <a href="recibo.html?p=${encodeURIComponent(p.codigo)}" class="btn-secundario">
+                    <i class="fa-regular fa-file-lines"></i> Ver recibo
+                </a>
                 ${(!p.cancelado && p.estado_orden < 4) ? `
                     <button type="button" class="btn-texto peligro" id="btnCancelar">
                         Cancelar pedido
@@ -272,22 +266,6 @@ const Cuenta = {
             });
         }
 
-        const btnPagar = zona.querySelector('#btnPagarAhora');
-        if (btnPagar) {
-            btnPagar.addEventListener('click', async () => {
-                btnPagar.disabled = true;
-                btnPagar.innerHTML = '<span class="spinner"></span> Procesando...';
-                try {
-                    await API.post(`/pedidos/${p.codigo}/pagar`, { metodo: 'yape' });
-                    U.aviso('Pago registrado');
-                    this.verPedido(p.codigo);
-                } catch (e) {
-                    U.aviso(e.message, 'error');
-                    btnPagar.disabled = false;
-                    btnPagar.textContent = 'Pagar ahora';
-                }
-            });
-        }
     },
 
 

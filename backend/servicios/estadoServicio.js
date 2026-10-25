@@ -57,6 +57,12 @@ function catalogo() {
     return ESTADOS.map(({ fecha, ...resto }) => resto);
 }
 
+function permitidosDe(pedido) {
+    if (pedido.estado_pago !== 'pagado') return [];
+
+    return SIGUIENTES[pedido.estado] || [];
+}
+
 function decorar(pedido) {
     const e = buscarEstado(pedido.estado) || ESTADOS[0];
 
@@ -133,6 +139,7 @@ async function uno(codigo) {
 
     return {
         ...decorar(pedido),
+        siguientes: permitidosDe(pedido),
         direccion_entrega: pedido.direccion,
         costo_envio: pedido.envio,
         items: filas.map(armarItem),
@@ -152,6 +159,10 @@ async function cambiar(usuario, codigo, nuevo, comentario) {
     const destino = buscarEstado(nuevo);
 
     if (!destino) throw new ErrorEstado('Ese estado no existe');
+
+    if (pedido.estado_pago !== 'pagado' && nuevo !== 'cancelado') {
+        throw new ErrorEstado('Ese pedido no está pagado, no se puede avanzar', 409);
+    }
 
     if (pedido.estado === nuevo) {
         throw new ErrorEstado(`El pedido ya está en "${destino.nombre}"`);
@@ -201,9 +212,7 @@ async function cambiar(usuario, codigo, nuevo, comentario) {
 
 
 module.exports = {
-    ErrorEstado,
     ESTADOS,
-    SIGUIENTES,
     catalogo,
     decorar,
     listar,

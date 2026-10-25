@@ -77,7 +77,6 @@ async function cambiarEstado(id, estado) {
 }
 
 module.exports = {
-  ErrorCotizacion,
   ESTADOS,
   registrar,
   listar,

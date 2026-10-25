@@ -53,25 +53,15 @@ const Carrito = {
                 </div>
 
                 <aside class="carrito-resumen">
-                    <h2>Resumen</h2>
-
-                    <div class="linea">
-                        <span>${resumen.total_articulos} artículo(s)</span>
-                        <span>${U.soles(resumen.subtotal)}</span>
-                    </div>
-                    <p class="nota-envio">
-                        <i class="fa-solid fa-truck-fast"></i>
-                        El recojo o el envío se elige al confirmar el pedido.
-                    </p>
-
                     <div class="linea total">
-                        <span>Total</span>
+                        <span>Total <small>${resumen.total_articulos} artículo(s)</small></span>
                         <strong>${U.soles(resumen.subtotal)}</strong>
                     </div>
 
                     <p class="nota-produccion">
                         <i class="fa-regular fa-clock"></i>
-                        Producción estimada: ${resumen.dias_produccion_estimados} día(s) hábiles
+                        Producción estimada: ${resumen.dias_produccion_estimados} día(s) hábiles.
+                        El recojo o el envío se elige al confirmar.
                     </p>
 
                     <a href="checkout.html" class="btn-principal ancho-total">

@@ -45,16 +45,72 @@ const Admin = {
         if (pagina === 'proveedores') this.proveedores();
     },
 
+    rango: { desde: '', hasta: '', atajo: 'todo' },
+
+
+    periodo(atajo) {
+        const hoy = new Date();
+        const iso = (d) => d.getFullYear() + '-' +
+            String(d.getMonth() + 1).padStart(2, '0') + '-' +
+            String(d.getDate()).padStart(2, '0');
+
+        if (atajo === 'semana') {
+            const dia = (hoy.getDay() + 6) % 7;
+            const lunes = new Date(hoy);
+            lunes.setDate(hoy.getDate() - dia);
+            return { desde: iso(lunes), hasta: iso(hoy) };
+        }
+
+        if (atajo === 'mes') {
+            return { desde: iso(new Date(hoy.getFullYear(), hoy.getMonth(), 1)), hasta: iso(hoy) };
+        }
+
+        if (atajo === 'anio') {
+            return { desde: iso(new Date(hoy.getFullYear(), 0, 1)), hasta: iso(hoy) };
+        }
+
+        return { desde: '', hasta: '' };
+    },
+
+
     async dashboard() {
         const zona = document.getElementById('contenidoAdmin');
         U.cargando(zona, 'Cargando métricas...');
 
+        const atajos = [
+            ['semana', 'Esta semana'],
+            ['mes', 'Este mes'],
+            ['anio', 'Este año'],
+            ['todo', 'Todo'],
+        ];
+
         try {
-            const r = await API.get('/admin/metricas');
+            const q = [];
+            if (this.rango.desde) q.push('desde=' + this.rango.desde);
+            if (this.rango.hasta) q.push('hasta=' + this.rango.hasta);
+
+            const r = await API.get('/admin/metricas' + (q.length ? '?' + q.join('&') : ''));
             const m = r.metricas;
             const s = m.resumen;
 
             zona.innerHTML = `
+                <div class="filtros-tablero">
+                    <div class="atajos-fecha">
+                        ${atajos.map(([clave, nombre]) => `
+                            <button type="button" data-atajo="${clave}"
+                                class="${this.rango.atajo === clave ? 'activo' : ''}">
+                                ${nombre}
+                            </button>`).join('')}
+                    </div>
+
+                    <label>Desde <input type="date" id="tDesde" value="${this.rango.desde}"></label>
+                    <label>Hasta <input type="date" id="tHasta" value="${this.rango.hasta}"></label>
+
+                    <button type="button" class="btn-secundario" data-excel-tablero>
+                        <i class="fa-solid fa-file-excel"></i> Descargar Excel
+                    </button>
+                </div>
+
                 <div class="tarjetas-metrica">
                     ${this.tarjeta('fa-receipt', 'Pedidos totales', s.pedidos_total, '#8b5cf6')}
                     ${this.tarjeta('fa-sack-dollar', 'Cobrado', U.soles(s.ventas_cobradas), '#16a34a')}
@@ -102,10 +158,33 @@ const Admin = {
                                         </tr>`).join('')}
                                 </tbody>
                             </table>`
-                            : '<p class="sin-datos">Todavía no hay ventas registradas.</p>'}
+                            : '<p class="sin-datos">Todavía no hay ventas en este periodo.</p>'}
                     </section>
 
                 </div>`;
+
+            zona.querySelectorAll('[data-atajo]').forEach((b) => {
+                b.addEventListener('click', () => {
+                    const p = this.periodo(b.dataset.atajo);
+                    this.rango = { ...p, atajo: b.dataset.atajo };
+                    this.dashboard();
+                });
+            });
+
+            ['tDesde', 'tHasta'].forEach((id) => {
+                zona.querySelector('#' + id).addEventListener('change', () => {
+                    this.rango = {
+                        desde: zona.querySelector('#tDesde').value,
+                        hasta: zona.querySelector('#tHasta').value,
+                        atajo: '',
+                    };
+                    this.dashboard();
+                });
+            });
+
+            zona.querySelector('[data-excel-tablero]').addEventListener('click', () => {
+                U.aviso('La descarga a Excel todavía no está lista', 'aviso');
+            });
 
         } catch (e) {
             U.vacio(zona, 'fa-solid fa-triangle-exclamation', 'No pudimos cargar las métricas', e.message);
@@ -128,9 +207,6 @@ const Admin = {
     async pedidos() {
         const zona = document.getElementById('contenidoAdmin');
 
-        // Por defecto se muestran los últimos 30 días: sin estado
-        // "Entregado", el filtro por fecha es lo que mantiene la lista
-        // manejable con el tiempo.
         const hoy = new Date();
         const hace30 = new Date(hoy.getTime() - 30 * 86400000);
         const iso = (d) => d.toISOString().slice(0, 10);
@@ -144,13 +220,6 @@ const Admin = {
                         <option value="">Todos</option>
                         ${this.estados.map((e) =>
                             `<option value="${U.esc(e.codigo)}">${U.esc(e.nombre)}</option>`).join('')}
-                    </select>
-                </label>
-                <label>Pago
-                    <select id="fPago">
-                        <option value="">Todos</option>
-                        <option value="pagado">Pagado</option>
-                        <option value="pendiente">Pendiente</option>
                     </select>
                 </label>
                 <label class="crece">Buscar
@@ -171,7 +240,6 @@ const Admin = {
             document.getElementById('fDesde').value = '';
             document.getElementById('fHasta').value = '';
             document.getElementById('fEstado').value = '';
-            document.getElementById('fPago').value = '';
             document.getElementById('fBuscar').value = '';
             this.cargarPedidos();
         });
@@ -188,7 +256,7 @@ const Admin = {
         U.cargando(lista, 'Cargando pedidos...');
 
         const p = new URLSearchParams({ pagina });
-        ['Desde', 'Hasta', 'Estado', 'Pago', 'Buscar'].forEach((campo) => {
+        ['Desde', 'Hasta', 'Estado', 'Buscar'].forEach((campo) => {
             const v = document.getElementById(`f${campo}`).value;
             if (v) p.set(campo.toLowerCase(), v);
         });
@@ -226,8 +294,7 @@ const Admin = {
                                     </span>
                                 </td>
                                 <td>
-                                    <span class="punto-pago ${U.esc(x.estado_pago)}"></span>
-                                    ${x.estado_pago === 'pagado' ? 'Pagado' : 'Pendiente'}
+                                    <span class="punto-pago pagado"></span> Pagado
                                 </td>
                                 <td><strong>${U.soles(x.total)}</strong></td>
                                 <td>
@@ -270,8 +337,11 @@ const Admin = {
             return;
         }
 
-        const raiz = API.base.replace('/api', '');
-        const siguiente = this.estados.find((e) => e.orden === p.estado_orden + 1 && e.codigo !== 'cancelado');
+        const raiz = API.base.replace(/\/api\/?$/, '') + '/';
+        const permitidos = p.siguientes || [];
+        const siguiente = this.estados.find(
+            (e) => permitidos.includes(e.codigo) && e.codigo !== 'cancelado'
+        );
 
         zona.innerHTML = `
             <button type="button" class="btn-texto" id="volverAdmin">
@@ -290,21 +360,27 @@ const Admin = {
 
             <div class="admin-columnas">
 
-                <!-- Cambio de estado -->
                 <section class="tarjeta-admin">
                     <h2>Avanzar fabricación</h2>
                     <p class="sub">Cada cambio se registra en el historial y el cliente lo ve al instante.</p>
 
                     <div class="campo">
                         <label for="nuevoEstado">Nuevo estado</label>
-                        <select id="nuevoEstado">
-                            ${this.estados.map((e) => `
+                        <select id="nuevoEstado" ${permitidos.length === 0 ? 'disabled' : ''}>
+                            ${this.estados.map((e) => {
+                                const actual = e.id === p.estado_id;
+                                const libre = permitidos.includes(e.codigo);
+
+                                return `
                                 <option value="${U.esc(e.codigo)}"
                                     ${siguiente && e.codigo === siguiente.codigo ? 'selected' : ''}
-                                    ${e.id === p.estado_id ? 'disabled' : ''}>
-                                    ${e.orden}. ${U.esc(e.nombre)}${e.id === p.estado_id ? ' (actual)' : ''}
-                                </option>`).join('')}
+                                    ${libre ? '' : 'disabled'}>
+                                    ${e.orden}. ${U.esc(e.nombre)}${actual ? ' (actual)' : ''}
+                                </option>`;
+                            }).join('')}
                         </select>
+                        ${permitidos.length === 0 ? `
+                            <small class="ayuda">Este pedido ya no se puede mover.</small>` : ''}
                     </div>
 
                     <div class="campo">
@@ -313,7 +389,8 @@ const Admin = {
                             placeholder="Ej.: Te enviamos la propuesta por WhatsApp"></textarea>
                     </div>
 
-                    <button type="button" class="btn-principal ancho-total" id="btnCambiarEstado">
+                    <button type="button" class="btn-principal ancho-total" id="btnCambiarEstado"
+                        ${permitidos.length === 0 ? 'disabled' : ''}>
                         <i class="fa-solid fa-arrow-right"></i> Actualizar estado
                     </button>
 
@@ -331,7 +408,6 @@ const Admin = {
                     </ul>
                 </section>
 
-                <!-- Datos -->
                 <section class="tarjeta-admin">
                     <h2>Entrega y pago</h2>
                     <dl class="datos-admin">
@@ -354,8 +430,7 @@ const Admin = {
                         <dt>Total</dt><dd><strong class="total-admin">${U.soles(p.total)}</strong></dd>
                         <dt>Pago</dt>
                         <dd>
-                            <span class="punto-pago ${U.esc(p.estado_pago)}"></span>
-                            ${p.estado_pago === 'pagado' ? 'Pagado' : 'Pendiente'}
+                            <span class="punto-pago pagado"></span> Pagado
                             ${p.pagos.length ? `<small>${U.esc(p.pagos[0].metodo)} · ref. ${U.esc(p.pagos[0].referencia)}</small>` : ''}
                         </dd>
                         ${p.notas ? `<dt>Notas</dt><dd>${U.esc(p.notas)}</dd>` : ''}
@@ -364,7 +439,6 @@ const Admin = {
 
             </div>
 
-            <!-- Productos a fabricar -->
             <section class="tarjeta-admin">
                 <h2>Productos a fabricar</h2>
                 ${p.items.map((i) => `
@@ -524,15 +598,9 @@ const Admin = {
         });
     },
 
-        // =================================================================
-    // PROVEEDORES Y ORDENES DE COMPRA
-    // El admin registra empresas, les crea cuentas de acceso y les manda
-    // ordenes de compra. La pantalla son dos columnas: la lista a la
-    // izquierda, y todo lo de la empresa elegida a la derecha.
-    // =================================================================
 
-    provSel: null,      // id de la empresa elegida
-    provLista: [],      // las empresas, para filtrar sin volver a pedirlas
+    provSel: null,
+    provLista: [],
 
     async proveedores() {
         const zona = this.zona();
@@ -548,12 +616,10 @@ const Admin = {
 
         this.provLista = r.proveedores;
 
-        // Si la elegida ya no existe (se borro), se pasa a la primera
         if (!this.provLista.some((p) => p.id === this.provSel)) {
             this.provSel = this.provLista.length ? this.provLista[0].id : null;
         }
 
-        // La clave recien generada se muestra una sola vez y se borra
         const reciente = this.claveNueva;
         this.claveNueva = null;
 
@@ -600,7 +666,6 @@ const Admin = {
     },
 
 
-    // Solo la columna izquierda. El texto filtra por nombre o por RUC
     pintarLista(texto) {
         const caja = document.getElementById('listaProv');
         const busca = texto.trim().toLowerCase();
@@ -637,7 +702,6 @@ const Admin = {
     },
 
 
-    // Toda la columna derecha: datos, encargados y ordenes de la elegida
     async verProveedor() {
         const caja = document.getElementById('detalleProv');
 
@@ -666,7 +730,6 @@ const Admin = {
             return;
         }
 
-        // El CSS tiene tres colores de pastilla: ambar, verde y rojo
         const color = { enviada: 'espera', aceptada: 'si', rechazada: 'no', recibida: 'listo' };
 
         const sinAcceso = encargados.length === 0;
@@ -803,7 +866,6 @@ const Admin = {
 
             </div>`;
 
-        // ---- los botones, que recien existen ahora ----
 
         caja.querySelector('[data-editar-emp]')
             .addEventListener('click', () => this.formEmpresa(p));
@@ -852,8 +914,6 @@ const Admin = {
         });
     },
 
-
-    // ---------------- la empresa ----------------
 
     formEmpresa(empresa) {
         const nueva = !empresa;
@@ -907,13 +967,9 @@ const Admin = {
     },
 
 
-    // ---------------- los encargados ----------------
-
     formEncargado(empresa, encargado) {
         const nuevo = !encargado;
 
-        // Al editar no va el correo: es el usuario con el que inicia sesion
-        // y el servidor no lo cambia
         const campos = [
             { id: 'nombres', etiqueta: 'Nombres', requerido: true,
               valor: encargado ? encargado.nombres : '', placeholder: 'Mario' },
@@ -964,8 +1020,6 @@ const Admin = {
     },
 
 
-    // ---------------- las ordenes ----------------
-
     async borrarOrden(orden) {
         if (!confirm(`¿Borrar la orden ${orden.codigo}?`)) return;
 
@@ -979,8 +1033,6 @@ const Admin = {
     },
 
 
-    // Este formulario no usa modal() porque tiene una tabla de lineas
-    // que se agregan y se quitan, y totales que se recalculan solos
     async formOrden(empresa) {
         let catalogo;
 
@@ -1001,9 +1053,6 @@ const Admin = {
             `<option value="${p.id}">${U.esc(p.categoria)} · ${U.esc(p.nombre)}</option>`
         ).join('');
 
-        // La fecha de hoy en formato aaaa-mm-dd, segun el reloj de quien
-        // esta usando la pantalla. El menos del desfase es para que a las
-        // 7 de la noche en Lima no salte ya al dia siguiente
         const ahora = new Date();
         const hoy = new Date(ahora.getTime() - ahora.getTimezoneOffset() * 60000)
             .toISOString().slice(0, 10);
@@ -1072,7 +1121,6 @@ const Admin = {
 
         const cuerpo = capa.querySelector('#cuerpoLineas');
 
-        // Suma las lineas cada vez que se escribe algo
         const recalcular = () => {
             let subtotal = 0;
 
@@ -1110,8 +1158,6 @@ const Admin = {
                 recalcular();
             });
 
-            // El precio no se rellena solo: lo que le pagas al proveedor
-            // no tiene nada que ver con lo que le cobras al cliente
             fila.querySelector('[data-prod]').addEventListener('change', () => {
                 const precio = fila.querySelector('[data-precio]');
                 if (!precio.value) precio.focus();
@@ -1156,7 +1202,6 @@ const Admin = {
             }
         });
     },
-
 
 
     migas(nivel) {
@@ -1219,14 +1264,24 @@ const Admin = {
                     <p class="sub">${r.total} categoría(s). Entra a una para ver sus productos.</p>
                 </div>
                 <div class="acciones-cabecera">
-                    <button type="button" class="btn-secundario" data-excel>
-                        <i class="fa-solid fa-file-excel"></i> Descargar Excel
-                    </button>
                     <button type="button" class="btn-principal" data-nueva>
                         <i class="fa-solid fa-plus"></i> Nueva categoría
                     </button>
                 </div>
             </div>
+
+            <div class="barra-buscar">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="search" id="buscarProducto" autocomplete="off"
+                       placeholder="Buscar un producto en todo el catálogo...">
+                <button type="button" class="limpiar" data-limpiar hidden>
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div id="resultadoBusqueda" hidden></div>
+
+            <div id="listaCategorias">
 
             ${r.total === 0 ? `
                 <div class="estado-vacio">
@@ -1261,19 +1316,17 @@ const Admin = {
                                 </td>
                             </tr>`).join('')}
                     </tbody>
-                </table>`}`;
+                </table>`}
+            </div>`;
 
         this.conectarMigas();
+        this.conectarBuscador();
 
         zona.querySelector('[data-nueva]').addEventListener('click', () => this.formCategoria(null));
 
-
-        zona.querySelector('[data-excel]')
-            .addEventListener('click', (ev) => this.descargarExcel(ev.currentTarget));
-
         zona.querySelectorAll('[data-entrar]').forEach((fila) => {
             fila.addEventListener('click', (ev) => {
-                if (ev.target.closest('button')) return;   // los botones no navegan
+                if (ev.target.closest('button')) return;
                 const c = r.categorias.find((x) => String(x.id) === fila.dataset.entrar);
                 this.verProductos(c);
             });
@@ -1301,42 +1354,98 @@ const Admin = {
     },
 
 
-    // El Excel no se puede pedir con un enlace normal: un enlace no manda
-    // el token y el servidor contestaria 401. Hay que pedirlo con fetch,
-    // recibir el archivo y dispararle la descarga a mano
-    async descargarExcel(boton) {
-        const original = boton.innerHTML;
+    conectarBuscador() {
+        const caja = document.getElementById('buscarProducto');
+        const limpiar = document.querySelector('[data-limpiar]');
 
-        boton.disabled = true;
-        boton.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Generando...';
+        if (!caja) return;
 
-        try {
-            const respuesta = await fetch(API.base + '/admin/reportes/productos', {
-                headers: { Authorization: 'Bearer ' + API.token },
-            });
+        let reloj = null;
 
-            if (!respuesta.ok) throw new Error('No se pudo generar el reporte');
+        caja.addEventListener('input', () => {
+            limpiar.hidden = caja.value === '';
 
-            // El archivo llega en crudo; createObjectURL le inventa una
-            // direccion temporal para poder enlazarlo
-            const archivo = await respuesta.blob();
-            const direccion = URL.createObjectURL(archivo);
+            clearTimeout(reloj);
+            reloj = setTimeout(() => this.buscarProductos(caja.value), 300);
+        });
 
-            const enlace = document.createElement('a');
-            enlace.href = direccion;
-            enlace.download = 'productos-vonvi-' + new Date().toISOString().slice(0, 10) + '.xlsx';
-            enlace.click();
+        limpiar.addEventListener('click', () => {
+            caja.value = '';
+            limpiar.hidden = true;
+            this.buscarProductos('');
+            caja.focus();
+        });
+    },
 
-            URL.revokeObjectURL(direccion);
-            U.aviso('Reporte descargado');
 
-        } catch (e) {
-            U.aviso(e.message, 'error');
+    async buscarProductos(texto) {
+        const resultado = document.getElementById('resultadoBusqueda');
+        const lista = document.getElementById('listaCategorias');
 
-        } finally {
-            boton.disabled = false;
-            boton.innerHTML = original;
+        if (!resultado) return;
+
+        const limpio = texto.trim();
+
+        if (limpio.length < 2) {
+            resultado.hidden = true;
+            resultado.innerHTML = '';
+            lista.hidden = false;
+            return;
         }
+
+        lista.hidden = true;
+        resultado.hidden = false;
+        resultado.innerHTML = '<p class="sub">Buscando...</p>';
+
+        let r;
+        try {
+            r = await API.get('/admin/productos?buscar=' + encodeURIComponent(limpio));
+        } catch (e) {
+            resultado.innerHTML = `<p class="sub">No se pudo buscar: ${U.esc(e.message)}</p>`;
+            return;
+        }
+
+        if (r.total === 0) {
+            resultado.innerHTML = `
+                <div class="estado-vacio">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <h3>Sin resultados</h3>
+                    <p>Ningún producto coincide con "${U.esc(limpio)}".</p>
+                </div>`;
+            return;
+        }
+
+        resultado.innerHTML = `
+            <p class="sub">${r.total} resultado(s) para "${U.esc(limpio)}".</p>
+
+            <table class="tabla-admin">
+                <thead>
+                    <tr><th>Producto</th><th>Categoría</th><th>Precio base</th>
+                        <th>Stock</th><th>Estado</th></tr>
+                </thead>
+                <tbody>
+                    ${r.productos.map((p) => `
+                        <tr class="fila-clic ${p.activo ? '' : 'inactiva'}" data-ir="${p.id}">
+                            <td><strong>${U.esc(p.nombre)}</strong><small>${U.esc(p.slug)}</small></td>
+                            <td>${U.esc(p.categoria)}</td>
+                            <td>${U.soles(p.precio_base)}</td>
+                            <td class="${p.stock === 0 ? 'sin-stock' : ''}">${p.stock} u.</td>
+                            <td>
+                                <span class="pastilla-estado ${p.activo ? 'si' : 'no'}">
+                                    ${p.activo ? 'Activo' : 'Inactivo'}
+                                </span>
+                            </td>
+                        </tr>`).join('')}
+                </tbody>
+            </table>`;
+
+        resultado.querySelectorAll('[data-ir]').forEach((fila) => {
+            fila.addEventListener('click', () => {
+                const p = r.productos.find((x) => String(x.id) === fila.dataset.ir);
+                this.catCategoria = { id: p.categoria_id, nombre: p.categoria };
+                this.verProducto(p.id);
+            });
+        });
     },
 
 
@@ -1692,7 +1801,6 @@ const Admin = {
               valor: detalle ? detalle.recargo : '' },
         ];
 
-        // El color solo se pregunta si el atributo es de tipo color
         if (atributo.tipo === 'color') {
             campos.push({ id: 'colorHex', etiqueta: 'Color', tipo: 'color',
                           valor: detalle ? (detalle.color_hex || '#000000') : '#000000' });
@@ -1853,7 +1961,6 @@ const Admin = {
         return `<input type="text" id="${id}" value="${U.esc(c.valor)}"
                        placeholder="${U.esc(c.placeholder || '')}" ${req}>`;
     },
-
 
 
     async cotizaciones() {

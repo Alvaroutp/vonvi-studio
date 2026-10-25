@@ -152,7 +152,6 @@ async function leerProducto(body) {
 
     if (!await categoriaDAO.existe(categoriaId)) return { error: 'Esa categoría no existe' };
 
-    // Si el formulario no manda stock se deja en null y el DAO no lo toca
     let stock = null;
 
     if (body.stock !== undefined && body.stock !== '') {
@@ -209,8 +208,10 @@ router.post('/admin/productos', requiereSesion, requiereRol('admin'), async (req
 router.get('/admin/productos', requiereSesion, requiereRol('admin'), async (req, res) => {
     try {
         const filtro = Number(req.query.categoria) || null;
+        const texto = (req.query.buscar || '').trim();
+        const buscar = texto.length >= 2 ? texto : null;
 
-        const productos = await productoDAO.listarParaAdmin(filtro);
+        const productos = await productoDAO.listarParaAdmin(filtro, buscar);
 
         res.json({ ok: true, total: productos.length, productos });
 
