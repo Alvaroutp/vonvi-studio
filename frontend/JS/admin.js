@@ -18,6 +18,8 @@ const Admin = {
         const caja = document.getElementById('adminUsuario');
         if (caja) caja.textContent = `${u.nombres} ${u.apellidos}`;
 
+        this.montarCampana();
+
         const salir = document.getElementById('adminSalir');
         if (salir) {
             salir.addEventListener('click', () => {
@@ -44,6 +46,144 @@ const Admin = {
         if (pagina === 'empleados') this.empleados();
         if (pagina === 'proveedores') this.proveedores();
     },
+
+    CADA_CUANTO: 120000,
+    LEIDAS: 'vonvi_alertas_leidas',
+
+    firmaDe(avisos) {
+        return avisos.map((a) => a.producto_id + ':' + a.nivel).sort().join('|');
+    },
+
+    yaLeidas(firma) {
+        try {
+            return localStorage.getItem(this.LEIDAS) === firma;
+        } catch (e) {
+            return false;
+        }
+    },
+
+    marcarLeidas(firma) {
+        try {
+            localStorage.setItem(this.LEIDAS, firma);
+        } catch (e) { /* si el navegador no deja guardar, el globo sigue visible */ }
+    },
+
+    montarCampana() {
+        const perfil = document.querySelector('.admin-perfil');
+        if (!perfil || document.getElementById('campana')) return;
+
+        const caja = document.createElement('div');
+        caja.className = 'campana-caja';
+        caja.innerHTML = `
+            <button type="button" id="campana" aria-label="Alertas de stock">
+                <i class="fa-regular fa-bell"></i>
+                <span class="globo" id="campanaGlobo" hidden>0</span>
+            </button>
+            <div class="campana-panel" id="campanaPanel" hidden></div>`;
+
+        perfil.prepend(caja);
+
+        document.getElementById('campana').addEventListener('click', async (ev) => {
+            ev.stopPropagation();
+            const panel = document.getElementById('campanaPanel');
+            panel.hidden = !panel.hidden;
+
+            if (panel.hidden) return;
+
+            await this.cargarAlertas();
+
+            if (this.firmaActual) {
+                this.marcarLeidas(this.firmaActual);
+                this.pintarGlobo(0, false);
+            }
+        });
+
+        document.addEventListener('click', (ev) => {
+            const panel = document.getElementById('campanaPanel');
+            if (panel && !panel.hidden && !ev.target.closest('.campana-caja')) panel.hidden = true;
+        });
+
+        this.cargarAlertas();
+        setInterval(() => this.cargarAlertas(), this.CADA_CUANTO);
+    },
+
+
+    pintarGlobo(cuantos, urgente) {
+        const globo = document.getElementById('campanaGlobo');
+        const campana = document.getElementById('campana');
+        if (!globo) return;
+
+        globo.hidden = cuantos === 0;
+        globo.textContent = cuantos > 99 ? '99+' : cuantos;
+        globo.classList.toggle('urgente', urgente);
+
+        if (campana) campana.classList.toggle('con-avisos', cuantos > 0);
+    },
+
+
+    async cargarAlertas() {
+        const globo = document.getElementById('campanaGlobo');
+        const panel = document.getElementById('campanaPanel');
+        if (!globo || !panel) return;
+
+        let r;
+        try {
+            r = await API.get('/admin/alertas/stock');
+        } catch (e) {
+            panel.innerHTML = '<p class="campana-vacia">No se pudieron cargar las alertas.</p>';
+            return;
+        }
+
+        this.firmaActual = this.firmaDe(r.avisos);
+
+        const sinLeer = r.total > 0 && !this.yaLeidas(this.firmaActual);
+        this.pintarGlobo(sinLeer ? r.total : 0, r.agotados > 0);
+
+        if (r.total === 0) {
+            panel.innerHTML = `
+                <div class="campana-cabecera"><strong>Alertas de stock</strong></div>
+                <p class="campana-vacia">
+                    <i class="fa-solid fa-circle-check"></i>
+                    Todo el catálogo tiene stock suficiente.
+                </p>`;
+            return;
+        }
+
+        panel.innerHTML = `
+            <div class="campana-cabecera">
+                <strong>Alertas de stock</strong>
+                <span>${r.total} producto(s)</span>
+            </div>
+
+            <ul class="campana-lista">
+                ${r.avisos.map((a) => `
+                    <li class="${U.esc(a.nivel)}" data-categoria="${a.categoria_id}">
+                        <span class="punto"></span>
+                        <div>
+                            <strong>${U.esc(a.nombre)}</strong>
+                            <small>${U.esc(a.categoria)} · ${U.esc(a.titulo)}</small>
+                            <small>${U.esc(a.detalle)}</small>
+                        </div>
+                        <b>${a.stock}</b>
+                    </li>`).join('')}
+            </ul>
+
+            <button type="button" class="campana-pie" id="campanaIr">
+                Ir a Productos <i class="fa-solid fa-arrow-right"></i>
+            </button>`;
+
+        panel.querySelector('#campanaIr').addEventListener('click', () => {
+            location.href = 'productos.html';
+        });
+
+        panel.querySelectorAll('[data-categoria]').forEach((fila) => {
+            fila.addEventListener('click', () => {
+                location.href = 'productos.html?categoria=' +
+                    encodeURIComponent(fila.dataset.categoria);
+            });
+        });
+    },
+
 
     rango: { desde: '', hasta: '', atajo: 'todo' },
 
@@ -182,12 +322,51 @@ const Admin = {
                 });
             });
 
-            zona.querySelector('[data-excel-tablero]').addEventListener('click', () => {
-                U.aviso('La descarga a Excel todavía no está lista', 'aviso');
-            });
+            zona.querySelector('[data-excel-tablero]')
+                .addEventListener('click', (ev) => this.descargarExcel(ev.currentTarget));
 
         } catch (e) {
             U.vacio(zona, 'fa-solid fa-triangle-exclamation', 'No pudimos cargar las métricas', e.message);
+        }
+    },
+
+    async descargarExcel(boton) {
+        const original = boton.innerHTML;
+
+        boton.disabled = true;
+        boton.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Generando...';
+
+        let direccion = null;
+
+        try {
+            const respuesta = await fetch(API.base + '/admin/reportes/ventas', {
+                headers: { Authorization: 'Bearer ' + API.token },
+            });
+
+            if (!respuesta.ok) throw new Error('No se pudo generar el reporte');
+
+            const archivo = await respuesta.blob();
+            direccion = URL.createObjectURL(archivo);
+
+            const nombre = (respuesta.headers.get('Content-Disposition') || '')
+                .match(/filename="?([^"]+)"?/);
+
+            const enlace = document.createElement('a');
+            enlace.href = direccion;
+            enlace.download = nombre ? nombre[1] : 'reporte-vonvi.xlsx';
+            document.body.appendChild(enlace);
+            enlace.click();
+            enlace.remove();
+
+            U.aviso('Reporte descargado');
+
+        } catch (e) {
+            U.aviso(e.message, 'error');
+
+        } finally {
+            if (direccion) URL.revokeObjectURL(direccion);
+            boton.disabled = false;
+            boton.innerHTML = original;
         }
     },
 
@@ -499,6 +678,22 @@ const Admin = {
     catProducto: null,    
 
     async productos() {
+        const pedida = U.parametro('categoria');
+
+        if (pedida) {
+            history.replaceState(null, '', 'productos.html');
+
+            try {
+                const r = await API.get('/admin/categorias');
+                const cat = r.categorias.find((c) => String(c.id) === String(pedida));
+
+                if (cat) {
+                    this.verProductos(cat);
+                    return;
+                }
+            } catch (e) { /* si falla se cae a la lista normal */ }
+        }
+
         this.verCategorias();
     },
 
@@ -1310,6 +1505,10 @@ const Admin = {
                                     <button type="button" title="Editar" data-editar="${c.id}">
                                         <i class="fa-solid fa-pen"></i>
                                     </button>
+                                    <button type="button" title="${c.activo ? 'Ocultar de la tienda' : 'Mostrar en la tienda'}"
+                                            data-alternar-cat="${c.id}" data-activa="${c.activo}">
+                                        <i class="fa-solid fa-power-off"></i>
+                                    </button>
                                     <button type="button" title="Borrar" data-borrar-cat="${c.id}">
                                         <i class="fa-regular fa-trash-can"></i>
                                     </button>
@@ -1336,6 +1535,22 @@ const Admin = {
             b.addEventListener('click', (ev) => {
                 ev.stopPropagation();
                 this.formCategoria(r.categorias.find((x) => String(x.id) === b.dataset.editar));
+            });
+        });
+
+        zona.querySelectorAll('[data-alternar-cat]').forEach((b) => {
+            b.addEventListener('click', async (ev) => {
+                ev.stopPropagation();
+                const activa = b.dataset.activa === '1';
+                const accion = activa ? 'desactivar' : 'activar';
+
+                try {
+                    await API.put(`/admin/categorias/${b.dataset.alternarCat}/${accion}`);
+                    U.aviso(activa
+                        ? 'Categoría oculta de la tienda'
+                        : 'Categoría visible en la tienda');
+                    this.verCategorias();
+                } catch (e) { U.aviso(e.message, 'error'); }
             });
         });
 

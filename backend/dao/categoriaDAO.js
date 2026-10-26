@@ -62,10 +62,18 @@ async function crear(datos) {
 async function actualizar(id, datos) {
     const [r] = await db.query(
         `UPDATE categorias
-            SET nombre = ?, slug = ?, descripcion = ?, imagen = ?, icono = ?, activo = ?
+            SET nombre = ?, slug = ?, descripcion = ?, imagen = ?, icono = ?
           WHERE id = ?`,
-        [datos.nombre, datos.slug, datos.descripcion, datos.imagen,
-         datos.icono, datos.activo, id]
+        [datos.nombre, datos.slug, datos.descripcion, datos.imagen, datos.icono, id]
+    );
+
+    return r.affectedRows;
+}
+
+
+async function cambiarActivo(id, activo) {
+    const [r] = await db.query(
+        'UPDATE categorias SET activo = ? WHERE id = ?', [activo, id]
     );
 
     return r.affectedRows;
@@ -85,5 +93,6 @@ module.exports = {
     existe,
     crear,
     actualizar,
+    cambiarActivo,
     borrar,
 };
