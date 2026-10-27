@@ -16,5 +16,10 @@
     "express": "^4.22.3",
     "multer": "^2.4.0",
     "mysql2": "^3.23.3"
+  },
+  "overrides": {
+    "exceljs": {
+      "uuid": "^11.1.1"
+    }
   }
 }
