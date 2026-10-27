@@ -78,7 +78,5 @@ async function recibo(usuario, codigo) {
 
 
 module.exports = {
-    ErrorRecibo,
-    IGV,
     recibo,
 };

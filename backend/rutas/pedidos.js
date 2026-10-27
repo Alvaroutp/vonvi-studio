@@ -27,17 +27,6 @@ router.post('/pedidos', requiereSesion, async (req, res) => {
 });
 
 
-router.post('/pedidos/:codigo/pagar', requiereSesion, async (req, res) => {
-    try {
-        const r = await pedidoServicio.pagar(req.usuario, req.params.codigo, req.body);
-        res.json({ ok: true, pedido: r.pedido, pago: r.pago });
-
-    } catch (error) {
-        fallo(res, error, 'No se pudo procesar el pago');
-    }
-});
-
-
 router.get('/pedidos', requiereSesion, async (req, res) => {
     try {
         res.json({ ok: true, pedidos: await pedidoServicio.mios(req.usuario) });

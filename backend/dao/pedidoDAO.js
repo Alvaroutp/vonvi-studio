@@ -1,8 +1,6 @@
 const db = require('../db');
 
 
-// Abre una transaccion, corre el trabajo y confirma. Si algo revienta en
-// el medio deshace todo y vuelve a lanzar el error
 async function transaccion(trabajo) {
     const cx = await db.getConnection();
 
@@ -22,7 +20,6 @@ async function transaccion(trabajo) {
 }
 
 
-// El correlativo del anio: PED-2026-001, PED-2026-002 y asi
 async function siguienteCodigo(cx) {
     const anio = new Date().getFullYear();
 
@@ -37,15 +34,13 @@ async function siguienteCodigo(cx) {
 }
 
 
-// El pedido sin pagar que ya nacio de este mismo carrito. El usuario va
-// tambien en el WHERE: un id de carrito puede reusarse y nadie debe
-// terminar viendo el pedido de otra persona
-async function pendienteDeCarrito(carritoId, usuarioId) {
+async function recienteDeCarrito(carritoId, usuarioId, segundos) {
     const [filas] = await db.query(
         `SELECT * FROM pedidos
-          WHERE carrito_id = ? AND usuario_id = ? AND estado_pago = 'pendiente'
+          WHERE carrito_id = ? AND usuario_id = ?
+            AND creado_en >= NOW() - INTERVAL ? SECOND
           ORDER BY id DESC LIMIT 1`,
-        [carritoId, usuarioId]
+        [carritoId, usuarioId, segundos]
     );
 
     return filas[0] || null;
@@ -73,8 +68,6 @@ async function crear(cx, datos) {
 }
 
 
-// Cada linea guarda el nombre y el precio del dia de la compra, no el
-// de ahora. Si manana sube el precio, el pedido viejo no cambia
 async function agregarItem(cx, pedidoId, item) {
     await cx.query(
         `INSERT INTO pedido_items
@@ -98,16 +91,6 @@ async function buscarPorCodigo(codigo, usuarioId) {
 }
 
 
-async function items(pedidoId) {
-    const [filas] = await db.query(
-        'SELECT * FROM pedido_items WHERE pedido_id = ? ORDER BY id',
-        [pedidoId]
-    );
-
-    return filas;
-}
-
-
 async function listarDe(usuarioId) {
     const [filas] = await db.query(
         `SELECT p.*, COUNT(i.id) AS total_lineas, SUM(i.cantidad) AS total_articulos
@@ -123,8 +106,6 @@ async function listarDe(usuarioId) {
 }
 
 
-// Marca pagado solo si todavia estaba pendiente. Si devuelve 0 es que
-// alguien ya lo pago antes y este intento no debe seguir
 async function marcarPagado(cx, pedidoId, datos) {
     const [r] = await cx.query(
         `UPDATE pedidos
@@ -138,8 +119,6 @@ async function marcarPagado(cx, pedidoId, datos) {
 }
 
 
-// Baja el stock solo si alcanza. El WHERE hace la comparacion dentro de
-// la base: si devuelve 0 es que otro se adelanto y ya no queda
 async function bajarStock(cx, productoId, cantidad) {
     const [r] = await cx.query(
         'UPDATE productos SET stock = stock - ? WHERE id = ? AND stock >= ?',
@@ -150,7 +129,6 @@ async function bajarStock(cx, productoId, cantidad) {
 }
 
 
-// Lo que hay guardado ahora mismo, para avisar antes de cobrar
 async function stockDe(productoId) {
     const [filas] = await db.query(
         'SELECT stock FROM productos WHERE id = ?', [productoId]
@@ -163,11 +141,10 @@ async function stockDe(productoId) {
 module.exports = {
     transaccion,
     siguienteCodigo,
-    pendienteDeCarrito,
+    recienteDeCarrito,
     crear,
     agregarItem,
     buscarPorCodigo,
-    items,
     listarDe,
     marcarPagado,
     bajarStock,

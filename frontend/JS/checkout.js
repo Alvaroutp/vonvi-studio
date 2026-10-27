@@ -114,13 +114,7 @@ const Checkout = {
 
                 <!-- Paso 3: pago -->
                 <section class="bloque-checkout">
-                    <h2><span class="paso">3</span> Pago</h2>
-
-                    <p class="aviso-simulado">
-                        <i class="fa-solid fa-flask"></i>
-                        <strong>Pago simulado.</strong> Este es un proyecto académico: no se procesa
-                        dinero real y no se guardan datos de tarjetas (solo los últimos 4 dígitos).
-                    </p>
+                    <h2><span class="paso">3</span> Pago (simulado)</h2>
 
                     <div class="opciones-pago">
                         <label class="tarjeta-radio">
@@ -128,12 +122,8 @@ const Checkout = {
                             <div><strong><i class="fa-regular fa-credit-card"></i> Tarjeta</strong></div>
                         </label>
                         <label class="tarjeta-radio">
-                            <input type="radio" name="pago" value="yape">
-                            <div><strong><i class="fa-solid fa-mobile-screen"></i> Yape / Plin</strong></div>
-                        </label>
-                        <label class="tarjeta-radio">
                             <input type="radio" name="pago" value="transferencia">
-                            <div><strong><i class="fa-solid fa-building-columns"></i> Transferencia</strong></div>
+                            <div><strong><i class="fa-solid fa-mobile-screen"></i> Yape / Plin o Transferencia</strong></div>
                         </label>
                     </div>
 
@@ -146,8 +136,8 @@ const Checkout = {
                         <div class="campo">
                             <label for="numeroTarjeta">Número de tarjeta</label>
                             <input type="text" id="numeroTarjeta" inputmode="numeric"
-                                   placeholder="4111 1111 1111 1111" maxlength="23">
-                            <small class="ayuda">Prueba con 4111 1111 1111 1111</small>
+                                   placeholder="Ingrese aquí" maxlength="23">
+                            <small class="ayuda" id="contadorTarjeta">0 / 16 dígitos</small>
                         </div>
                     </div>
 
@@ -197,7 +187,7 @@ const Checkout = {
                 <p id="errorCheckout" class="error-general" hidden></p>
 
                 <button type="button" class="btn-principal ancho-total" id="btnConfirmar">
-                    <i class="fa-solid fa-lock"></i> Confirmar pedido
+                    <i class="fa-solid fa-lock"></i> Pagar y confirmar pedido
                 </button>
 
                 <a href="carrito.html" class="btn-texto centrado">Volver al carrito</a>
@@ -229,9 +219,13 @@ const Checkout = {
         });
 
         const tarjeta = document.getElementById('numeroTarjeta');
+        const contador = document.getElementById('contadorTarjeta');
+
         tarjeta.addEventListener('input', () => {
             const digitos = tarjeta.value.replace(/\D/g, '').slice(0, 19);
             tarjeta.value = digitos.replace(/(.{4})/g, '$1 ').trim();
+            contador.textContent = digitos.length + ' / 16 dígitos';
+            contador.classList.toggle('completo', digitos.length === 16);
         });
 
         document.getElementById('btnConfirmar')
@@ -261,8 +255,25 @@ const Checkout = {
             }
         }
 
+        const titular = document.getElementById('titular').value.trim();
+        const numeroTarjeta = document.getElementById('numeroTarjeta').value.replace(/\s/g, '');
+
+        if (metodo === 'tarjeta') {
+            if (titular.length < 5) {
+                error.textContent = 'Escribe el nombre del titular de la tarjeta.';
+                error.hidden = false;
+                return;
+            }
+            if (numeroTarjeta.length < 13 || numeroTarjeta.length > 19) {
+                error.textContent = 'Escribe el número completo de la tarjeta (16 dígitos).';
+                error.hidden = false;
+                document.getElementById('numeroTarjeta').focus();
+                return;
+            }
+        }
+
         boton.disabled = true;
-        boton.innerHTML = '<span class="spinner"></span> Registrando pedido...';
+        boton.innerHTML = '<span class="spinner"></span> Procesando pago...';
 
         try {
             const r = await API.post('/pedidos', {
@@ -274,31 +285,21 @@ const Checkout = {
                 direccion: document.getElementById('direccion').value.trim(),
                 referencia: document.getElementById('referencia').value.trim(),
                 notas: document.getElementById('notasPedido').value.trim(),
+                metodo,
+                titular,
+                numeroTarjeta,
             });
 
             this.pedido = r.pedido;
 
-            boton.innerHTML = '<span class="spinner"></span> Procesando pago...';
-            let pago = null;
-            try {
-                pago = await API.post(`/pedidos/${this.pedido.codigo}/pagar`, {
-                    metodo,
-                    titular: document.getElementById('titular').value.trim(),
-                    numeroTarjeta: document.getElementById('numeroTarjeta').value.replace(/\s/g, ''),
-                });
-            } catch (e) {
-
-                U.aviso('El pedido se registró, pero el pago quedó pendiente', 'aviso');
-            }
-
             await Header.actualizarCarrito();
-            this.mostrarExito(pago);
+            this.mostrarExito({ pago: { referencia: r.pedido.referencia_pago } });
 
         } catch (e) {
             error.textContent = e.message;
             error.hidden = false;
             boton.disabled = false;
-            boton.innerHTML = '<i class="fa-solid fa-lock"></i> Confirmar pedido';
+            boton.innerHTML = '<i class="fa-solid fa-lock"></i> Pagar y confirmar pedido';
         }
     },
 
@@ -307,14 +308,16 @@ const Checkout = {
         document.getElementById('contenidoCheckout').innerHTML = `
             <div class="pedido-exito">
                 <i class="fa-solid fa-circle-check"></i>
-                <h2>¡Pedido registrado!</h2>
+                <h2>¡Pedido pagado!</h2>
                 <p class="codigo-pedido">${U.esc(p.codigo)}</p>
 
                 <div class="detalle-exito">
                     <div><span>Total</span><strong>${U.soles(p.total)}</strong></div>
-                    <div><span>Pago</span><strong>${pago ? 'Aprobado' : 'Pendiente'}</strong></div>
+                    <div><span>Pago</span><strong>Aprobado</strong></div>
                     <div><span>Entrega estimada</span><strong>${U.fecha(p.fecha_entrega_estimada)}</strong></div>
-                    ${pago ? `<div><span>Referencia</span><strong>${U.esc(pago.pago.referencia)}</strong></div>` : ''}
+                    ${pago && pago.pago.referencia
+                        ? `<div><span>Referencia</span><strong>${U.esc(pago.pago.referencia)}</strong></div>`
+                        : ''}
                 </div>
 
                 <p class="texto-exito">

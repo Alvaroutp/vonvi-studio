@@ -1,7 +1,7 @@
 const seguimientoDAO = require('../dao/seguimientoDAO');
 const estadoServicio = require('./estadoServicio');
 const EXPLICACION = {
-    recibido: 'Recibimos tu pedido y entró a la cola de producción',
+    recibido: 'Recibimos tu pedido y lo estamos analizando',
     diseno_enviado: 'Te enviamos la prueba de tu diseño para que la revises',
     por_aprobar: 'Esperamos tu visto bueno para empezar a fabricar',
     en_produccion: 'Estamos fabricando tu pedido',
@@ -147,11 +147,9 @@ async function cancelar(usuario, codigo) {
 
 
 module.exports = {
-ErrorSeguimiento,
     opcionesEnLista,
     decorar,
     decorarFila,
-    detalle,
     cancelar,
     suyo,
 };

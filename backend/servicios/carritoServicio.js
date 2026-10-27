@@ -202,6 +202,13 @@ async function vaciar(usuarioId, token) {
     return armar(carrito);
 }
 
+
+async function cerrar(usuarioId) {
+    const carrito = await carritoDAO.obtener(usuarioId, null);
+
+    if (carrito) await carritoDAO.borrar(carrito.id);
+}
+
 async function fusionar(usuarioId, token) {
     if (!usuarioId) throw new ErrorCarrito('Necesitas iniciar sesión', 401);
 
@@ -224,12 +231,12 @@ async function lineasDe(carritoId) {
 
 
 module.exports = {
-    ErrorCarrito,
     ver,
     agregar,
     cambiarCantidad,
     quitar,
     vaciar,
+    cerrar,
     fusionar,
     suCarrito,
     lineasDe,

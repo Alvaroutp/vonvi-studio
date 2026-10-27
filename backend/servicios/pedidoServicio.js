@@ -5,15 +5,13 @@ const carritoServicio = require('./carritoServicio');
 const seguimientoServicio = require('./seguimientoServicio');
 
 
-// Las reglas del pedido viven aqui. Este archivo no recibe req ni res,
-// no conoce codigos HTTP y no escribe ni una linea de SQL.
-
-
 const ENTREGAS = ['recojo', 'delivery'];
 const PAGOS = ['tarjeta', 'transferencia', 'yape', 'plin'];
 
 const COSTO_ENVIO = 12;
 const ENVIO_GRATIS_DESDE = 250;
+
+const SEGUNDOS_DOBLE_CLIC = 60;
 
 
 class ErrorPedido extends Error {
@@ -30,7 +28,6 @@ function envioDe(tipoEntrega, subtotal) {
 }
 
 
-// Suma dias habiles: salta sabados y domingos
 function fechaEstimada(dias) {
     const fecha = new Date();
     let faltan = dias;
@@ -45,8 +42,6 @@ function fechaEstimada(dias) {
 }
 
 
-// Las opciones elegidas se guardan como texto plano en la linea, porque
-// el pedido tiene que poder leerse incluso si manana borran ese color
 function opcionesEnTexto(linea) {
     if (!linea.opciones || linea.opciones.length === 0) return null;
     return linea.opciones.map((o) => o.atributo + ': ' + o.valor).join(', ');
@@ -85,7 +80,6 @@ function revisarDatos(datos) {
 }
 
 
-// El pedido tal como lo espera la pantalla
 async function armar(pedido) {
     return seguimientoServicio.decorar(pedido);
 }
@@ -94,17 +88,20 @@ async function armar(pedido) {
 async function crear(usuario, datos) {
     const limpios = revisarDatos(datos);
 
+    const tarjeta = revisarPago(datos);
+
     const carrito = await carritoServicio.suCarrito(usuario.id, null);
+
+    const recien = await pedidoDAO.recienteDeCarrito(
+        carrito.id, usuario.id, SEGUNDOS_DOBLE_CLIC
+    );
+
+    if (recien) return armar(recien);
+
     const lineas = await carritoServicio.lineasDe(carrito.id);
 
     if (lineas.length === 0) throw new ErrorPedido('Tu carrito está vacío');
 
-    // Si ya nacio un pedido sin pagar de este mismo carrito se devuelve
-    // ese. Asi el doble click no crea dos pedidos iguales
-    const yaExiste = await pedidoDAO.pendienteDeCarrito(carrito.id, usuario.id);
-    if (yaExiste) return armar(yaExiste);
-
-    // Se avisa temprano si ya no alcanza, antes de crear nada
     for (const linea of lineas) {
         const stock = await pedidoDAO.stockDe(linea.producto_id);
 
@@ -119,7 +116,37 @@ async function crear(usuario, datos) {
     const envio = envioDe(limpios.tipoEntrega, subtotal);
     const dias = lineas.reduce((mayor, l) => Math.max(mayor, l.dias_produccion), 0);
 
-    const codigo = await pedidoDAO.transaccion(async (cx) => {
+    const referencia = 'PAG-' + crypto.randomBytes(4).toString('hex').toUpperCase();
+
+    let codigo;
+
+    try {
+        codigo = await hacerPedido(usuario, limpios, carrito, lineas, {
+            subtotal, envio, dias, tarjeta, referencia,
+        });
+
+    } catch (error) {
+        if (error.code === 'ER_DUP_ENTRY') {
+            const gemelo = await pedidoDAO.recienteDeCarrito(
+                carrito.id, usuario.id, SEGUNDOS_DOBLE_CLIC
+            );
+
+            if (gemelo) return armar(gemelo);
+        }
+
+        throw error;
+    }
+
+    await carritoServicio.cerrar(usuario.id);
+
+    return armar(await pedidoDAO.buscarPorCodigo(codigo, usuario.id));
+}
+
+
+async function hacerPedido(usuario, limpios, carrito, lineas, montos) {
+    const { subtotal, envio, dias, tarjeta, referencia } = montos;
+
+    return pedidoDAO.transaccion(async (cx) => {
         const suCodigo = await pedidoDAO.siguienteCodigo(cx);
 
         const id = await pedidoDAO.crear(cx, {
@@ -156,10 +183,27 @@ async function crear(usuario, datos) {
             });
         }
 
+        await pedidoDAO.marcarPagado(cx, id, {
+            metodo_pago: tarjeta.metodo,
+            referencia_pago: referencia,
+            ultimos4: tarjeta.ultimos4,
+        });
+
+        for (const linea of lineas) {
+            if (!linea.producto_id) continue;
+
+            const bajadas = await pedidoDAO.bajarStock(cx, linea.producto_id, linea.cantidad);
+
+            if (bajadas === 0) {
+                throw new ErrorPedido(
+                    `Nos quedamos sin stock de ${linea.producto_nombre}. No te cobramos nada`,
+                    409
+                );
+            }
+        }
+
         return suCodigo;
     });
-
-    return armar(await pedidoDAO.buscarPorCodigo(codigo, usuario.id));
 }
 
 
@@ -168,8 +212,6 @@ function revisarPago(datos) {
 
     if (!PAGOS.includes(metodo)) throw new ErrorPedido('Elige cómo vas a pagar');
 
-    // Solo la tarjeta pide titular y numero. Yape, Plin y la
-    // transferencia no tienen nada que revisar
     if (metodo !== 'tarjeta') return { metodo, ultimos4: null };
 
     const titular = (datos.titular || '').trim();
@@ -181,59 +223,7 @@ function revisarPago(datos) {
         throw new ErrorPedido('El número de la tarjeta no es válido');
     }
 
-    // De la tarjeta se guardan solo los 4 ultimos digitos. El resto no
-    // se escribe en ningun lado, ni en la base ni en el log
     return { metodo, ultimos4: numero.slice(-4) };
-}
-
-
-async function pagar(usuario, codigo, datos) {
-    const pedido = await pedidoDAO.buscarPorCodigo(codigo, usuario.id);
-
-    if (!pedido) throw new ErrorPedido('No encontramos ese pedido', 404);
-
-    // Pagar dos veces el mismo pedido devuelve el mismo recibo y no
-    // vuelve a bajar el stock
-    if (pedido.estado_pago === 'pagado') {
-        return {
-            pedido: await armar(pedido),
-            pago: { referencia: pedido.referencia_pago, repetido: true },
-        };
-    }
-
-    const tarjeta = revisarPago(datos);
-    const referencia = 'PAG-' + crypto.randomBytes(4).toString('hex').toUpperCase();
-    const lineas = await pedidoDAO.items(pedido.id);
-
-    await pedidoDAO.transaccion(async (cx) => {
-        const marcadas = await pedidoDAO.marcarPagado(cx, pedido.id, {
-            metodo_pago: tarjeta.metodo,
-            referencia_pago: referencia,
-            ultimos4: tarjeta.ultimos4,
-        });
-
-        if (marcadas === 0) throw new ErrorPedido('Ese pedido ya estaba pagado', 409);
-
-        for (const linea of lineas) {
-            if (!linea.producto_id) continue;
-
-            const bajadas = await pedidoDAO.bajarStock(cx, linea.producto_id, linea.cantidad);
-
-            if (bajadas === 0) {
-                throw new ErrorPedido(
-                    `Nos quedamos sin stock de ${linea.nombre_producto}. No te cobramos nada`,
-                    409
-                );
-            }
-        }
-    });
-
-    // El carrito se vacia recien cuando el pago quedo confirmado
-    await carritoServicio.vaciar(usuario.id, null);
-
-    const pagado = await pedidoDAO.buscarPorCodigo(codigo, usuario.id);
-
-    return { pedido: await armar(pagado), pago: { referencia, repetido: false } };
 }
 
 
@@ -253,9 +243,7 @@ async function uno(usuario, codigo) {
 
 
 module.exports = {
-    ErrorPedido,
     crear,
-    pagar,
     mios,
     uno,
 };

@@ -97,7 +97,6 @@ router.put('/admin/categorias/:id', requiereSesion, requiereRol('admin'), async 
             descripcion: (req.body.descripcion || '').trim() || null,
             imagen: (req.body.imagen || '').trim() || null,
             icono: (req.body.icono || '').trim() || null,
-            activo: req.body.activo === false ? 0 : 1,
         });
 
         res.json({ ok: true, mensaje: 'Categoría actualizada' });
@@ -112,6 +111,38 @@ router.put('/admin/categorias/:id', requiereSesion, requiereRol('admin'), async 
         res.status(500).json({ ok: false, mensaje: 'No se pudo actualizar la categoría' });
     }
 });
+
+
+router.put('/admin/categorias/:id/activar', requiereSesion, requiereRol('admin'),
+    async (req, res) => {
+        try {
+            if (await categoriaDAO.cambiarActivo(Number(req.params.id), 1) === 0) {
+                return res.status(404).json({ ok: false, mensaje: 'Esa categoría no existe' });
+            }
+
+            res.json({ ok: true, mensaje: 'Categoría activada' });
+
+        } catch (error) {
+            console.error('Error activando categoría:', error.message);
+            res.status(500).json({ ok: false, mensaje: 'No se pudo activar la categoría' });
+        }
+    });
+
+
+router.put('/admin/categorias/:id/desactivar', requiereSesion, requiereRol('admin'),
+    async (req, res) => {
+        try {
+            if (await categoriaDAO.cambiarActivo(Number(req.params.id), 0) === 0) {
+                return res.status(404).json({ ok: false, mensaje: 'Esa categoría no existe' });
+            }
+
+            res.json({ ok: true, mensaje: 'Categoría desactivada' });
+
+        } catch (error) {
+            console.error('Error desactivando categoría:', error.message);
+            res.status(500).json({ ok: false, mensaje: 'No se pudo desactivar la categoría' });
+        }
+    });
 
 
 router.delete('/admin/categorias/:id', requiereSesion, requiereRol('admin'), async (req, res) => {
@@ -152,7 +183,6 @@ async function leerProducto(body) {
 
     if (!await categoriaDAO.existe(categoriaId)) return { error: 'Esa categoría no existe' };
 
-    // Si el formulario no manda stock se deja en null y el DAO no lo toca
     let stock = null;
 
     if (body.stock !== undefined && body.stock !== '') {
@@ -209,8 +239,10 @@ router.post('/admin/productos', requiereSesion, requiereRol('admin'), async (req
 router.get('/admin/productos', requiereSesion, requiereRol('admin'), async (req, res) => {
     try {
         const filtro = Number(req.query.categoria) || null;
+        const texto = (req.query.buscar || '').trim();
+        const buscar = texto.length >= 2 ? texto : null;
 
-        const productos = await productoDAO.listarParaAdmin(filtro);
+        const productos = await productoDAO.listarParaAdmin(filtro, buscar);
 
         res.json({ ok: true, total: productos.length, productos });
 

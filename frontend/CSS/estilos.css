@@ -15,21 +15,6 @@ body {
     overflow-x: hidden;
 }
 
-
-.top-bar {
-    width: 100%;
-    background: #ec4f95;
-    color: #fff;
-    font-size: 13px;
-    padding: 8px;
-    display: flex;
-    justify-content: center;
-}
-
-.top-bar p {
-    margin: 0;
-}
-
 img {
     width: 100%;
     display: block;
@@ -85,25 +70,6 @@ nav ul li a {
 nav ul li a:hover,
 nav ul li a.activo {
     color: #ec4f95;
-}
-
-.btn-header {
-    background: #ec4f95;
-    color: #fff;
-    padding: 12px 28px;
-    border-radius: 40px;
-    transition: .3s;
-    font-weight: 600;
-}
-
-.btn-header.btn-favoritos {
-    margin-left: 10px;
-
-}
-
-.btn-header:hover {
-    background: #ff6aa9;
-    transform: translateY(-3px);
 }
 
 .menu-movil {
@@ -270,36 +236,6 @@ nav ul li a.activo {
 .botones-card button {
 
     flex: 1;
-
-}
-
-.btn-favorito {
-
-    background: #eb4a94;
-
-    color: white;
-
-    border: none;
-
-    border-radius: 30px;
-
-    cursor: pointer;
-
-    font-size: 16px;
-
-    font-weight: 200;
-
-    padding: 10px 20px;
-
-    transition: .3s;
-
-}
-
-.btn-favorito:hover {
-
-    background: #d93682;
-
-    transform: translateY(-3px);
 
 }
 
@@ -675,11 +611,6 @@ footer hr {
     border-top: 1px solid rgba(255, 255, 255, .15);
 }
 
-.copyright {
-    text-align: center;
-    color: #bfbfbf;
-}
-
 .whatsapp {
     position: fixed;
     bottom: 25px;
@@ -703,8 +634,7 @@ footer hr {
 }
 
 
-
-@keyframes aparecer {
+@keyframes aparecer{
 
     from {
         opacity: 0;
@@ -715,9 +645,7 @@ footer hr {
         opacity: 1;
         transform: translateY(0);
     }
-
 }
-
 
 
 .hero,
@@ -752,47 +680,6 @@ section {
     justify-content: center;
     align-items: center;
     z-index: 9999;
-}
-
-.modal-contenido {
-    width: 90%;
-    max-width: 500px;
-    background: #fff;
-    padding: 35px;
-    border-radius: 20px;
-    position: relative;
-    animation: modal .4s;
-}
-
-.modal-contenido h2 {
-    color: #ec4f95;
-    margin-bottom: 20px;
-}
-
-.modal-contenido input,
-.modal-contenido textarea,
-.modal-contenido select {
-    width: 100%;
-    padding: 15px;
-    margin-bottom: 15px;
-    border: 1px solid #ddd;
-    border-radius: 10px;
-    outline: none;
-}
-
-.modal-contenido button {
-    width: 100%;
-    padding: 15px;
-    background: #ec4f95;
-    color: #fff;
-    border: none;
-    border-radius: 30px;
-    cursor: pointer;
-    transition: .3s;
-}
-
-.modal-contenido button:hover {
-    background: #ff6aa9;
 }
 
 .cerrar-modal {
@@ -838,36 +725,6 @@ section {
     outline: none;
 }
 
-.tabla-precios {
-    padding: 100px 0;
-    background: #fff;
-}
-
-.tabla-precios table {
-    width: 100%;
-    border-collapse: collapse;
-    background: #fff;
-    border-radius: 15px;
-    overflow: hidden;
-    box-shadow: 0 15px 30px rgba(0, 0, 0, .08);
-}
-
-.tabla-precios th {
-    background: #ec4f95;
-    color: #fff;
-    padding: 18px;
-}
-
-.tabla-precios td {
-    padding: 18px;
-    border-bottom: 1px solid #eee;
-    text-align: center;
-}
-
-.tabla-precios tr:hover {
-    background: #fff3f8;
-}
-
 #btnTop {
     position: fixed;
     right: 25px;
@@ -894,24 +751,6 @@ section {
 .clientes {
     padding: 100px 0;
     background: #fff;
-}
-
-.grid-clientes {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 30px;
-    align-items: center;
-}
-
-.grid-clientes img {
-    width: 100%;
-    filter: grayscale(100%);
-    transition: .3s;
-}
-
-.grid-clientes img:hover {
-    filter: none;
-    transform: scale(1.05);
 }
 
 .testimonios {
@@ -949,8 +788,7 @@ section {
 }
 
 
-@keyframes flotar {
-
+@keyframes flotar{
 
 
     0% {
@@ -966,12 +804,12 @@ section {
     }
 }
 
+
 .testimonio {
 
     animation: flotar 3s ease-in-out infinite;
 
 }
-
 
 
 .hero-imagen img {
@@ -980,7 +818,7 @@ section {
 
 }
 
-@keyframes zoom {
+@keyframes zoom{
 
     from {
 
@@ -993,8 +831,8 @@ section {
         transform: scale(1.05);
 
     }
-
 }
+
 
 .card-producto:hover img {
 
@@ -1223,11 +1061,6 @@ section {
     font-size: 18px;
 }
 
-.productos-destacados {
-    padding: 100px 0;
-    background: #fff;
-}
-
 .proceso {
     padding: 100px 0;
     background: #fafafa;
@@ -1266,36 +1099,6 @@ section {
 .proceso .servicio p {
     color: #666;
     line-height: 28px;
-}
-
-.tabla-precios {
-    padding: 100px 0;
-    background: #fff;
-}
-
-.tabla-precios table {
-    width: 100%;
-    border-collapse: collapse;
-    overflow: hidden;
-    border-radius: 18px;
-    box-shadow: 0 15px 30px rgba(0, 0, 0, .08);
-}
-
-.tabla-precios th {
-    background: #ec4f95;
-    color: #fff;
-    padding: 18px;
-    font-size: 17px;
-}
-
-.tabla-precios td {
-    padding: 18px;
-    text-align: center;
-    border-bottom: 1px solid #eee;
-}
-
-.tabla-precios tr:hover {
-    background: #fff4f9;
 }
 
 .cta {
@@ -1462,7 +1265,7 @@ nav ul { flex-wrap: wrap; }
 .grid-galeria img { aspect-ratio: 4 / 3; object-fit: cover; }
 .miembro img { aspect-ratio: 1; object-fit: cover; }
 
-@media (max-width: 480px) {
+@media (max-width: 480px){
 
     .formulario {
         padding: 24px 18px;
@@ -1475,5 +1278,4 @@ nav ul { flex-wrap: wrap; }
         width: 100%;
         max-width: 100%;
     }
-
 }
