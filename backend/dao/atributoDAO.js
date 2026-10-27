@@ -1,6 +1,5 @@
 const db = require('../db');
 
-// Atributos
 
 async function listarPorProducto(productoId) {
     const [filas] = await db.query(
@@ -58,8 +57,6 @@ async function borrar(id) {
     return r.affectedRows;
 }
 
-
-// Valores
 
 async function listarValoresDeProducto(productoId) {
     const [filas] = await db.query(

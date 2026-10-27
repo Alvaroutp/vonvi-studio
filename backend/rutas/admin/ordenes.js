@@ -32,7 +32,6 @@ async function siguienteCodigo() {
 }
 
 
-
 async function leerItems(items) {
     if (!Array.isArray(items) || items.length === 0) {
         return { error: 'La orden debe tener al menos un item' };
@@ -95,7 +94,6 @@ router.post('/admin/ordenes', requiereSesion, requiereRol('admin'), async (req, 
             return res.status(400).json({ ok: false, mensaje: 'Proveedor requerido' });
         }
 
-        // El calendario ya lo bloquea, pero el navegador se puede saltar
         if (fecha_entrega && fecha_entrega < hoy()) {
             return res.status(400).json({
                 ok: false, mensaje: 'La fecha de entrega no puede ser anterior a hoy'

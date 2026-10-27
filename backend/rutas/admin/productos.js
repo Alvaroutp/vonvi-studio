@@ -19,8 +19,6 @@ function aSlug(texto) {
 }
 
 
-// NIVEL 1 CATEGORIAS
-
 router.post('/admin/categorias', requiereSesion, requiereRol('admin'), async (req, res) => {
     try {
         const nombre = (req.body.nombre || '').trim();
@@ -171,7 +169,6 @@ router.delete('/admin/categorias/:id', requiereSesion, requiereRol('admin'), asy
 });
 
 
-// NIVEL 2 PRODUCTOS
 async function leerProducto(body) {
     const nombre = (body.nombre || '').trim();
     const categoriaId = Number(body.categoriaId || body.categoria_id);
@@ -373,8 +370,6 @@ router.delete('/admin/productos/:id', requiereSesion, requiereRol('admin'), asyn
 });
 
 
-// NIVEL 3 ATRIBUTOS
-
 router.post('/admin/atributos', requiereSesion, requiereRol('admin'), async (req, res) => {
     try {
         const productoId = Number(req.body.productoId);
@@ -453,8 +448,6 @@ router.delete('/admin/atributos/:id', requiereSesion, requiereRol('admin'), asyn
     }
 });
 
-
-// NIVEL 4 DETALLES
 
 router.post('/admin/detalles', requiereSesion, requiereRol('admin'), async (req, res) => {
     try {
@@ -538,8 +531,6 @@ router.delete('/admin/detalles/:id', requiereSesion, requiereRol('admin'), async
     }
 });
 
-
-// EL ARBOL COMPLETO
 
 router.get('/admin/productos/:id/arbol', requiereSesion, requiereRol('admin'),
     async (req, res) => {

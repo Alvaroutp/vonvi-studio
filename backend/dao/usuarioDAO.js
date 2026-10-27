@@ -111,8 +111,6 @@ async function borrarEmpleado(id) {
 }
 
 
-// Encargados de proveedores
-
 async function listarEncargados(proveedorId) {
     const [filas] = await db.query(
         `SELECT id, nombres, apellidos, email, telefono, creado_en

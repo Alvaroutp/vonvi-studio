@@ -68,7 +68,7 @@ function contadores() {
 
     const animar = (el) => {
         const objetivo = parseInt(el.dataset.numero || el.dataset.valor, 10);
-        if (!Number.isFinite(objetivo)) return;   // sin esto se veía "NaN"
+        if (!Number.isFinite(objetivo)) return;
 
         const inicio = performance.now();
         const duracion = 1400;
@@ -204,7 +204,6 @@ const PanelCarrito = {
 
         document.querySelectorAll('.btn-carrito').forEach((enlace) => {
             enlace.addEventListener('click', (e) => {
-                // En la propia página del carrito, el enlace se deja normal.
                 if (enPaginaCarrito) return;
                 e.preventDefault();
                 this.abrir();

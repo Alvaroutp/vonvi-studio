@@ -6,13 +6,6 @@ const estadoServicio = require('../../servicios/estadoServicio');
 const router = express.Router();
 
 
-// Esta capa solo habla HTTP. Las reglas estan en estadoServicio y el
-// SQL en adminPedidoDAO.
-
-
-// Los permisos van ruta por ruta, nunca con router.use. Este archivo lo
-// carga admin/index.js sin prefijo, asi que un router.use aqui le
-// pediria sesion a TODA la api, hasta para ver el catalogo
 const SOLO_PANEL = [requiereSesion, requiereRol('admin', 'empleado')];
 
 
@@ -26,8 +19,6 @@ function fallo(res, error, mensaje) {
 }
 
 
-// El catalogo de estados. La pantalla lo pide al entrar al panel para
-// pintar los colores y armar el selector
 router.get('/admin/estados', SOLO_PANEL, (req, res) => {
     res.json({ ok: true, estados: estadoServicio.catalogo() });
 });

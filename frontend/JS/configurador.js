@@ -140,7 +140,6 @@ const Configurador = {
             zona.appendChild(campo);
         }
 
-        // --- Eventos ---
         zona.querySelectorAll('.chip-color, .chip-opcion').forEach((btn) => {
             btn.addEventListener('click', () => {
                 const slug = btn.dataset.slug;
@@ -187,7 +186,6 @@ const Configurador = {
         });
         input.addEventListener('input', () => this.cotizarConEspera());
     },
-
 
 
     prepararEstampa() {
