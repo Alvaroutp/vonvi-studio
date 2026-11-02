@@ -33,7 +33,7 @@ router.get('/admin/pedidos', SOLO_PANEL, async (req, res) => {
             estado: req.query.estado,
             pago: req.query.pago,
             buscar: req.query.buscar,
-        });
+        }, req.usuario);
 
         res.json({ ok: true, ...resultado });
 
@@ -45,7 +45,10 @@ router.get('/admin/pedidos', SOLO_PANEL, async (req, res) => {
 
 router.get('/admin/pedidos/:codigo', SOLO_PANEL, async (req, res) => {
     try {
-        res.json({ ok: true, pedido: await estadoServicio.uno(req.params.codigo) });
+        res.json({
+            ok: true,
+            pedido: await estadoServicio.uno(req.params.codigo, req.usuario),
+        });
 
     } catch (error) {
         fallo(res, error, 'No se pudo cargar el pedido');

@@ -62,4 +62,6 @@ async function stock() {
 
 module.exports = {
     stock,
+    clasificar,
+    PEDIDOS_MINIMOS,
 };

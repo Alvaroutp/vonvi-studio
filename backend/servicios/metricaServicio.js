@@ -56,4 +56,4 @@ async function tablero(rango = {}) {
   };
 }
 
-module.exports = { tablero };
+module.exports = { tablero, fecha, barras, enNumero };

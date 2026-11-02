@@ -481,13 +481,6 @@
     animation: aparecerEstampa .45s ease;
 }
 
-/* Se llama "aparecerEstampa" y no "aparecer" a secas porque estilos.css
-   ya tiene una animacion con ese nombre para la entrada de las
-   secciones. Los @keyframes no se limitan al archivo donde se escriben:
-   son de toda la pagina, y como tienda.css se carga despues, el nombre
-   repetido pisaba al otro. Las secciones terminaban entrando con el
-   translate(-50%,-50%) de la estampa, se dibujaban corridas y encogidas
-   y recien al terminar la animacion caian en su sitio */
 @keyframes aparecerEstampa {
     from { opacity: 0; transform: translate(-50%, -50%) scale(.75); }
     to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
@@ -982,16 +975,12 @@
 
 .linea.total strong { font-size: 25px; color: var(--rosa); }
 
-/* En el carrito el total es lo primero del resumen, asi que no lleva la
-   raya de arriba: ahi arriba ya esta la que cierra la lista de productos */
 .carrito-resumen .linea.total:first-child {
     margin-top: 0;
     padding-top: 0;
     border-top: none;
 }
 
-/* La cantidad de articulos va junto al total y no en su propia linea,
-   que repetia el mismo monto dos veces */
 .linea.total small {
     display: block;
     font-size: 12.5px;
@@ -1126,8 +1115,6 @@
 .tarjeta-radio strong i { color: var(--rosa); margin-right: 6px; }
 .tarjeta-radio small { font-size: 12.5px; color: var(--gris); }
 
-/* El contador de digitos de la tarjeta. Mientras falten numeros se ve
-   gris como cualquier texto de ayuda; al completar los 16 se pone verde */
 #contadorTarjeta.completo {
     color: #16a34a;
     font-weight: 600;

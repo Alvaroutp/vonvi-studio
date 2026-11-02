@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+
+    <title>Taller | Vonvi Studio Perú</title>
+    <link rel="icon" type="image/png" href="img/icon.png">
+
+    <link rel="stylesheet" href="CSS/estilos.css">
+    <link rel="stylesheet" href="CSS/tienda.css">
+    <link rel="stylesheet" href="CSS/responsive.css">
+    <style>
+        .pagina-taller { padding: 125px 28px 70px; }
+        .pagina-taller h1 { font-size: 30px; margin: 0 0 6px; }
+        .pagina-taller h2 { font-size: 22px; margin: 0 0 4px; }
+        .pagina-taller .intro { color: #8a8a8a; font-size: 14.5px; margin: 0; max-width: 520px; }
+        .pagina-taller .sub { color: #8a8a8a; font-size: 13.5px; margin: 0 0 14px; }
+
+        .taller-cabecera {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 18px;
+            margin-bottom: 24px;
+        }
+
+        .quien {
+            background: #f4f4f5;
+            color: #6b6b6b;
+            border-radius: 999px;
+            padding: 7px 16px;
+            font-size: 13px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .filtros-taller {
+            display: flex;
+            align-items: flex-end;
+            gap: 12px;
+            flex-wrap: wrap;
+            background: #fff;
+            border: 1px solid #eceaee;
+            border-radius: 14px;
+            padding: 16px 18px;
+            margin-bottom: 20px;
+        }
+
+        .filtros-taller label {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            font-size: 11.5px;
+            letter-spacing: .4px;
+            text-transform: uppercase;
+            color: #9ca3af;
+            font-weight: 600;
+        }
+
+        .filtros-taller label.crece { flex: 1; min-width: 180px; }
+
+        .filtros-taller select,
+        .filtros-taller input {
+            border: 1px solid #e3e1e5;
+            border-radius: 9px;
+            padding: 10px 12px;
+            font-family: inherit;
+            font-size: 13.5px;
+            color: #1f2430;
+            background: #fff;
+        }
+
+        .filtros-taller select:focus,
+        .filtros-taller input:focus { outline: 2px solid #ddd6fe; }
+
+        .tabla-admin {
+            width: 100%;
+            border-collapse: collapse;
+            background: #fff;
+            border: 1px solid #eceaee;
+            border-radius: 14px;
+            overflow: hidden;
+        }
+
+        .tabla-admin th {
+            font-size: 10.5px;
+            letter-spacing: .5px;
+            text-transform: uppercase;
+            color: #9ca3af;
+            text-align: left;
+            padding: 12px 14px;
+            border-bottom: 1px solid #eceaee;
+        }
+
+        .tabla-admin td { font-size: 13.5px; padding: 12px 14px; border-bottom: 1px solid #f6f6f7; }
+        .tabla-admin tbody tr:hover { background: #fafafa; }
+        .tabla-admin small { display: block; font-size: 11.5px; color: #9ca3af; }
+
+        .paginas {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 7px;
+            justify-content: center;
+            margin-top: 22px;
+        }
+
+        .paginas button {
+            min-width: 40px;
+            min-height: 40px;
+            border: 1px solid #e3e1e5;
+            background: #fff;
+            border-radius: 9px;
+            font-family: inherit;
+            font-size: 13.5px;
+            cursor: pointer;
+        }
+
+        .paginas button.activa { background: #1f2430; border-color: #1f2430; color: #fff; }
+
+        .tarjeta-taller {
+            background: #fff;
+            border: 1px solid #eceaee;
+            border-radius: 14px;
+            padding: 20px 22px;
+            margin-bottom: 16px;
+        }
+
+        .tarjeta-taller h3 { font-size: 16px; margin: 0 0 16px; }
+
+        .tarjeta-taller .campo { margin-bottom: 16px; }
+
+        .tarjeta-taller .campo label {
+            display: block;
+            font-size: 12.5px;
+            font-weight: 600;
+            color: #6b7280;
+            margin-bottom: 6px;
+        }
+
+        .tarjeta-taller .campo select,
+        .tarjeta-taller .campo textarea {
+            width: 100%;
+            border: 1px solid #e3e1e5;
+            border-radius: 9px;
+            padding: 11px 12px;
+            font-family: inherit;
+            font-size: 14px;
+            color: #1f2430;
+            background: #fff;
+            resize: vertical;
+        }
+
+        .tarjeta-taller .campo select:disabled { background: #f6f6f7; color: #9ca3af; }
+
+        .item-taller {
+            display: flex;
+            gap: 14px;
+            align-items: flex-start;
+            padding: 14px 0;
+            border-top: 1px solid #f6f6f7;
+        }
+
+        .item-taller:first-of-type { border-top: 0; padding-top: 0; }
+
+        .item-taller .cuantos {
+            background: #1f2430;
+            color: #fff;
+            border-radius: 9px;
+            padding: 6px 11px;
+            font-size: 13px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .item-taller > div { flex: 1; }
+        .item-taller strong { display: block; font-size: 14.5px; }
+        .item-taller small { display: block; font-size: 12px; color: #9ca3af; margin-bottom: 7px; }
+
+        .pastillas { display: flex; flex-wrap: wrap; gap: 6px; }
+
+        .pastilla {
+            background: #f4f4f5;
+            border-radius: 7px;
+            padding: 4px 9px;
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        .nota-fabricar {
+            margin: 9px 0 0;
+            font-size: 13px;
+            color: #b45309;
+            background: #fffbeb;
+            border-radius: 8px;
+            padding: 8px 11px;
+        }
+
+        .item-taller .arte { text-align: right; min-width: 130px; }
+
+        .item-taller .arte a {
+            font-size: 13px;
+            font-weight: 600;
+            color: #7c3aed;
+            text-decoration: none;
+        }
+
+        .item-taller .arte a:hover { text-decoration: underline; }
+        .sin-arte { font-size: 12.5px; color: #c4c4c8; }
+
+        .dato { font-size: 13.5px; color: #4b5563; margin: 0 0 9px; }
+
+        .historial-taller { list-style: none; margin: 0; padding: 0; }
+
+        .historial-taller li {
+            border-left: 2px solid #eceaee;
+            padding: 0 0 16px 16px;
+            position: relative;
+        }
+
+        .historial-taller li:last-child { padding-bottom: 0; }
+
+        .historial-taller li::before {
+            content: '';
+            position: absolute;
+            left: -5px;
+            top: 4px;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #c4b5fd;
+        }
+
+        .historial-taller strong { font-size: 13.5px; }
+        .historial-taller small { display: block; font-size: 12px; color: #9ca3af; }
+
+        @media (max-width: 700px) {
+            .pagina-taller { padding: 110px 16px 60px; }
+            .taller-cabecera { flex-direction: column; }
+            .filtros-taller { flex-direction: column; align-items: stretch; }
+            .tabla-admin { display: block; overflow-x: auto; white-space: nowrap; }
+            .item-taller { flex-wrap: wrap; }
+            .item-taller .arte { text-align: left; min-width: 0; }
+        }
+    </style>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+</head>
+
+<body>
+
+    <header>
+        <div class="contenedor">
+
+            <div class="logo">
+                <a href="index.html"><img src="img/logo.png" alt="Vonvi Studio Perú"></a>
+            </div>
+
+            <div class="acciones-header">
+                <div id="zonaSesion"></div>
+            </div>
+
+        </div>
+    </header>
+
+    <main class="contenedor pagina-taller">
+
+        <div class="taller-cabecera">
+            <div>
+                <h1>Taller</h1>
+                <p class="intro">
+                    Pedidos listos para fabricar. Los que todavía están en diseño
+                    los prepara el administrador.
+                </p>
+            </div>
+            <span class="quien" id="quienSoy"></span>
+        </div>
+
+        <div class="filtros-taller" id="filtrosTaller">
+            <label>Estado
+                <select id="fEstado"></select>
+            </label>
+            <label class="crece">Buscar
+                <input type="search" id="fBuscar" placeholder="Código, cliente o correo">
+            </label>
+            <button type="button" class="btn-principal chico" id="btnFiltrar">Filtrar</button>
+            <button type="button" class="btn-texto" id="btnTodo">Ver todo</button>
+        </div>
+
+        <div id="listaTaller"></div>
+        <div id="detalleTaller" hidden></div>
+
+    </main>
+
+    <script src="JS/api.js"></script>
+    <script src="JS/comun.js"></script>
+    <script src="JS/empleado.js"></script>
+
+</body>
+
+</html>

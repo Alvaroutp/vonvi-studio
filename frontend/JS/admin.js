@@ -31,7 +31,7 @@ const Admin = {
         try {
             const r = await API.get('/admin/estados');
             this.estados = r.estados;
-        } catch (e) { /* se sigue sin el catálogo de estados */ }
+        } catch (e) { }
 
         const menu = document.getElementById('adminMenuMovil');
         if (menu) {
@@ -65,7 +65,7 @@ const Admin = {
     marcarLeidas(firma) {
         try {
             localStorage.setItem(this.LEIDAS, firma);
-        } catch (e) { /* si el navegador no deja guardar, el globo sigue visible */ }
+        } catch (e) { }
     },
 
     montarCampana() {
@@ -691,7 +691,7 @@ const Admin = {
                     this.verProductos(cat);
                     return;
                 }
-            } catch (e) { /* si falla se cae a la lista normal */ }
+            } catch (e) { }
         }
 
         this.verCategorias();

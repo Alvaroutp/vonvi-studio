@@ -246,4 +246,11 @@ module.exports = {
     crear,
     mios,
     uno,
+    envioDe,
+    fechaEstimada,
+    opcionesEnTexto,
+    revisarDatos,
+    revisarPago,
+    COSTO_ENVIO,
+    ENVIO_GRATIS_DESDE,
 };

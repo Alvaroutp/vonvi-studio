@@ -57,10 +57,32 @@ function catalogo() {
     return ESTADOS.map(({ fecha, ...resto }) => resto);
 }
 
-function permitidosDe(pedido) {
+const ORDEN_TALLER = 3;
+
+const ESTADOS_TALLER = ESTADOS
+    .filter((e) => e.orden >= ORDEN_TALLER && e.codigo !== 'cancelado')
+    .map((e) => e.codigo);
+
+function esEmpleado(usuario) {
+    return !!usuario && usuario.rol === 'empleado';
+}
+
+function enElTaller(pedido) {
+    const e = buscarEstado(pedido.estado);
+
+    return !!e && e.orden >= ORDEN_TALLER && e.codigo !== 'cancelado';
+}
+
+function permitidosDe(pedido, usuario) {
     if (pedido.estado_pago !== 'pagado') return [];
 
-    return SIGUIENTES[pedido.estado] || [];
+    const siguientes = SIGUIENTES[pedido.estado] || [];
+
+    if (!esEmpleado(usuario)) return siguientes;
+
+    if (!enElTaller(pedido)) return [];
+
+    return siguientes.filter((c) => c !== 'cancelado');
 }
 
 function decorar(pedido) {
@@ -115,11 +137,15 @@ function armarHistorial(pedido, filas) {
 }
 
 
-async function listar(filtros) {
+async function listar(filtros, usuario) {
     const pagina = Math.max(1, Number(filtros.pagina) || 1);
 
-    const total = await adminPedidoDAO.contar(filtros);
-    const filas = await adminPedidoDAO.listar(filtros, POR_PAGINA, (pagina - 1) * POR_PAGINA);
+    const busqueda = esEmpleado(usuario)
+        ? { ...filtros, estados: ESTADOS_TALLER }
+        : filtros;
+
+    const total = await adminPedidoDAO.contar(busqueda);
+    const filas = await adminPedidoDAO.listar(busqueda, POR_PAGINA, (pagina - 1) * POR_PAGINA);
 
     return {
         pedidos: filas.map(decorar),
@@ -130,16 +156,20 @@ async function listar(filtros) {
 }
 
 
-async function uno(codigo) {
+async function uno(codigo, usuario) {
     const pedido = await adminPedidoDAO.buscarPorCodigo(codigo);
 
     if (!pedido) throw new ErrorEstado('No encontramos ese pedido', 404);
+
+    if (esEmpleado(usuario) && !enElTaller(pedido)) {
+        throw new ErrorEstado('Ese pedido todavía no llegó al taller', 403);
+    }
 
     const filas = await adminPedidoDAO.items(pedido.id);
 
     return {
         ...decorar(pedido),
-        siguientes: permitidosDe(pedido),
+        siguientes: permitidosDe(pedido, usuario),
         direccion_entrega: pedido.direccion,
         costo_envio: pedido.envio,
         items: filas.map(armarItem),
@@ -162,6 +192,18 @@ async function cambiar(usuario, codigo, nuevo, comentario) {
 
     if (pedido.estado_pago !== 'pagado' && nuevo !== 'cancelado') {
         throw new ErrorEstado('Ese pedido no está pagado, no se puede avanzar', 409);
+    }
+
+    if (esEmpleado(usuario)) {
+        if (!enElTaller(pedido)) {
+            throw new ErrorEstado(
+                'Ese pedido todavía lo está preparando el administrador', 403
+            );
+        }
+
+        if (nuevo === 'cancelado') {
+            throw new ErrorEstado('Solo el administrador puede cancelar un pedido', 403);
+        }
     }
 
     if (pedido.estado === nuevo) {
@@ -207,15 +249,18 @@ async function cambiar(usuario, codigo, nuevo, comentario) {
         }
     });
 
-    return uno(codigo);
+    return uno(codigo, usuario);
 }
 
 
 module.exports = {
     ESTADOS,
+    SIGUIENTES,
     catalogo,
     decorar,
     listar,
     uno,
     cambiar,
+    buscarEstado,
+    permitidosDe,
 };

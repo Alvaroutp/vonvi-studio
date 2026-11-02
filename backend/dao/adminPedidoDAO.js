@@ -32,6 +32,11 @@ function filtrar(f) {
     if (f.estado) { partes.push('p.estado = ?'); datos.push(f.estado); }
     if (f.pago) { partes.push('p.estado_pago = ?'); datos.push(f.pago); }
 
+    if (Array.isArray(f.estados) && f.estados.length) {
+        partes.push(`p.estado IN (${f.estados.map(() => '?').join(',')})`);
+        datos.push(...f.estados);
+    }
+
     if (f.buscar) {
         partes.push('(p.codigo LIKE ? OR p.nombre_contacto LIKE ? OR p.email_contacto LIKE ?)');
         const texto = '%' + f.buscar + '%';

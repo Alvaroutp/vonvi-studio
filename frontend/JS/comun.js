@@ -158,6 +158,9 @@ const Header = {
                     ${u.rol === 'admin'
                         ? '<a href="admin/index.html"><i class="fa-solid fa-gauge"></i> Panel admin</a>'
                         : ''}
+                    ${u.rol === 'empleado'
+                        ? '<a href="empleado.html"><i class="fa-solid fa-screwdriver-wrench"></i> Taller</a>'
+                        : ''}
                     <button type="button" id="btnSalir"><i class="fa-solid fa-right-from-bracket"></i> Cerrar sesión</button>
                 </div>
             </div>`;
@@ -211,7 +214,6 @@ const PanelCarrito = {
         });
     },
 
-    /** Crea el HTML y el CSS del panel la primera vez que se necesita. */
     crear() {
         if (this.creado) return;
         this.creado = true;
@@ -265,7 +267,6 @@ const PanelCarrito = {
 
             body.bloqueo-scroll { overflow: hidden; }
 
-            /* Layout de una sola columna dentro del panel angosto */
             .carrito-grid-panel {
                 display: flex; flex-direction: column; gap: 22px;
             }

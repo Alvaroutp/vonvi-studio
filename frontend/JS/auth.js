@@ -61,6 +61,7 @@ const Login = {
 
     destino() {
         if (API.usuario && API.usuario.rol === 'proveedor') return 'proveedor.html';
+        if (API.usuario && API.usuario.rol === 'empleado') return 'empleado.html';
 
         const volver = U.parametro('volver');
         const interna = volver

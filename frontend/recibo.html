@@ -38,7 +38,6 @@
         .cargando, .problema { text-align: center; color: #6c7482; padding: 50px 10px; }
         .problema strong { display: block; color: #22262e; font-size: 17px; margin-bottom: 6px; }
 
-        /* ---------- cabecera ---------- */
         .cabecera { display: flex; justify-content: space-between; align-items: flex-start;
                     gap: 20px; padding-bottom: 20px; border-bottom: 2px solid #22262e; }
         .cabecera .logo { font-size: 20px; font-weight: 700; letter-spacing: -.4px; }
@@ -52,7 +51,6 @@
         .caja-numero strong { display: block; font-size: 17px; margin-top: 3px; letter-spacing: -.3px; }
         .caja-numero time { display: block; font-size: 11px; color: #6c7482; margin-top: 3px; }
 
-        /* ---------- bloques ---------- */
         .columnas { display: flex; gap: 30px; margin-top: 24px; }
         .columnas section { flex: 1; }
 
@@ -61,7 +59,6 @@
         .columnas p { font-size: 13px; line-height: 1.6; color: #3b434f; }
         .columnas p strong { color: #22262e; }
 
-        /* ---------- tabla ---------- */
         table { width: 100%; border-collapse: collapse; margin-top: 26px; }
         thead th { text-align: left; font-size: 9.5px; letter-spacing: 1.1px; text-transform: uppercase;
                    color: #6c7482; border-bottom: 1.5px solid #dfe3e8; padding: 0 10px 8px 0; }
@@ -71,7 +68,6 @@
         tbody td strong { display: block; }
         tbody td small { color: #6c7482; font-size: 11.5px; }
 
-        /* ---------- totales ---------- */
         .totales { margin-left: auto; width: 268px; margin-top: 18px; }
         .totales div { display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px;
                        color: #3b434f; }
@@ -87,7 +83,6 @@
         .pie { margin-top: 30px; padding-top: 16px; border-top: 1px solid #eef0f4;
                font-size: 11px; color: #96a0ad; line-height: 1.6; }
 
-        /* ---------- botones ---------- */
         .acciones { max-width: 720px; margin: 0 auto 16px; display: flex; gap: 10px;
                     justify-content: flex-end; }
         .acciones button, .acciones a {
@@ -97,7 +92,6 @@
         .acciones .imprimir { background: #ec4f95; color: #fff; }
         .acciones .volver { background: #fff; color: #3b434f; border: 1px solid #dfe3e8; }
 
-        /* ---------- al imprimir se va todo lo que no es el recibo ---------- */
         @media print {
             body { background: #fff; padding: 0; }
             .acciones { display: none; }
@@ -129,8 +123,6 @@
 
     <script src="JS/api.js"></script>
     <script>
-        // Esta pagina no tiene su propio archivo de JS: es una sola
-        // pantalla y todo lo que hace es pedir el recibo y pintarlo
 
         function problema(titulo, detalle) {
             document.getElementById('hoja').innerHTML =

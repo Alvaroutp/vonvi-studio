@@ -7,7 +7,7 @@ const router = express.Router();
 
 const EXCEL = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
 
-router.get('/admin/metricas', requiereSesion, requiereRol('admin', 'empleado'),
+router.get('/admin/metricas', requiereSesion, requiereRol('admin'),
 async (req, res) => {
     try {
     const rango = { desde: req.query.desde, hasta: req.query.hasta };
@@ -19,7 +19,7 @@ async (req, res) => {
     }
 });
 
-router.get('/admin/reportes/ventas', requiereSesion, requiereRol('admin', 'empleado'),
+router.get('/admin/reportes/ventas', requiereSesion, requiereRol('admin'),
 async (req, res) => {
     try {
     const libro = await reporteServicio.libro();
@@ -36,7 +36,7 @@ async (req, res) => {
     }
 });
 
-router.get('/admin/alertas/stock', requiereSesion, requiereRol('admin', 'empleado'),
+router.get('/admin/alertas/stock', requiereSesion, requiereRol('admin'),
 async (req, res) => {
     try {
     res.json({ ok: true, ...await alertaServicio.stock() });
