@@ -125,7 +125,10 @@ describe('Fecha estimada de entrega', () => {
     });
 
     test('siempre es despues de hoy', () => {
-        const hoy = new Date().toISOString().slice(0, 10);
+        const ahora = new Date();
+        const mes = String(ahora.getMonth() + 1).padStart(2, '0');
+        const dia = String(ahora.getDate()).padStart(2, '0');
+        const hoy = `${ahora.getFullYear()}-${mes}-${dia}`;
 
         assert.ok(pedidoServicio.fechaEstimada(1) > hoy);
     });
