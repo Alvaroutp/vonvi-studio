@@ -5,8 +5,8 @@
   "main": "servidor.js",
   "scripts": {
     "start": "node servidor.js",
-    "test": "node --test --test-concurrency=1 pruebas/unitarias.test.js pruebas/validacion.test.js pruebas/caja-negra.test.js pruebas/caja-blanca.test.js",
-    "test:cobertura": "node --test --test-concurrency=1 --experimental-test-coverage pruebas/unitarias.test.js pruebas/validacion.test.js pruebas/caja-negra.test.js pruebas/caja-blanca.test.js",
+    "test": "node --test --test-concurrency=1 pruebas/unitarias.test.js pruebas/validacion.test.js pruebas/caja-negra.test.js pruebas/caja-blanca.test.js pruebas/seguridad.test.js",
+    "test:cobertura": "node --test --test-concurrency=1 --experimental-test-coverage pruebas/unitarias.test.js pruebas/validacion.test.js pruebas/caja-negra.test.js pruebas/caja-blanca.test.js pruebas/seguridad.test.js",
     "rendimiento": "node pruebas/rendimiento.js"
   },
   "keywords": [],

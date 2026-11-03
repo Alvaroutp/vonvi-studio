@@ -11,6 +11,39 @@ function nuevoToken() {
     return crypto.randomBytes(24).toString('hex');
 }
 
+const INTENTOS_MAXIMOS = 5;
+const BLOQUEO_SEGUNDOS = 60;
+
+const intentos = new Map();
+
+function bloqueado(email) {
+    const registro = intentos.get(email);
+
+    if (!registro) return 0;
+
+    const faltan = registro.hasta - Date.now();
+
+    if (faltan <= 0) {
+        intentos.delete(email);
+        return 0;
+    }
+
+    return registro.fallos >= INTENTOS_MAXIMOS ? Math.ceil(faltan / 1000) : 0;
+}
+
+function anotarFallo(email) {
+    const registro = intentos.get(email) || { fallos: 0, hasta: 0 };
+
+    registro.fallos += 1;
+    registro.hasta = Date.now() + BLOQUEO_SEGUNDOS * 1000;
+
+    intentos.set(email, registro);
+}
+
+function limpiarIntentos(email) {
+    intentos.delete(email);
+}
+
 
 router.post('/auth/registro', async (req, res) => {
     try {
@@ -91,17 +124,30 @@ router.post('/auth/login', async (req, res) => {
             });
         }
 
+        const espera = bloqueado(email);
+
+        if (espera > 0) {
+            return res.status(429).json({
+                ok: false,
+                mensaje: `Demasiados intentos fallidos. Espera ${espera} segundos`
+            });
+        }
+
         const usuario = await usuarioDAO.buscarPorEmail(email);
 
         if (!usuario) {
+            anotarFallo(email);
             return res.status(401).json({ ok: false, mensaje: 'Correo o contraseña incorrectos' });
         }
 
         const coincide = await bcrypt.compare(password, usuario.password);
 
         if (!coincide) {
+            anotarFallo(email);
             return res.status(401).json({ ok: false, mensaje: 'Correo o contraseña incorrectos' });
         }
+
+        limpiarIntentos(email);
 
         const token = nuevoToken();
         await usuarioDAO.guardarToken(usuario.id, token);
@@ -113,6 +159,18 @@ router.post('/auth/login', async (req, res) => {
     } catch (error) {
         console.error('Error en login:', error.message);
         res.status(500).json({ ok: false, mensaje: 'No se pudo iniciar sesión' });
+    }
+});
+
+
+router.post('/auth/logout', requiereSesion, async (req, res) => {
+    try {
+        await usuarioDAO.guardarToken(req.usuario.id, null);
+        res.json({ ok: true });
+
+    } catch (error) {
+        console.error('Error cerrando sesión:', error.message);
+        res.status(500).json({ ok: false, mensaje: 'No se pudo cerrar la sesión' });
     }
 });
 

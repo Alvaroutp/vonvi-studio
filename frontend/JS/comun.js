@@ -172,7 +172,9 @@ const Header = {
         });
         document.addEventListener('click', () => caja.classList.remove('abierto'));
 
-        zona.querySelector('#btnSalir').addEventListener('click', () => {
+        zona.querySelector('#btnSalir').addEventListener('click', async () => {
+            try { await API.post('/auth/logout', {}); } catch (e) { }
+
             API.cerrarSesion();
             U.aviso('Sesión cerrada');
             setTimeout(() => { location.href = 'index.html'; }, 600);

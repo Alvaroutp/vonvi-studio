@@ -79,16 +79,16 @@ after(async () => {
     await db.end();
 });
 
-describe('cambiar(): los caminos de la funcion, uno por uno', () => {
+describe('Cambio de estado de un pedido: los 13 caminos de la funcion', () => {
 
-    test('camino 1: el pedido no existe, sale por el 404', async () => {
+    test('camino 1: si el codigo de pedido no existe, responde 404', async () => {
         await assert.rejects(
             () => estadoServicio.cambiar(ADMIN, 'PED-NO-EXISTE', 'listo'),
             (e) => e.codigo === 404 && /No encontramos/.test(e.message)
         );
     });
 
-    test('camino 2: el estado destino no existe', async () => {
+    test('camino 2: si el estado de destino no existe, lo rechaza', async () => {
         await nacePedido('recibido', 'pagado');
 
         await assert.rejects(
@@ -97,7 +97,7 @@ describe('cambiar(): los caminos de la funcion, uno por uno', () => {
         );
     });
 
-    test('camino 3: pedido sin pagar y destino distinto de cancelado', async () => {
+    test('camino 3: un pedido sin pagar no puede avanzar de fase', async () => {
         await nacePedido('recibido', 'pendiente');
 
         await assert.rejects(
@@ -106,7 +106,7 @@ describe('cambiar(): los caminos de la funcion, uno por uno', () => {
         );
     });
 
-    test('camino 4: pedido sin pagar pero cancelando, el 409 no se dispara', async () => {
+    test('camino 4: un pedido sin pagar si se puede cancelar', async () => {
         await nacePedido('recibido', 'pendiente');
 
         const r = await estadoServicio.cambiar(ADMIN, CODIGO, 'cancelado');
@@ -114,7 +114,7 @@ describe('cambiar(): los caminos de la funcion, uno por uno', () => {
         assert.equal(r.estado, 'cancelado');
     });
 
-    test('camino 5: empleado con el pedido todavia en diseno', async () => {
+    test('camino 5: el empleado no puede tocar un pedido que sigue en diseno', async () => {
         await nacePedido('recibido', 'pagado');
 
         await assert.rejects(
@@ -123,7 +123,7 @@ describe('cambiar(): los caminos de la funcion, uno por uno', () => {
         );
     });
 
-    test('camino 6: empleado intentando cancelar desde el taller', async () => {
+    test('camino 6: el empleado no puede cancelar, solo el administrador', async () => {
         await nacePedido('por_aprobar', 'pagado');
 
         await assert.rejects(
@@ -132,7 +132,7 @@ describe('cambiar(): los caminos de la funcion, uno por uno', () => {
         );
     });
 
-    test('camino 7: mandarlo al estado en el que ya esta', async () => {
+    test('camino 7: no se puede mover un pedido al estado donde ya esta', async () => {
         await nacePedido('por_aprobar', 'pagado');
 
         await assert.rejects(
@@ -141,7 +141,7 @@ describe('cambiar(): los caminos de la funcion, uno por uno', () => {
         );
     });
 
-    test('camino 8: un salto que la maquina no permite', async () => {
+    test('camino 8: no se pueden saltar fases, por ejemplo de recibido a listo', async () => {
         await nacePedido('recibido', 'pagado');
 
         await assert.rejects(
@@ -150,7 +150,7 @@ describe('cambiar(): los caminos de la funcion, uno por uno', () => {
         );
     });
 
-    test('camino 9: un pedido entregado ya no se mueve', async () => {
+    test('camino 9: un pedido entregado ya no se puede mover', async () => {
         await nacePedido('entregado', 'pagado');
 
         await assert.rejects(
@@ -159,7 +159,7 @@ describe('cambiar(): los caminos de la funcion, uno por uno', () => {
         );
     });
 
-    test('camino 10: el camino bueno graba el historial y la fecha', async () => {
+    test('camino 10: un cambio valido guarda el historial y la fecha', async () => {
         await nacePedido('por_aprobar', 'pagado');
 
         const r = await estadoServicio.cambiar(ADMIN, CODIGO, 'en_produccion', 'Entro a prensa');
@@ -174,7 +174,7 @@ describe('cambiar(): los caminos de la funcion, uno por uno', () => {
         assert.ok(f[0].fecha_produccion !== null);
     });
 
-    test('camino 11: el comentario se corta en 300 caracteres', async () => {
+    test('camino 11: un comentario largo se corta a 300 caracteres', async () => {
         await nacePedido('por_aprobar', 'pagado');
 
         await estadoServicio.cambiar(ADMIN, CODIGO, 'en_produccion', 'x'.repeat(500));
@@ -197,7 +197,7 @@ describe('cambiar(): los caminos de la funcion, uno por uno', () => {
         assert.equal(await stockAhora(), antes + 5);
     });
 
-    test('camino 13: cancelar uno sin pagar no regala stock', async () => {
+    test('camino 13: cancelar un pedido sin pagar no devuelve stock', async () => {
         await nacePedido('recibido', 'pendiente');
 
         const antes = await stockAhora();
@@ -208,9 +208,9 @@ describe('cambiar(): los caminos de la funcion, uno por uno', () => {
     });
 });
 
-describe('El candado del stock', () => {
+describe('Control del stock cuando hay dos compras a la vez', () => {
 
-    test('si hay suficiente, descuenta', async () => {
+    test('con stock suficiente, la compra descuenta las unidades', async () => {
         await db.query('UPDATE productos SET stock = 10 WHERE id = ?', [productoId]);
 
         const filas = await pedidoDAO.transaccion(
@@ -221,7 +221,7 @@ describe('El candado del stock', () => {
         assert.equal(await stockAhora(), 6);
     });
 
-    test('si falta uno, no descuenta y avisa con 0 filas', async () => {
+    test('si el stock no alcanza, no descuenta nada', async () => {
         await db.query('UPDATE productos SET stock = 3 WHERE id = ?', [productoId]);
 
         const filas = await pedidoDAO.transaccion(
@@ -232,7 +232,7 @@ describe('El candado del stock', () => {
         assert.equal(await stockAhora(), 3);
     });
 
-    test('dos compras a la vez del ultimo producto: solo una gana', async () => {
+    test('dos compras al mismo tiempo de la ultima unidad: solo una se completa', async () => {
         await db.query('UPDATE productos SET stock = 1 WHERE id = ?', [productoId]);
 
         const [a, b] = await Promise.all([
@@ -244,7 +244,7 @@ describe('El candado del stock', () => {
         assert.equal(await stockAhora(), 0);
     });
 
-    test('la transaccion deshace todo si algo revienta a medias', async () => {
+    test('si algo falla a medias, la transaccion deshace los cambios', async () => {
         await db.query('UPDATE productos SET stock = 10 WHERE id = ?', [productoId]);
 
         await assert.rejects(() => pedidoDAO.transaccion(async (cx) => {
@@ -256,7 +256,7 @@ describe('El candado del stock', () => {
     });
 });
 
-describe('El seguro contra el doble clic', () => {
+describe('Proteccion contra el doble clic al pagar', () => {
 
     const CARRITO = 999001;
     const USUARIO = 3;
@@ -269,7 +269,7 @@ describe('El seguro contra el doble clic', () => {
         await db.query('DELETE FROM pedidos WHERE carrito_id = ?', [CARRITO]);
     });
 
-    test('un pedido de hace 5 segundos si lo encuentra', async () => {
+    test('reconoce un pedido creado hace 5 segundos y no crea otro', async () => {
         await db.query(
             `INSERT INTO pedidos
                 (codigo, usuario_id, carrito_id, estado, estado_pago,
@@ -287,7 +287,7 @@ describe('El seguro contra el doble clic', () => {
         assert.equal(hallado.codigo, 'PED-DOBLE-1');
     });
 
-    test('el mismo pedido de hace 2 horas ya no cuenta', async () => {
+    test('un pedido de hace 2 horas ya no se considera repetido', async () => {
         await db.query(
             'UPDATE pedidos SET creado_en = NOW() - INTERVAL 2 HOUR WHERE carrito_id = ?',
             [CARRITO]
@@ -296,7 +296,7 @@ describe('El seguro contra el doble clic', () => {
         assert.equal(await pedidoDAO.recienteDeCarrito(CARRITO, USUARIO, 60), null);
     });
 
-    test('el pedido de otro usuario no se devuelve nunca', async () => {
+    test('nunca devuelve el pedido de otro usuario', async () => {
         await db.query(
             'UPDATE pedidos SET creado_en = NOW() WHERE carrito_id = ?', [CARRITO]
         );
