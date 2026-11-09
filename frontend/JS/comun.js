@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
     animacionTarjetas();
     contadores();
     acordeon();
+    ayudaPreguntas();
     avisoPendiente();
     Header.iniciar();
     PanelCarrito.enganchar();
@@ -16,6 +17,44 @@ function avisoPendiente() {
     if (!mensaje) return;
     sessionStorage.removeItem('vonvi_aviso');
     setTimeout(() => U.aviso(mensaje, 'aviso'), 300);
+}
+
+const AYUDA_MENSAJES = [
+    'Hola, quiero un producto que no está en el catálogo.',
+    'Hola, no sé qué talla o medida elegir.',
+    'Hola, el stock no me alcanza para lo que necesito.',
+    'Hola, quiero ver una muestra antes de pagar.',
+    'Hola, quiero pagar de otra forma.',
+    'Hola, necesito cambiar algo de un pedido que ya envié.',
+];
+
+function ayudaPreguntas() {
+    const globo = document.querySelector('.ayuda-globo');
+    if (!globo) return;
+
+    const wsp = globo.querySelector('.ir-wsp');
+    if (!wsp) return;
+
+    const base = wsp.href.split('?')[0];
+    const botones = globo.querySelectorAll('li button');
+
+    botones.forEach((boton, i) => {
+        boton.addEventListener('click', () => {
+            const yaEstaba = boton.classList.contains('elegida');
+
+            botones.forEach((b) => b.classList.remove('elegida'));
+
+            if (yaEstaba) {
+                wsp.href = base;
+                return;
+            }
+
+            boton.classList.add('elegida');
+
+            const mensaje = AYUDA_MENSAJES[i] || boton.textContent.trim();
+            wsp.href = base + '?text=' + encodeURIComponent(mensaje);
+        });
+    });
 }
 
 function anioFooter() {
